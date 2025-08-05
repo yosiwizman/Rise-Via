@@ -1,4 +1,4 @@
-export const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
+export const trackEvent = (eventName: string, parameters?: Record<string, unknown>) => {
   if (typeof gtag !== 'undefined') {
     gtag('event', eventName, parameters);
   }
@@ -22,5 +22,5 @@ export const trackUserEngagement = (action: string, category: string, label?: st
 };
 
 declare global {
-  function gtag(...args: any[]): void;
+  function gtag(...args: unknown[]): void;
 }

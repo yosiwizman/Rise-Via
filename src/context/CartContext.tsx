@@ -99,7 +99,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const cartItems = JSON.parse(savedCart);
         dispatch({ type: 'LOAD_CART', payload: cartItems });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'LOAD_CART', payload: [] });
       }
     }

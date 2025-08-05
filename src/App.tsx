@@ -12,6 +12,7 @@ import ProgressBar from './components/ui/ProgressBar';
 import BackToTop from './components/ui/BackToTop';
 import MonitoringDashboard from './components/analytics/MonitoringDashboard';
 import FeedbackWidget from './components/analytics/FeedbackWidget';
+import ReviewModeration from './components/admin/ReviewModeration';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -106,6 +107,7 @@ function App() {
                 <BackToTop />
                 <MonitoringDashboard />
                 <FeedbackWidget />
+                <ReviewModeration />
               </>
             )}
           </div>

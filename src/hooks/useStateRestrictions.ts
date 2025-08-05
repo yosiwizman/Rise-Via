@@ -54,7 +54,7 @@ export const useStateRestrictions = () => {
           message: ''
         });
         setIsLoading(false);
-      } catch (error) {
+      } catch {
         setStateRestriction({
           state: 'UNKNOWN',
           isRestricted: false,

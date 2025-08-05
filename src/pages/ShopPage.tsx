@@ -16,6 +16,11 @@ import RecentlyViewed from '../components/products/RecentlyViewed';
 import { ProductSkeleton } from '../components/ui/ProductSkeleton';
 import { FadeInSection } from '../components/ui/FadeInSection';
 import productsData from '../data/products.json';
+import ReviewForm from '../components/reviews/ReviewForm';
+import ReviewsList from '../components/reviews/ReviewsList';
+import ReviewSummary from '../components/reviews/ReviewSummary';
+import StarRating from '../components/ui/StarRating';
+import { useProductReviews } from '../hooks/useProductReviews';
 
 interface Product {
   id: string;
@@ -116,12 +121,23 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
 
   const StrainDetailModal = ({ strain }: { strain: Product }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const { reviews, isLoading, getReviewSummary, refreshReviews } = useProductReviews(strain.id);
     const images = strain.images || [strain.images?.[0], strain.images?.[0], strain.images?.[0]];
     
+    const reviewSummary = getReviewSummary();
+    
     return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200 text-risevia-black dark:text-gray-100">
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-gray-200 text-risevia-black dark:text-gray-100">
       <DialogHeader>
-        <DialogTitle className="text-2xl gradient-text">{strain.name}</DialogTitle>
+        <DialogTitle className="text-2xl gradient-text flex items-center gap-2">
+          {strain.name}
+          {reviewSummary.totalReviews > 0 && (
+            <div className="flex items-center gap-1 text-sm">
+              <StarRating rating={Math.round(reviewSummary.averageRating)} readonly size="sm" />
+              <span className="text-gray-600">({reviewSummary.totalReviews})</span>
+            </div>
+          )}
+        </DialogTitle>
       </DialogHeader>
       <div className="space-y-6">
         <div className="aspect-video bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 rounded-lg overflow-hidden">
@@ -185,6 +201,28 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         </div>
 
         <ProductWarnings placement="product" />
+
+        <div className="border-t border-gray-200 pt-6">
+          <h4 className="font-semibold text-risevia-purple mb-4">Customer Reviews</h4>
+          
+          {!isLoading && (
+            <>
+              <ReviewSummary summary={reviewSummary} />
+              
+              <div className="mt-6">
+                <ReviewForm
+                  productId={strain.id}
+                  productName={strain.name}
+                  onReviewSubmitted={refreshReviews}
+                />
+              </div>
+              
+              <div className="mt-6">
+                <ReviewsList reviews={reviews} />
+              </div>
+            </>
+          )}
+        </div>
 
         {isStateBlocked && (
           <Alert className="compliance-warning border-red-500">
