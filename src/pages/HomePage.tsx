@@ -21,9 +21,22 @@ export const HomePage = () => {
       />
       {/* Hero Section with Video Background */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Video Background Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-white to-teal-50">
-        </div>
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover -z-10"
+        >
+          <source
+            src="https://res.cloudinary.com/dq6ddlsjq/video/upload/v1754348759/YOU_ARE_THE_ONE_lyi5ay.mp4"
+            type="video/mp4"
+          />
+        </video>
+        
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50 -z-10"></div>
 
         {/* Hero Content */}
         <motion.div
