@@ -1,55 +1,32 @@
-import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, ShoppingBag, Trash2 } from 'lucide-react';
+import { Plus, Minus, ShoppingBag, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { useAppStore } from '../store';
 
-interface CartItem {
-  id: string;
-  strain_name: string;
-  price: number;
-  quantity: number;
-  image_url: string;
-  volume: string;
-  thca_potency: number;
-}
+export const CartDrawer = () => {
+  const { 
+    cartOpen, 
+    cartItems, 
+    cartTotal,
+    toggleCart, 
+    updateQuantity, 
+    removeFromCart,
+  } = useAppStore();
 
-interface CartDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  cartItems: CartItem[];
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemoveItem: (id: string) => void;
-  onCheckout: () => void;
-}
-
-export const CartDrawer = ({
-  isOpen,
-  onClose,
-  cartItems,
-  onUpdateQuantity,
-  onRemoveItem,
-  onCheckout
-}: CartDrawerProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.08; // 8% tax rate
+  const subtotal = cartTotal;
+  const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
-  const handleCheckout = async () => {
-    setIsLoading(true);
-    try {
-      await onCheckout();
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCheckout = () => {
+    console.log('Checkout initiated with total:', total);
+    alert(`Checkout functionality coming soon! Total: $${total.toFixed(2)}`);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={cartOpen} onOpenChange={toggleCart}>
       <SheetContent className="w-full sm:max-w-lg bg-white dark:bg-risevia-charcoal">
         <SheetHeader className="pb-6">
           <div className="flex items-center justify-between">
@@ -74,7 +51,7 @@ export const CartDrawer = ({
                 Add some premium THCA strains to get started
               </p>
               <Button
-                onClick={onClose}
+                onClick={toggleCart}
                 className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
               >
                 Continue Shopping
@@ -95,20 +72,20 @@ export const CartDrawer = ({
                     >
                       <div className="w-20 h-20 bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 rounded-lg overflow-hidden flex-shrink-0">
                         <img
-                          src={item.image_url}
-                          alt={item.strain_name}
+                          src={item.image}
+                          alt={item.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-risevia-black dark:text-white truncate">
-                          {item.strain_name}
+                          {item.name}
                         </h4>
                         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                          <span>{item.volume}</span>
+                          <span>{item.category}</span>
                           <Badge className="bg-risevia-teal text-white text-xs">
-                            {item.thca_potency}% THCA
+                            {item.thcaContent}% THCA
                           </Badge>
                         </div>
                         
@@ -118,7 +95,7 @@ export const CartDrawer = ({
                               size="sm"
                               variant="outline"
                               className="w-8 h-8 p-0"
-                              onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                              onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
                             >
                               <Minus className="w-3 h-3" />
                             </Button>
@@ -129,7 +106,7 @@ export const CartDrawer = ({
                               size="sm"
                               variant="outline"
                               className="w-8 h-8 p-0"
-                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
@@ -143,7 +120,7 @@ export const CartDrawer = ({
                               size="sm"
                               variant="ghost"
                               className="w-8 h-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => onRemoveItem(item.id)}
+                              onClick={() => removeFromCart(item.id)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -178,14 +155,13 @@ export const CartDrawer = ({
                 <div className="space-y-2">
                   <Button
                     onClick={handleCheckout}
-                    disabled={isLoading}
                     className="w-full neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold py-3"
                   >
-                    {isLoading ? 'Processing...' : `Checkout - $${total.toFixed(2)}`}
+                    Checkout - ${total.toFixed(2)}
                   </Button>
                   
                   <Button
-                    onClick={onClose}
+                    onClick={toggleCart}
                     variant="outline"
                     className="w-full border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
                   >

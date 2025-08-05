@@ -8,6 +8,7 @@ import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { AppRoutes } from './components/AppRoutes';
+import { CartDrawer } from './components/CartDrawer';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { isStateBlocked } from './utils/stateBlocking';
@@ -57,6 +58,7 @@ function App() {
                 <AppRoutes isStateBlocked={isUserStateBlocked} />
               </main>
               <Footer />
+              <CartDrawer />
               <CookieConsentBanner />
             </>
           )}
