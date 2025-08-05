@@ -1,18 +1,38 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, SortAsc, Eye, QrCode } from 'lucide-react';
+import { Search, Filter, SortAsc, QrCode } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { SEOHead } from '../components/SEOHead';
 import { ProductWarnings } from '../components/ProductWarnings';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAnalytics } from '../components/AnalyticsPlaceholder';
-import strainsData from '../data/strains.json';
+import ProductCard from '../components/products/ProductCard';
+import productsData from '../data/products.json';
+
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  strainType: string;
+  thcaPercentage: number;
+  thcPercentage: number;
+  price: number;
+  images: string[];
+  description: string;
+  effects: string[];
+  terpenes: Array<{ name: string; percentage: number }>;
+  batchNumber: string;
+  harvestDate: string;
+  labResultsUrl: string;
+  inventory: number;
+  featured: boolean;
+}
 
 interface ShopPageProps {
   isStateBlocked: boolean;
@@ -22,23 +42,23 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [selectedStrain, setSelectedStrain] = useState<any>(null);
+  const [selectedStrain, setSelectedStrain] = useState<Product | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [qrStrain, setQRStrain] = useState<any>(null);
+  const [qrStrain, setQRStrain] = useState<Product | null>(null);
   const { trackCOAView } = useAnalytics();
 
-  const filteredAndSortedStrains = useMemo(() => {
-    let filtered = strainsData.filter(strain => 
-      strain.strain_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filterCategory === 'all' || strain.category.toLowerCase() === filterCategory.toLowerCase())
+  const filteredAndSortedProducts = useMemo(() => {
+    const filtered = productsData.products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filterCategory === 'all' || product.strainType.toLowerCase() === filterCategory.toLowerCase())
     );
 
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'potency':
-          return parseFloat(b.thca_potency) - parseFloat(a.thca_potency);
+          return b.thcaPercentage - a.thcaPercentage;
         case 'name':
-          return a.strain_name.localeCompare(b.strain_name);
+          return a.name.localeCompare(b.name);
         default:
           return 0;
       }
@@ -47,53 +67,51 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
     return filtered;
   }, [searchTerm, sortBy, filterCategory]);
 
-  const getPotencyBadge = (potency: string) => {
-    const potencyNum = parseFloat(potency);
-    if (potencyNum >= 30) {
+  const getPotencyBadge = (potency: number) => {
+    if (potency >= 30) {
       return <Badge className="bg-risevia-purple text-white">Premium {potency}%</Badge>;
-    } else if (potencyNum >= 25) {
+    } else if (potency >= 25) {
       return <Badge className="bg-risevia-teal text-white">Strong {potency}%</Badge>;
     } else {
       return <Badge className="bg-gray-600 text-white">Standard {potency}%</Badge>;
     }
   };
 
-  const getVolumeIndicator = (volume: string) => {
-    const volumeNum = parseInt(volume.replace('+', ''));
-    if (volumeNum < 50) {
+  const getInventoryIndicator = (inventory: number) => {
+    if (inventory < 50) {
       return <span className="text-red-400 text-sm">Limited Stock</span>;
-    } else if (volumeNum < 100) {
+    } else if (inventory < 100) {
       return <span className="text-yellow-400 text-sm">Available</span>;
     } else {
       return <span className="text-green-400 text-sm">In Stock</span>;
     }
   };
 
-  const handleViewCOA = (strain: any) => {
-    setQRStrain(strain);
+  const handleViewCOA = (product: Product) => {
+    setQRStrain(product);
     setShowQRModal(true);
-    trackCOAView(strain.batch_id);
+    trackCOAView(product.batchNumber);
   };
 
-  const StrainDetailModal = ({ strain }: { strain: any }) => {
+  const StrainDetailModal = ({ strain }: { strain: Product }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const images = [strain.image_url, strain.image_url, strain.image_url];
+    const images = strain.images || [strain.images?.[0], strain.images?.[0], strain.images?.[0]];
     
     return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200 text-risevia-black dark:text-gray-100">
       <DialogHeader>
-        <DialogTitle className="text-2xl gradient-text">{strain.strain_name}</DialogTitle>
+        <DialogTitle className="text-2xl gradient-text">{strain.name}</DialogTitle>
       </DialogHeader>
       <div className="space-y-6">
         <div className="aspect-video bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 rounded-lg overflow-hidden">
           <img
             src={images[currentImageIndex]}
-            alt={strain.strain_name}
+            alt={strain.name}
             className="w-full h-full object-cover cursor-pointer"
             onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
           />
           <div className="flex justify-center mt-2 space-x-2">
-            {images.map((_, index) => (
+            {images.map((_: string, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
@@ -106,15 +124,15 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <h4 className="font-semibold text-risevia-purple">Product Details</h4>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">THCA Potency:</span> {getPotencyBadge(strain.thca_potency)}</p>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">Volume:</span> {strain.volume} {getVolumeIndicator(strain.volume)}</p>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">Category:</span> {strain.category}</p>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">Batch ID:</span> {strain.batch_id}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">THCA Potency:</span> {getPotencyBadge(strain.thcaPercentage)}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Price:</span> ${strain.price} {getInventoryIndicator(strain.inventory)}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Type:</span> {strain.strainType}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Batch ID:</span> {strain.batchNumber}</p>
           </div>
           <div className="space-y-2">
             <h4 className="font-semibold text-risevia-teal">Compliance Info</h4>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">Expiration:</span> {strain.expiration_date}</p>
-            <p><span className="text-risevia-charcoal dark:text-gray-300">Storage:</span> {strain.storage}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Harvest Date:</span> {strain.harvestDate}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Inventory:</span> {strain.inventory} units</p>
             <div className="flex space-x-2">
               <Button
                 onClick={() => handleViewCOA(strain)}
@@ -132,6 +150,17 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         <div>
           <h4 className="font-semibold text-risevia-teal mb-2">Description</h4>
           <p className="text-risevia-charcoal dark:text-gray-300">{strain.description}</p>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-risevia-purple mb-2">Effects</h4>
+          <div className="flex flex-wrap gap-2">
+            {strain.effects?.map((effect: string, index: number) => (
+              <Badge key={index} variant="outline" className="border-risevia-teal text-risevia-teal">
+                {effect}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         <ProductWarnings placement="product" />
@@ -245,7 +274,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
           className="mb-6"
         >
           <p className="text-risevia-charcoal dark:text-gray-300">
-            Showing {filteredAndSortedStrains.length} of {strainsData.length} strains
+            Showing {filteredAndSortedProducts.length} of {productsData.products.length} products
           </p>
         </motion.div>
 
@@ -256,64 +285,17 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
           transition={{ delay: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {filteredAndSortedStrains.map((strain, index) => (
-            <motion.div
-              key={strain.batch_id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className="card-light border-gray-200 hover:border-risevia-purple/40 transition-all duration-300 overflow-hidden group">
-                <div className="aspect-square bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 relative overflow-hidden">
-                  <img
-                    src={strain.image_url}
-                    alt={strain.strain_name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-risevia-teal text-white font-semibold">
-                      {strain.thca_potency}%
-                    </Badge>
-                  </div>
-                  <div className="absolute top-3 left-3">
-                    <Badge variant="outline" className="border-white text-white bg-black/50">
-                      {strain.category}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-risevia-black dark:text-gray-100 text-lg">{strain.strain_name}</CardTitle>
-                  <div className="flex justify-between text-sm text-risevia-charcoal dark:text-gray-300">
-                    <span>Vol: {strain.volume}</span>
-                    <span>Batch: {strain.batch_id}</span>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                    {strain.description}
-                  </p>
-                  
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        className="w-full neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
-                        onClick={() => setSelectedStrain(strain)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                    </DialogTrigger>
-                    {selectedStrain && <StrainDetailModal strain={selectedStrain} />}
-                  </Dialog>
-                </CardContent>
-              </Card>
-            </motion.div>
+          {filteredAndSortedProducts.map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              index={index}
+              onViewDetails={(product: Product) => setSelectedStrain(product)}
+            />
           ))}
         </motion.div>
 
-        {filteredAndSortedStrains.length === 0 && (
+        {filteredAndSortedProducts.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -333,13 +315,19 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
           </motion.div>
         )}
 
+        {selectedStrain && (
+          <Dialog open={!!selectedStrain} onOpenChange={() => setSelectedStrain(null)}>
+            <StrainDetailModal strain={selectedStrain} />
+          </Dialog>
+        )}
+        
         {qrStrain && (
           <QRCodeModal
             isOpen={showQRModal}
             onClose={() => setShowQRModal(false)}
-            coaUrl={qrStrain.coa_url}
-            batchId={qrStrain.batch_id}
-            strainName={qrStrain.strain_name}
+            coaUrl={qrStrain.labResultsUrl}
+            batchId={qrStrain.batchNumber}
+            strainName={qrStrain.name}
           />
         )}
       </div>

@@ -10,8 +10,8 @@ interface AnalyticsEvent {
 
 export const useAnalytics = () => {
   const trackEvent = (eventData: AnalyticsEvent) => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', eventData.action, {
+    if (typeof window !== 'undefined' && (window as unknown as Window & { gtag?: (...args: unknown[]) => void }).gtag) {
+      (window as unknown as Window & { gtag: (...args: unknown[]) => void }).gtag('event', eventData.action, {
         event_category: eventData.category,
         event_label: eventData.label,
         value: eventData.value,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent } from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
@@ -12,9 +12,31 @@ interface AgeGateProps {
 export const AgeGate = ({ isOpen, onVerify }: AgeGateProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const checkExistingVerification = () => {
+      const verificationDate = localStorage.getItem('risevia-age-verified-date');
+      if (verificationDate) {
+        const hoursSinceVerification = (Date.now() - new Date(verificationDate).getTime()) / (1000 * 60 * 60);
+        if (hoursSinceVerification < 24) {
+          onVerify(true);
+          return;
+        } else {
+          localStorage.removeItem('risevia-age-verified-date');
+        }
+      }
+    };
+
+    checkExistingVerification();
+  }, [onVerify]);
+
   const handleVerification = async (isOver21: boolean) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for UX
+    
+    if (isOver21) {
+      localStorage.setItem('risevia-age-verified-date', new Date().toISOString());
+    }
+    
     onVerify(isOver21);
     setIsLoading(false);
   };

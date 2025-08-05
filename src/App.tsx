@@ -6,6 +6,7 @@ import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
+import { CartProvider } from './context/CartContext';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -70,33 +71,35 @@ function App() {
 
   return (
     <AnalyticsProvider>
-      <div className="min-h-screen bg-risevia-black text-white">
-        <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-        
-        {showStateBlocker && (
-          <StateBlocker onStateVerified={handleStateVerified} />
-        )}
-        
-        {isAgeVerified && (
-          <>
-            <Navigation 
-              currentPage={currentPage} 
-              onNavigate={setCurrentPage}
-              cartOpen={cartOpen}
-              setCartOpen={setCartOpen}
-              userMenuOpen={userMenuOpen}
-              setUserMenuOpen={setUserMenuOpen}
-              searchOpen={searchOpen}
-              setSearchOpen={setSearchOpen}
-            />
-            <main>
-              {renderCurrentPage()}
-            </main>
-            <Footer onNavigate={setCurrentPage} />
-            <CookieConsentBanner />
-          </>
-        )}
-      </div>
+      <CartProvider>
+        <div className="min-h-screen bg-risevia-black text-white">
+          <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+          
+          {showStateBlocker && (
+            <StateBlocker onStateVerified={handleStateVerified} />
+          )}
+          
+          {isAgeVerified && (
+            <>
+              <Navigation 
+                currentPage={currentPage} 
+                onNavigate={setCurrentPage}
+                cartOpen={cartOpen}
+                setCartOpen={setCartOpen}
+                userMenuOpen={userMenuOpen}
+                setUserMenuOpen={setUserMenuOpen}
+                searchOpen={searchOpen}
+                setSearchOpen={setSearchOpen}
+              />
+              <main>
+                {renderCurrentPage()}
+              </main>
+              <Footer onNavigate={setCurrentPage} />
+              <CookieConsentBanner />
+            </>
+          )}
+        </div>
+      </CartProvider>
     </AnalyticsProvider>
   );
 }
