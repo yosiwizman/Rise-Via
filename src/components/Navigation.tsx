@@ -1,23 +1,21 @@
-import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, ShoppingBag, User, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
+import { useAppStore } from '../store';
 
-interface NavigationProps {
-  cartOpen: boolean;
-  setCartOpen: (open: boolean) => void;
-  userMenuOpen: boolean;
-  setUserMenuOpen: (open: boolean) => void;
-  searchOpen: boolean;
-  setSearchOpen: (open: boolean) => void;
-}
-
-export const Navigation = ({ cartOpen: _cartOpen, setCartOpen, userMenuOpen, setUserMenuOpen, searchOpen: _searchOpen, setSearchOpen }: NavigationProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+export const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const { 
+    mobileMenuOpen, 
+    toggleMobileMenu, 
+    toggleCart, 
+    toggleSearch,
+    cartItems 
+  } = useAppStore();
 
   const navItems = [
     { id: '/', label: 'Home', path: '/' },
@@ -29,7 +27,7 @@ export const Navigation = ({ cartOpen: _cartOpen, setCartOpen, userMenuOpen, set
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    setIsMobileMenuOpen(false);
+    toggleMobileMenu();
   };
 
   return (
@@ -77,20 +75,25 @@ export const Navigation = ({ cartOpen: _cartOpen, setCartOpen, userMenuOpen, set
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={toggleSearch}>
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple">
               <User className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple relative" onClick={toggleCart}>
               <ShoppingBag className="w-4 h-4" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItems.length}
+                </span>
+              )}
             </Button>
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <Sheet open={mobileMenuOpen} onOpenChange={toggleMobileMenu}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300">
                   <Menu className="w-6 h-6" />
@@ -112,17 +115,22 @@ export const Navigation = ({ cartOpen: _cartOpen, setCartOpen, userMenuOpen, set
                     </button>
                   ))}
                   <div className="border-t border-gray-200 pt-4 space-y-2">
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={toggleSearch}>
                       <Search className="w-4 h-4 mr-2" />
                       Search
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple">
                       <User className="w-4 h-4 mr-2" />
                       Account
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple relative" onClick={toggleCart}>
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Cart
+                      {cartItems.length > 0 && (
+                        <span className="absolute top-1 right-4 bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {cartItems.length}
+                        </span>
+                      )}
                     </Button>
                   </div>
                 </div>

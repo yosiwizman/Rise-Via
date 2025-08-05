@@ -11,17 +11,19 @@ import { AppRoutes } from './components/AppRoutes';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { isStateBlocked } from './utils/stateBlocking';
+import { useAppStore, initializeDarkMode } from './store';
 
 function App() {
   const [, setUserState] = useState<string>('');
   const [isUserStateBlocked, setIsUserStateBlocked] = useState(false);
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
+  
+  const { ageVerified } = useAppStore();
 
   useEffect(() => {
+    initializeDarkMode();
+    
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
@@ -48,16 +50,9 @@ function App() {
             <StateBlocker onStateVerified={handleStateVerified} />
           )}
           
-          {isAgeVerified && (
+          {(isAgeVerified || ageVerified) && (
             <>
-              <Navigation 
-                cartOpen={cartOpen}
-                setCartOpen={setCartOpen}
-                userMenuOpen={userMenuOpen}
-                setUserMenuOpen={setUserMenuOpen}
-                searchOpen={searchOpen}
-                setSearchOpen={setSearchOpen}
-              />
+              <Navigation />
               <main>
                 <AppRoutes isStateBlocked={isUserStateBlocked} />
               </main>
