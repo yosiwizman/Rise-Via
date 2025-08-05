@@ -1,12 +1,11 @@
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, ShoppingBag, User, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 
 interface NavigationProps {
-  currentPage: string;
-  onNavigate: (page: string) => void;
   cartOpen: boolean;
   setCartOpen: (open: boolean) => void;
   userMenuOpen: boolean;
@@ -15,19 +14,21 @@ interface NavigationProps {
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, cartOpen: _cartOpen, setCartOpen, userMenuOpen, setUserMenuOpen, searchOpen: _searchOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ cartOpen: _cartOpen, setCartOpen, userMenuOpen, setUserMenuOpen, searchOpen: _searchOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'shop', label: 'Shop' },
-    { id: 'learn', label: 'Learn' },
-    { id: 'legal', label: 'Legal' },
-    { id: 'contact', label: 'Contact' }
+    { id: '/', label: 'Home', path: '/' },
+    { id: 'shop', label: 'Shop', path: '/shop' },
+    { id: 'learn', label: 'Learn', path: '/learn' },
+    { id: 'legal', label: 'Legal', path: '/legal' },
+    { id: 'contact', label: 'Contact', path: '/contact' }
   ];
 
-  const handleNavigation = (page: string) => {
-    onNavigate(page);
+  const handleNavigation = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
   };
 
@@ -42,7 +43,7 @@ export const Navigation = ({ currentPage, onNavigate, cartOpen: _cartOpen, setCa
           {/* Logo */}
           <div className="flex-shrink-0">
             <button
-              onClick={() => handleNavigation('home')}
+              onClick={() => handleNavigation('/')}
               className="hover:scale-105 transition-transform"
             >
               <div className="w-16 h-16">
@@ -61,9 +62,9 @@ export const Navigation = ({ currentPage, onNavigate, cartOpen: _cartOpen, setCa
               {navItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => handleNavigation(item.id)}
+                  onClick={() => handleNavigation(item.path)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    currentPage === item.id
+                    location.pathname === item.path
                       ? 'text-risevia-teal bg-risevia-teal/10'
                       : 'text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple hover:bg-purple-50'
                   }`}
@@ -100,9 +101,9 @@ export const Navigation = ({ currentPage, onNavigate, cartOpen: _cartOpen, setCa
                   {navItems.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => handleNavigation(item.id)}
+                      onClick={() => handleNavigation(item.path)}
                       className={`text-left px-4 py-3 rounded-lg text-lg font-medium transition-all ${
-                        currentPage === item.id
+                        location.pathname === item.path
                           ? 'text-risevia-teal bg-risevia-teal/10'
                           : 'text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple hover:bg-purple-50'
                       }`}

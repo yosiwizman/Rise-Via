@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Play, Shield, Award, ChevronRight, Star } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -7,11 +8,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { SEOHead } from '../components/SEOHead';
 import strainsData from '../data/strains.json';
 
-interface HomePageProps {
-  onNavigate: (page: string) => void;
-}
-
-export const HomePage = ({ onNavigate }: HomePageProps) => {
+export const HomePage = () => {
+  const navigate = useNavigate();
   const featuredStrains = strainsData.slice(0, 3);
 
   return (
@@ -63,7 +61,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
             transition={{ delay: 0.6, duration: 0.6 }}
           >
             <Button
-              onClick={() => onNavigate('shop')}
+              onClick={() => navigate('/shop')}
               size="lg"
               className="neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold px-8 py-4 text-lg rounded-2xl"
             >
@@ -176,7 +174,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
                 </p>
               </div>
               <Button
-                onClick={() => onNavigate('learn')}
+                onClick={() => navigate('/learn')}
                 variant="outline"
                 className="mt-6 border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
               >
@@ -228,7 +226,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
                 pesticide screening, and heavy metal testing results.
               </p>
               <Button
-                onClick={() => onNavigate('legal')}
+                onClick={() => navigate('/legal')}
                 variant="outline"
                 className="border-risevia-purple text-risevia-purple hover:bg-risevia-purple hover:text-white"
               >
@@ -291,7 +289,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
                       <CardContent>
                         <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4">{strain.description}</p>
                         <Button
-                          onClick={() => onNavigate('shop')}
+                          onClick={() => navigate('/shop')}
                           className="w-full neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
                         >
                           View Details
@@ -308,7 +306,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
 
           <div className="text-center mt-8">
             <Button
-              onClick={() => onNavigate('shop')}
+              onClick={() => navigate('/shop')}
               size="lg"
               variant="outline"
               className="border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"

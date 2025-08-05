@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Home, Search, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -6,11 +7,8 @@ import { SEOHead } from '../components/SEOHead';
 import { getUserState } from '../utils/cookies';
 import { isStateBlocked } from '../utils/stateBlocking';
 
-interface NotFoundPageProps {
-  onNavigate: (page: string) => void;
-}
-
-export const NotFoundPage = ({ onNavigate }: NotFoundPageProps) => {
+export const NotFoundPage = () => {
+  const navigate = useNavigate();
   const userState = getUserState();
   const isBlocked = userState ? isStateBlocked(userState) : false;
 
@@ -64,7 +62,7 @@ export const NotFoundPage = ({ onNavigate }: NotFoundPageProps) => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
-                  onClick={() => onNavigate('home')}
+                  onClick={() => navigate('/')}
                   size="lg"
                   className="neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold"
                 >
@@ -73,7 +71,7 @@ export const NotFoundPage = ({ onNavigate }: NotFoundPageProps) => {
                 </Button>
                 
                 <Button
-                  onClick={() => onNavigate('shop')}
+                  onClick={() => navigate('/shop')}
                   size="lg"
                   variant="outline"
                   className="border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
@@ -87,13 +85,13 @@ export const NotFoundPage = ({ onNavigate }: NotFoundPageProps) => {
                 <p className="text-gray-400 text-sm mb-4">Popular pages:</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {[
-                    { id: 'learn', label: 'Learn About THCA' },
-                    { id: 'legal', label: 'Legal & Compliance' },
-                    { id: 'contact', label: 'Contact Us' }
+                    { id: 'learn', label: 'Learn About THCA', path: '/learn' },
+                    { id: 'legal', label: 'Legal & Compliance', path: '/legal' },
+                    { id: 'contact', label: 'Contact Us', path: '/contact' }
                   ].map((link) => (
                     <button
                       key={link.id}
-                      onClick={() => onNavigate(link.id)}
+                      onClick={() => navigate(link.path)}
                       className="text-risevia-teal hover:text-white text-sm underline transition-colors"
                     >
                       {link.label}

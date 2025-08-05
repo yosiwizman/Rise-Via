@@ -1,35 +1,33 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 
-interface FooterProps {
-  onNavigate: (page: string) => void;
-}
-
-export const Footer = ({ onNavigate }: FooterProps) => {
+export const Footer = () => {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     company: [
-      { label: 'About Us', action: () => onNavigate('home') },
-      { label: 'Careers', action: () => onNavigate('careers') }
+      { label: 'About Us', action: () => navigate('/') },
+      { label: 'Careers', action: () => navigate('/careers') }
     ],
     products: [
-      { label: 'Shop All Strains', action: () => onNavigate('shop') },
-      { label: 'Lab Results', action: () => onNavigate('lab-results') },
-      { label: 'Batch Information', action: () => onNavigate('shop') }
+      { label: 'Shop All Strains', action: () => navigate('/shop') },
+      { label: 'Lab Results', action: () => navigate('/lab-results') },
+      { label: 'Batch Information', action: () => navigate('/shop') }
     ],
     support: [
-      { label: 'Contact Us', action: () => onNavigate('contact') },
-      { label: 'FAQ', action: () => onNavigate('learn') },
-      { label: 'Shipping Info', action: () => onNavigate('shipping') }
+      { label: 'Contact Us', action: () => navigate('/contact') },
+      { label: 'FAQ', action: () => navigate('/learn') },
+      { label: 'Shipping Info', action: () => navigate('/shipping') }
     ],
     legal: [
-      { label: 'Privacy Policy', action: () => onNavigate('legal') },
-      { label: 'Terms of Service', action: () => onNavigate('legal') },
-      { label: 'Compliance', action: () => onNavigate('legal') },
-      { label: 'State Restrictions', action: () => onNavigate('legal') }
+      { label: 'Privacy Policy', action: () => navigate('/legal') },
+      { label: 'Terms of Service', action: () => navigate('/legal') },
+      { label: 'Compliance', action: () => navigate('/legal') },
+      { label: 'State Restrictions', action: () => navigate('/legal') }
     ]
   };
 

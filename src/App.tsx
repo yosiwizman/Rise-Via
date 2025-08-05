@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -6,21 +7,12 @@ import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
-import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { LearnPage } from './pages/LearnPage';
-import { LegalPage } from './pages/LegalPage';
-import { ContactPage } from './pages/ContactPage';
-import { ShippingPage } from './pages/ShippingPage';
-import { LabResultsPage } from './pages/LabResultsPage';
-import { CareersPage } from './pages/CareersPage';
-import { NotFoundPage } from './pages/NotFoundPage';
+import { AppRoutes } from './components/AppRoutes';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { isStateBlocked } from './utils/stateBlocking';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [isUserStateBlocked, setIsUserStateBlocked] = useState(false);
   const [showStateBlocker, setShowStateBlocker] = useState(false);
@@ -45,58 +37,36 @@ function App() {
     setShowStateBlocker(false);
   };
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage onNavigate={setCurrentPage} />;
-      case 'shop':
-        return <ShopPage isStateBlocked={isUserStateBlocked} />;
-      case 'learn':
-        return <LearnPage />;
-      case 'legal':
-        return <LegalPage />;
-      case 'contact':
-        return <ContactPage />;
-      case 'shipping':
-        return <ShippingPage />;
-      case 'lab-results':
-        return <LabResultsPage />;
-      case 'careers':
-        return <CareersPage />;
-      default:
-        return <NotFoundPage onNavigate={setCurrentPage} />;
-    }
-  };
 
   return (
     <AnalyticsProvider>
-      <div className="min-h-screen bg-risevia-black text-white">
-        <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-        
-        {showStateBlocker && (
-          <StateBlocker onStateVerified={handleStateVerified} />
-        )}
-        
-        {isAgeVerified && (
-          <>
-            <Navigation 
-              currentPage={currentPage} 
-              onNavigate={setCurrentPage}
-              cartOpen={cartOpen}
-              setCartOpen={setCartOpen}
-              userMenuOpen={userMenuOpen}
-              setUserMenuOpen={setUserMenuOpen}
-              searchOpen={searchOpen}
-              setSearchOpen={setSearchOpen}
-            />
-            <main>
-              {renderCurrentPage()}
-            </main>
-            <Footer onNavigate={setCurrentPage} />
-            <CookieConsentBanner />
-          </>
-        )}
-      </div>
+      <BrowserRouter>
+        <div className="min-h-screen bg-risevia-black text-white">
+          <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+          
+          {showStateBlocker && (
+            <StateBlocker onStateVerified={handleStateVerified} />
+          )}
+          
+          {isAgeVerified && (
+            <>
+              <Navigation 
+                cartOpen={cartOpen}
+                setCartOpen={setCartOpen}
+                userMenuOpen={userMenuOpen}
+                setUserMenuOpen={setUserMenuOpen}
+                searchOpen={searchOpen}
+                setSearchOpen={setSearchOpen}
+              />
+              <main>
+                <AppRoutes isStateBlocked={isUserStateBlocked} />
+              </main>
+              <Footer />
+              <CookieConsentBanner />
+            </>
+          )}
+        </div>
+      </BrowserRouter>
     </AnalyticsProvider>
   );
 }
