@@ -55,7 +55,6 @@ export const useStateRestrictions = () => {
         });
         setIsLoading(false);
       } catch (error) {
-        console.error('Error checking state restrictions:', error);
         setStateRestriction({
           state: 'UNKNOWN',
           isRestricted: false,

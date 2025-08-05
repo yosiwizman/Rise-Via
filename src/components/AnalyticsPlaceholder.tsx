@@ -18,8 +18,6 @@ export const useAnalytics = () => {
         custom_parameter_1: 'cannabis_ecommerce',
         privacy_mode: true
       });
-    } else {
-      console.log('Analytics Event:', eventData);
     }
   };
 

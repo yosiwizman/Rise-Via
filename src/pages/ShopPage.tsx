@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, SortAsc, QrCode } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -12,6 +12,9 @@ import { ProductWarnings } from '../components/ProductWarnings';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAnalytics } from '../components/AnalyticsPlaceholder';
 import ProductCard from '../components/products/ProductCard';
+import RecentlyViewed from '../components/products/RecentlyViewed';
+import { ProductSkeleton } from '../components/ui/ProductSkeleton';
+import { FadeInSection } from '../components/ui/FadeInSection';
 import productsData from '../data/products.json';
 
 interface Product {
@@ -45,6 +48,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
   const [selectedStrain, setSelectedStrain] = useState<Product | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrStrain, setQRStrain] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { trackCOAView } = useAnalytics();
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -92,6 +96,23 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
     setShowQRModal(true);
     trackCOAView(product.batchNumber);
   };
+
+  const handleViewDetails = (product: Product) => {
+    setSelectedStrain(product);
+    
+    const stored = localStorage.getItem('risevia-recently-viewed');
+    const recent = stored ? JSON.parse(stored) : [];
+    
+    const filtered = recent.filter((p: Product) => p.id !== product.id);
+    const updated = [product, ...filtered].slice(0, 4);
+    
+    localStorage.setItem('risevia-recently-viewed', JSON.stringify(updated));
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const StrainDetailModal = ({ strain }: { strain: Product }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -203,22 +224,22 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         title="Premium THCA Strains Shop"
         description="Browse RiseViA's complete collection of lab-tested THCA cannabis strains. High-potency, federally compliant products with detailed COAs and batch information."
         canonical="https://risevia.com/shop"
+        keywords="THCA, cannabis, hemp, THC-A flower, premium strains, lab tested, sativa, indica, hybrid"
+        type="website"
       />
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
-            Premium THCA Strains
-          </h1>
-          <p className="text-xl text-risevia-charcoal dark:text-gray-300 max-w-2xl mx-auto">
-            Discover our complete collection of lab-tested, high-potency THCA products. 
-            Each strain is carefully cultivated and third-party tested for quality assurance.
-          </p>
-        </motion.div>
+        <FadeInSection>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
+              Premium THCA Strains
+            </h1>
+            <p className="text-xl text-risevia-charcoal dark:text-gray-300 max-w-2xl mx-auto">
+              Discover our complete collection of lab-tested, high-potency THCA products. 
+              Each strain is carefully cultivated and third-party tested for quality assurance.
+            </p>
+          </div>
+        </FadeInSection>
 
         {/* Filters and Search */}
         <motion.div
@@ -279,44 +300,56 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         </motion.div>
 
         {/* Product Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
-          {filteredAndSortedProducts.map((product, index) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              index={index}
-              onViewDetails={(product: Product) => setSelectedStrain(product)}
-            />
-          ))}
-        </motion.div>
+        <FadeInSection delay={0.4}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {isLoading ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <ProductSkeleton key={index} />
+              ))
+            ) : (
+              filteredAndSortedProducts.map((product, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  onViewDetails={handleViewDetails}
+                />
+              ))
+            )}
+          </div>
+        </FadeInSection>
 
-        {filteredAndSortedProducts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-risevia-charcoal dark:text-gray-300 text-lg">No strains found matching your criteria.</p>
-            <Button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterCategory('all');
-              }}
-              variant="outline"
-              className="mt-4 border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
-            >
-              Clear Filters
-            </Button>
-          </motion.div>
+        {!isLoading && filteredAndSortedProducts.length === 0 && (
+          <FadeInSection>
+            <div className="text-center py-12">
+              <p className="text-risevia-charcoal dark:text-gray-300 text-lg">No strains found matching your criteria.</p>
+              <Button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterCategory('all');
+                }}
+                variant="outline"
+                className="mt-4 border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </FadeInSection>
+        )}
+
+        {!isLoading && (
+          <RecentlyViewed onViewDetails={handleViewDetails} />
         )}
 
         {selectedStrain && (
           <Dialog open={!!selectedStrain} onOpenChange={() => setSelectedStrain(null)}>
+            <SEOHead
+              title={`${selectedStrain.name} - ${selectedStrain.thcaPercentage}% THCA`}
+              description={`${selectedStrain.description} Lab-tested ${selectedStrain.strainType} with ${selectedStrain.thcaPercentage}% THCA.`}
+              image={selectedStrain.images[0]}
+              type="product"
+              keywords={`${selectedStrain.name}, ${selectedStrain.strainType}, THCA, ${selectedStrain.effects.join(', ')}`}
+            />
             <StrainDetailModal strain={selectedStrain} />
           </Dialog>
         )}

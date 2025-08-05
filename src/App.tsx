@@ -7,6 +7,9 @@ import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { CartProvider } from './context/CartContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import ProgressBar from './components/ui/ProgressBar';
+import BackToTop from './components/ui/BackToTop';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -70,37 +73,41 @@ function App() {
   };
 
   return (
-    <AnalyticsProvider>
-      <CartProvider>
-        <div className="min-h-screen bg-risevia-black text-white">
-          <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-          
-          {showStateBlocker && (
-            <StateBlocker onStateVerified={handleStateVerified} />
-          )}
-          
-          {isAgeVerified && (
-            <>
-              <Navigation 
-                currentPage={currentPage} 
-                onNavigate={setCurrentPage}
-                cartOpen={cartOpen}
-                setCartOpen={setCartOpen}
-                userMenuOpen={userMenuOpen}
-                setUserMenuOpen={setUserMenuOpen}
-                searchOpen={searchOpen}
-                setSearchOpen={setSearchOpen}
-              />
-              <main>
-                {renderCurrentPage()}
-              </main>
-              <Footer onNavigate={setCurrentPage} />
-              <CookieConsentBanner />
-            </>
-          )}
-        </div>
-      </CartProvider>
-    </AnalyticsProvider>
+    <ErrorBoundary>
+      <AnalyticsProvider>
+        <CartProvider>
+          <div className="min-h-screen bg-risevia-black text-white">
+            <ProgressBar />
+            <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+            
+            {showStateBlocker && (
+              <StateBlocker onStateVerified={handleStateVerified} />
+            )}
+            
+            {isAgeVerified && (
+              <>
+                <Navigation 
+                  currentPage={currentPage} 
+                  onNavigate={setCurrentPage}
+                  cartOpen={cartOpen}
+                  setCartOpen={setCartOpen}
+                  userMenuOpen={userMenuOpen}
+                  setUserMenuOpen={setUserMenuOpen}
+                  searchOpen={searchOpen}
+                  setSearchOpen={setSearchOpen}
+                />
+                <main>
+                  {renderCurrentPage()}
+                </main>
+                <Footer onNavigate={setCurrentPage} />
+                <CookieConsentBanner />
+                <BackToTop />
+              </>
+            )}
+          </div>
+        </CartProvider>
+      </AnalyticsProvider>
+    </ErrorBoundary>
   );
 }
 
