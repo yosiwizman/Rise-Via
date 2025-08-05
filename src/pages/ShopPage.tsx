@@ -122,7 +122,6 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
   const StrainDetailModal = ({ strain }: { strain: Product }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const { reviews, isLoading: reviewsLoading, getReviewSummary } = useProductReviews(strain.id);
-    const [refreshReviews, setRefreshReviews] = useState(0);
     const images = strain.images || [strain.images?.[0], strain.images?.[0], strain.images?.[0]];
     
     const reviewSummary = getReviewSummary();
@@ -214,7 +213,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
                 <ReviewForm
                   productId={strain.id}
                   productName={strain.name}
-                  onReviewSubmitted={() => setRefreshReviews(prev => prev + 1)}
+                  onReviewSubmitted={() => {}}
                 />
               </div>
               
