@@ -75,7 +75,7 @@ export const ContactPage = () => {
           <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
             Contact RiseViA
           </h1>
-          <p className="text-xl text-risevia-charcoal max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-risevia-charcoal dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Have questions about our products, need support, or want to learn more about THCA? 
             We're here to help you on your wellness journey.
           </p>
@@ -89,7 +89,7 @@ export const ContactPage = () => {
           >
             <Card className="card-light border-gray-200">
               <CardHeader>
-                <CardTitle className="text-2xl text-risevia-black flex items-center">
+                <CardTitle className="text-2xl text-risevia-black dark:text-gray-100 flex items-center">
                   <Send className="w-6 h-6 mr-2" />
                   Send us a Message
                 </CardTitle>
@@ -97,20 +97,20 @@ export const ContactPage = () => {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-risevia-black">Full Name</Label>
+                    <Label htmlFor="name" className="text-risevia-black dark:text-gray-100">Full Name</Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="bg-white border-gray-200 text-risevia-black placeholder-risevia-charcoal"
+                      className="bg-white border-gray-200 text-risevia-black dark:text-gray-100 placeholder-risevia-charcoal"
                       placeholder="Enter your full name"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-risevia-black">Email Address</Label>
+                    <Label htmlFor="email" className="text-risevia-black dark:text-gray-100">Email Address</Label>
                     <Input
                       id="email"
                       name="email"
@@ -118,13 +118,13 @@ export const ContactPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="bg-white border-gray-200 text-risevia-black placeholder-risevia-charcoal"
+                      className="bg-white border-gray-200 text-risevia-black dark:text-gray-100 placeholder-risevia-charcoal"
                       placeholder="Enter your email address"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="message" className="text-risevia-black">Message</Label>
+                    <Label htmlFor="message" className="text-risevia-black dark:text-gray-100">Message</Label>
                     <Textarea
                       id="message"
                       name="message"
@@ -172,9 +172,9 @@ export const ContactPage = () => {
                       {info.icon}
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-risevia-black mb-1">{info.title}</h3>
+                      <h3 className="text-xl font-semibold text-risevia-black dark:text-gray-100 mb-1">{info.title}</h3>
                       <p className="text-risevia-teal font-medium mb-2">{info.content}</p>
-                      <p className="text-risevia-charcoal text-sm">{info.description}</p>
+                      <p className="text-risevia-charcoal dark:text-gray-300 text-sm">{info.description}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -188,9 +188,9 @@ export const ContactPage = () => {
                     <MessageSquare className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-risevia-black mb-1">WhatsApp Support</h3>
+                    <h3 className="text-xl font-semibold text-risevia-black dark:text-gray-100 mb-1">WhatsApp Support</h3>
                     <p className="text-risevia-teal font-medium mb-2">Coming Soon</p>
-                    <p className="text-risevia-charcoal text-sm">Direct messaging support for quick questions</p>
+                    <p className="text-risevia-charcoal dark:text-gray-300 text-sm">Direct messaging support for quick questions</p>
                   </div>
                 </div>
               </CardContent>
@@ -203,9 +203,9 @@ export const ContactPage = () => {
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-risevia-black mb-1">Schedule Consultation</h3>
+                    <h3 className="text-xl font-semibold text-risevia-black dark:text-gray-100 mb-1">Schedule Consultation</h3>
                     <p className="text-risevia-teal font-medium mb-2">Calendly Integration Ready</p>
-                    <p className="text-risevia-charcoal text-sm">Book a personalized consultation with our cannabis experts</p>
+                    <p className="text-risevia-charcoal dark:text-gray-300 text-sm">Book a personalized consultation with our cannabis experts</p>
                   </div>
                 </div>
               </CardContent>
@@ -221,7 +221,7 @@ export const ContactPage = () => {
         >
           <Card className="card-light border-gray-200 overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-2xl text-risevia-black text-center flex items-center justify-center">
+              <CardTitle className="text-2xl text-risevia-black dark:text-gray-100 text-center flex items-center justify-center">
                 <MapPin className="w-6 h-6 mr-2" />
                 Our Location
               </CardTitle>
@@ -230,10 +230,10 @@ export const ContactPage = () => {
               <div className="aspect-video bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 rounded-lg flex items-center justify-center">
                 <div className="text-center">
                   <MapPin className="w-16 h-16 mx-auto mb-4 text-risevia-teal" />
-                  <h3 className="text-2xl font-bold text-risevia-black mb-2">Google Maps Integration</h3>
-                  <p className="text-risevia-charcoal mb-4">Interactive map showing our licensed facility location</p>
+                  <h3 className="text-2xl font-bold text-risevia-black dark:text-gray-100 mb-2">Google Maps Integration</h3>
+                  <p className="text-risevia-charcoal dark:text-gray-300 mb-4">Interactive map showing our licensed facility location</p>
                   <div className="bg-white/80 rounded-lg p-4 max-w-md mx-auto border border-gray-200">
-                    <p className="text-risevia-charcoal text-sm">
+                    <p className="text-risevia-charcoal dark:text-gray-300 text-sm">
                       Licensed Cannabis Cultivation & Processing Facility<br />
                       Fully compliant with state and federal regulations<br />
                       Visitor access by appointment only
@@ -257,15 +257,15 @@ export const ContactPage = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                 <div>
-                  <h4 className="text-risevia-black font-semibold mb-2">Customer Support</h4>
-                  <p className="text-risevia-charcoal">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
-                  <p className="text-risevia-charcoal">Saturday: 10:00 AM - 4:00 PM EST</p>
-                  <p className="text-risevia-charcoal">Sunday: Closed</p>
+                  <h4 className="text-risevia-black dark:text-gray-100 font-semibold mb-2">Customer Support</h4>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Saturday: 10:00 AM - 4:00 PM EST</p>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Sunday: Closed</p>
                 </div>
                 <div>
-                  <h4 className="text-risevia-black font-semibold mb-2">Order Processing</h4>
-                  <p className="text-risevia-charcoal">Monday - Friday: 8:00 AM - 5:00 PM EST</p>
-                  <p className="text-risevia-charcoal">Same-day processing for orders placed before 2:00 PM</p>
+                  <h4 className="text-risevia-black dark:text-gray-100 font-semibold mb-2">Order Processing</h4>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Monday - Friday: 8:00 AM - 5:00 PM EST</p>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Same-day processing for orders placed before 2:00 PM</p>
                 </div>
               </div>
             </CardContent>

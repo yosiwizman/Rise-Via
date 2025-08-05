@@ -57,7 +57,7 @@ export const LearnPage = () => {
           <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
             Cannabis Education
           </h1>
-          <p className="text-xl text-risevia-charcoal max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-risevia-charcoal dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Knowledge is power. Learn about THCA, cannabis science, and how to make informed decisions 
             about your wellness journey with our comprehensive educational resources.
           </p>
@@ -80,12 +80,12 @@ export const LearnPage = () => {
                       <div className="w-16 h-16 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white">
                         {section.icon}
                       </div>
-                      <CardTitle className="text-2xl text-risevia-black">{section.title}</CardTitle>
+                      <CardTitle className="text-2xl text-risevia-black dark:text-gray-100">{section.title}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {section.content.map((paragraph, pIndex) => (
-                      <p key={pIndex} className="text-risevia-charcoal leading-relaxed">
+                      <p key={pIndex} className="text-risevia-charcoal dark:text-gray-300 leading-relaxed">
                         {paragraph}
                       </p>
                     ))}
@@ -127,8 +127,8 @@ export const LearnPage = () => {
                   <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white">
                     <Play className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-bold text-risevia-black mb-2">Coming Soon</h3>
-                  <p className="text-risevia-charcoal">Educational video content will be available here</p>
+                  <h3 className="text-2xl font-bold text-risevia-black dark:text-gray-100 mb-2">Coming Soon</h3>
+                  <p className="text-risevia-charcoal dark:text-gray-300">Educational video content will be available here</p>
                   <Badge className="mt-4 bg-risevia-teal text-white">YouTube Integration Ready</Badge>
                 </div>
               </div>
@@ -148,7 +148,7 @@ export const LearnPage = () => {
                 <div className="w-12 h-12 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white">
                   <Award className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-xl text-risevia-black">Infographic Library</CardTitle>
+                <CardTitle className="text-xl text-risevia-black dark:text-gray-100">Infographic Library</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -167,7 +167,7 @@ export const LearnPage = () => {
                 <div className="w-12 h-12 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white">
                   <FileText className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-xl text-risevia-black">Research Papers</CardTitle>
+                <CardTitle className="text-xl text-risevia-black dark:text-gray-100">Research Papers</CardTitle>
               </div>
             </CardHeader>
             <CardContent>

@@ -24,6 +24,9 @@ function App() {
   const [, setUserState] = useState<string>('');
   const [isUserStateBlocked, setIsUserStateBlocked] = useState(false);
   const [showStateBlocker, setShowStateBlocker] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
@@ -76,7 +79,16 @@ function App() {
         
         {isAgeVerified && (
           <>
-            <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
+            <Navigation 
+              currentPage={currentPage} 
+              onNavigate={setCurrentPage}
+              cartOpen={cartOpen}
+              setCartOpen={setCartOpen}
+              userMenuOpen={userMenuOpen}
+              setUserMenuOpen={setUserMenuOpen}
+              searchOpen={searchOpen}
+              setSearchOpen={setSearchOpen}
+            />
             <main>
               {renderCurrentPage()}
             </main>
