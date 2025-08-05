@@ -52,12 +52,15 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
               RiseViA
             </h1>
           </motion.div>
+        </motion.div>
 
+        {/* Move text and button to bottom */}
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-2xl md:text-3xl text-risevia-charcoal mb-8 font-light"
+            className="text-2xl md:text-3xl text-white mb-8 font-light"
           >
             Wellness, Naturally Elevated
           </motion.p>
@@ -76,7 +79,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
               <ChevronRight className="ml-2 w-5 h-5" />
             </Button>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* Scroll Indicator */}
         <motion.div

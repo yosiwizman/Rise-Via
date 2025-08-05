@@ -11,6 +11,9 @@ import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
 import { LegalPage } from './pages/LegalPage';
 import { ContactPage } from './pages/ContactPage';
+import { ShippingPage } from './pages/ShippingPage';
+import { LabResultsPage } from './pages/LabResultsPage';
+import { CareersPage } from './pages/CareersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
@@ -51,6 +54,12 @@ function App() {
         return <LegalPage />;
       case 'contact':
         return <ContactPage />;
+      case 'shipping':
+        return <ShippingPage />;
+      case 'lab-results':
+        return <LabResultsPage />;
+      case 'careers':
+        return <CareersPage />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }

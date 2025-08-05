@@ -35,21 +35,18 @@ export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8">
+            <button
+              onClick={() => handleNavigation('home')}
+              className="hover:scale-105 transition-transform"
+            >
+              <div className="w-16 h-16">
                 <img 
                   src="/risevia-logo.png" 
                   alt="RiseViA Logo" 
                   className="w-full h-full object-contain"
                 />
               </div>
-              <button
-                onClick={() => handleNavigation('home')}
-                className="text-2xl font-bold gradient-text hover:scale-105 transition-transform"
-              >
-                RiseViA
-              </button>
-            </div>
+            </button>
           </div>
 
           {/* Desktop Navigation */}

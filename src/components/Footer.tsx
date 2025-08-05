@@ -13,21 +13,17 @@ export const Footer = ({ onNavigate }: FooterProps) => {
   const footerLinks = {
     company: [
       { label: 'About Us', action: () => onNavigate('home') },
-      { label: 'Our Story', action: () => onNavigate('home') },
-      { label: 'Careers', action: () => {} },
-      { label: 'Press', action: () => {} }
+      { label: 'Careers', action: () => onNavigate('careers') }
     ],
     products: [
       { label: 'Shop All Strains', action: () => onNavigate('shop') },
-      { label: 'Lab Results', action: () => onNavigate('legal') },
-      { label: 'Batch Information', action: () => onNavigate('shop') },
-      { label: 'Storage Guide', action: () => onNavigate('learn') }
+      { label: 'Lab Results', action: () => onNavigate('lab-results') },
+      { label: 'Batch Information', action: () => onNavigate('shop') }
     ],
     support: [
       { label: 'Contact Us', action: () => onNavigate('contact') },
       { label: 'FAQ', action: () => onNavigate('learn') },
-      { label: 'Shipping Info', action: () => onNavigate('legal') },
-      { label: 'Returns', action: () => onNavigate('legal') }
+      { label: 'Shipping Info', action: () => onNavigate('shipping') }
     ],
     legal: [
       { label: 'Privacy Policy', action: () => onNavigate('legal') },
