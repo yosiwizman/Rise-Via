@@ -75,32 +75,46 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
     trackCOAView(strain.batch_id);
   };
 
-  const StrainDetailModal = ({ strain }: { strain: any }) => (
-    <DialogContent className="max-w-2xl bg-white border-gray-200 text-risevia-black">
+  const StrainDetailModal = ({ strain }: { strain: any }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const images = [strain.image_url, strain.image_url, strain.image_url];
+    
+    return (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200 text-risevia-black dark:text-gray-100">
       <DialogHeader>
         <DialogTitle className="text-2xl gradient-text">{strain.strain_name}</DialogTitle>
       </DialogHeader>
       <div className="space-y-6">
         <div className="aspect-video bg-gradient-to-br from-risevia-purple/20 to-risevia-teal/20 rounded-lg overflow-hidden">
           <img
-            src={strain.image_url}
+            src={images[currentImageIndex]}
             alt={strain.strain_name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-pointer"
+            onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
           />
+          <div className="flex justify-center mt-2 space-x-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-2 h-2 rounded-full ${index === currentImageIndex ? 'bg-risevia-teal' : 'bg-gray-300'}`}
+              />
+            ))}
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <h4 className="font-semibold text-risevia-purple">Product Details</h4>
-            <p><span className="text-risevia-charcoal">THCA Potency:</span> {getPotencyBadge(strain.thca_potency)}</p>
-            <p><span className="text-risevia-charcoal">Volume:</span> {strain.volume} {getVolumeIndicator(strain.volume)}</p>
-            <p><span className="text-risevia-charcoal">Category:</span> {strain.category}</p>
-            <p><span className="text-risevia-charcoal">Batch ID:</span> {strain.batch_id}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">THCA Potency:</span> {getPotencyBadge(strain.thca_potency)}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Volume:</span> {strain.volume} {getVolumeIndicator(strain.volume)}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Category:</span> {strain.category}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Batch ID:</span> {strain.batch_id}</p>
           </div>
           <div className="space-y-2">
             <h4 className="font-semibold text-risevia-teal">Compliance Info</h4>
-            <p><span className="text-risevia-charcoal">Expiration:</span> {strain.expiration_date}</p>
-            <p><span className="text-risevia-charcoal">Storage:</span> {strain.storage}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Expiration:</span> {strain.expiration_date}</p>
+            <p><span className="text-risevia-charcoal dark:text-gray-300">Storage:</span> {strain.storage}</p>
             <div className="flex space-x-2">
               <Button
                 onClick={() => handleViewCOA(strain)}
@@ -117,7 +131,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
 
         <div>
           <h4 className="font-semibold text-risevia-teal mb-2">Description</h4>
-          <p className="text-risevia-charcoal">{strain.description}</p>
+          <p className="text-risevia-charcoal dark:text-gray-300">{strain.description}</p>
         </div>
 
         <ProductWarnings placement="product" />
@@ -151,7 +165,8 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         )}
       </div>
     </DialogContent>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-risevia-light py-8">
@@ -170,7 +185,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
           <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
             Premium THCA Strains
           </h1>
-          <p className="text-xl text-risevia-charcoal max-w-2xl mx-auto">
+          <p className="text-xl text-risevia-charcoal dark:text-gray-300 max-w-2xl mx-auto">
             Discover our complete collection of lab-tested, high-potency THCA products. 
             Each strain is carefully cultivated and third-party tested for quality assurance.
           </p>
@@ -185,38 +200,38 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
         >
           <div className="flex-1 max-w-md">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-risevia-charcoal w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-risevia-charcoal dark:text-gray-300 w-4 h-4" />
               <Input
                 placeholder="Search strains..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white border-gray-200 text-risevia-black placeholder-risevia-charcoal/60"
+                className="pl-10 bg-white border-gray-200 text-risevia-black dark:text-gray-100 placeholder-risevia-charcoal/60"
               />
             </div>
           </div>
           
           <div className="flex space-x-4">
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-40 bg-white border-gray-200 text-risevia-black">
+              <SelectTrigger className="w-40 bg-white border-gray-200 text-risevia-black dark:text-gray-100">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="all" className="text-risevia-black">All Types</SelectItem>
-                <SelectItem value="indica" className="text-risevia-black">Indica</SelectItem>
-                <SelectItem value="sativa" className="text-risevia-black">Sativa</SelectItem>
-                <SelectItem value="hybrid" className="text-risevia-black">Hybrid</SelectItem>
+                <SelectItem value="all" className="text-risevia-black dark:text-gray-100">All Types</SelectItem>
+                <SelectItem value="indica" className="text-risevia-black dark:text-gray-100">Indica</SelectItem>
+                <SelectItem value="sativa" className="text-risevia-black dark:text-gray-100">Sativa</SelectItem>
+                <SelectItem value="hybrid" className="text-risevia-black dark:text-gray-100">Hybrid</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40 bg-white border-gray-200 text-risevia-black">
+              <SelectTrigger className="w-40 bg-white border-gray-200 text-risevia-black dark:text-gray-100">
                 <SortAsc className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="name" className="text-risevia-black">A-Z</SelectItem>
-                <SelectItem value="potency" className="text-risevia-black">Potency</SelectItem>
+                <SelectItem value="name" className="text-risevia-black dark:text-gray-100">A-Z</SelectItem>
+                <SelectItem value="potency" className="text-risevia-black dark:text-gray-100">Potency</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -229,7 +244,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
           transition={{ delay: 0.3 }}
           className="mb-6"
         >
-          <p className="text-risevia-charcoal">
+          <p className="text-risevia-charcoal dark:text-gray-300">
             Showing {filteredAndSortedStrains.length} of {strainsData.length} strains
           </p>
         </motion.div>
@@ -268,15 +283,15 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
                 </div>
                 
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-risevia-black text-lg">{strain.strain_name}</CardTitle>
-                  <div className="flex justify-between text-sm text-risevia-charcoal">
+                  <CardTitle className="text-risevia-black dark:text-gray-100 text-lg">{strain.strain_name}</CardTitle>
+                  <div className="flex justify-between text-sm text-risevia-charcoal dark:text-gray-300">
                     <span>Vol: {strain.volume}</span>
                     <span>Batch: {strain.batch_id}</span>
                   </div>
                 </CardHeader>
                 
                 <CardContent className="pt-0">
-                  <p className="text-risevia-charcoal text-sm mb-4 line-clamp-2">
+                  <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">
                     {strain.description}
                   </p>
                   
@@ -304,7 +319,7 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-risevia-charcoal text-lg">No strains found matching your criteria.</p>
+            <p className="text-risevia-charcoal dark:text-gray-300 text-lg">No strains found matching your criteria.</p>
             <Button
               onClick={() => {
                 setSearchTerm('');

@@ -68,3 +68,13 @@ body {
     box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
   }
 }
+
+.dark {
+  --bg-primary: #1a1a1a;
+  --text-primary: #ffffff;
+}
+
+body.dark {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}

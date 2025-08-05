@@ -7,9 +7,15 @@ import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
+  cartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, cartOpen: _cartOpen, setCartOpen, userMenuOpen, setUserMenuOpen, searchOpen: _searchOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -59,7 +65,7 @@ export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     currentPage === item.id
                       ? 'text-risevia-teal bg-risevia-teal/10'
-                      : 'text-risevia-charcoal hover:text-risevia-purple hover:bg-purple-50'
+                      : 'text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple hover:bg-purple-50'
                   }`}
                 >
                   {item.label}
@@ -70,13 +76,13 @@ export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
               <User className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
               <ShoppingBag className="w-4 h-4" />
             </Button>
           </div>
@@ -85,7 +91,7 @@ export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-risevia-charcoal">
+                <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300">
                   <Menu className="w-6 h-6" />
                 </Button>
               </SheetTrigger>
@@ -98,22 +104,22 @@ export const Navigation = ({ currentPage, onNavigate }: NavigationProps) => {
                       className={`text-left px-4 py-3 rounded-lg text-lg font-medium transition-all ${
                         currentPage === item.id
                           ? 'text-risevia-teal bg-risevia-teal/10'
-                          : 'text-risevia-charcoal hover:text-risevia-purple hover:bg-purple-50'
+                          : 'text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple hover:bg-purple-50'
                       }`}
                     >
                       {item.label}
                     </button>
                   ))}
                   <div className="border-t border-gray-200 pt-4 space-y-2">
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal hover:text-risevia-purple">
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
                       <Search className="w-4 h-4 mr-2" />
                       Search
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal hover:text-risevia-purple">
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
                       <User className="w-4 h-4 mr-2" />
                       Account
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal hover:text-risevia-purple">
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Cart
                     </Button>

@@ -46,18 +46,18 @@ export const Footer = ({ onNavigate }: FooterProps) => {
               className="space-y-4"
             >
               <h3 className="text-2xl font-bold gradient-text">RiseViA</h3>
-              <p className="text-risevia-charcoal text-sm leading-relaxed">
+              <p className="text-risevia-charcoal dark:text-gray-300 text-sm leading-relaxed">
                 Wellness, Naturally Elevated. Premium THCA products crafted with care, 
                 lab-tested for purity, and delivered with compliance in mind.
               </p>
               <div className="flex space-x-4">
-                <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+                <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple">
                   <Facebook className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+                <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple">
                   <Instagram className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="text-risevia-charcoal hover:text-risevia-purple">
+                <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple">
                   <Twitter className="w-5 h-5" />
                 </Button>
               </div>
@@ -74,13 +74,13 @@ export const Footer = ({ onNavigate }: FooterProps) => {
               transition={{ delay: index * 0.1 }}
               className="space-y-4"
             >
-              <h4 className="text-risevia-black font-semibold capitalize">{category}</h4>
+              <h4 className="text-risevia-black dark:text-gray-100 font-semibold capitalize">{category}</h4>
               <ul className="space-y-2">
                 {links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <button
                       onClick={link.action}
-                      className="text-risevia-charcoal hover:text-risevia-purple text-sm transition-colors"
+                      className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple text-sm transition-colors"
                     >
                       {link.label}
                     </button>
@@ -95,15 +95,15 @@ export const Footer = ({ onNavigate }: FooterProps) => {
 
         {/* Contact Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="flex items-center space-x-3 text-risevia-charcoal">
+          <div className="flex items-center space-x-3 text-risevia-charcoal dark:text-gray-300">
             <Mail className="w-5 h-5 text-risevia-teal" />
             <span className="text-sm">support@risevia.com</span>
           </div>
-          <div className="flex items-center space-x-3 text-risevia-charcoal">
+          <div className="flex items-center space-x-3 text-risevia-charcoal dark:text-gray-300">
             <Phone className="w-5 h-5 text-risevia-teal" />
             <span className="text-sm">1-800-RISEVIA</span>
           </div>
-          <div className="flex items-center space-x-3 text-risevia-charcoal">
+          <div className="flex items-center space-x-3 text-risevia-charcoal dark:text-gray-300">
             <MapPin className="w-5 h-5 text-risevia-teal" />
             <span className="text-sm">Licensed Cannabis Facility</span>
           </div>
@@ -119,8 +119,8 @@ export const Footer = ({ onNavigate }: FooterProps) => {
               <p>This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women.</p>
             </div>
             <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-risevia-black font-semibold mb-1">🔬 Lab Tested</p>
-              <p className="text-risevia-charcoal">All products are third-party lab tested for potency, pesticides, and heavy metals.</p>
+              <p className="text-risevia-black dark:text-gray-100 font-semibold mb-1">🔬 Lab Tested</p>
+              <p className="text-risevia-charcoal dark:text-gray-300">All products are third-party lab tested for potency, pesticides, and heavy metals.</p>
             </div>
           </div>
           
