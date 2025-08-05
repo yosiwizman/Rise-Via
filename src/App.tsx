@@ -10,6 +10,8 @@ import { CartProvider } from './context/CartContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProgressBar from './components/ui/ProgressBar';
 import BackToTop from './components/ui/BackToTop';
+import MonitoringDashboard from './components/analytics/MonitoringDashboard';
+import FeedbackWidget from './components/analytics/FeedbackWidget';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -102,6 +104,8 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <CookieConsentBanner />
                 <BackToTop />
+                <MonitoringDashboard />
+                <FeedbackWidget />
               </>
             )}
           </div>
