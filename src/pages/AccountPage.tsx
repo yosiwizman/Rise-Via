@@ -46,16 +46,74 @@ export const AccountPage = () => {
 
   const fetchCustomerData = async () => {
     try {
-      const token = localStorage.getItem('customerToken');
-      const response = await fetch('/api/customers/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setOrders(data.customer.orders || []);
-        setLoyaltyTransactions(data.customer.loyaltyTransactions || []);
-        setMembershipTier(data.membershipTier);
-      }
+      const mockOrders = [
+        {
+          id: 'order-1',
+          orderNumber: 'RV-2024-001',
+          total: 89.99,
+          status: 'Delivered',
+          createdAt: '2024-01-15T10:30:00Z',
+          items: [
+            {
+              product: { name: 'Purple Haze THCA', images: ['/images/purple-haze.jpg'] },
+              quantity: 1,
+              price: 89.99
+            }
+          ]
+        },
+        {
+          id: 'order-2',
+          orderNumber: 'RV-2024-002',
+          total: 159.98,
+          status: 'Processing',
+          createdAt: '2024-01-20T14:15:00Z',
+          items: [
+            {
+              product: { name: 'OG Kush THCA', images: ['/images/og-kush.jpg'] },
+              quantity: 2,
+              price: 79.99
+            }
+          ]
+        }
+      ];
+
+      const mockTransactions = [
+        {
+          id: 'tx-1',
+          type: 'EARNED',
+          points: 90,
+          description: 'Purchase points for Order #RV-2024-001',
+          createdAt: '2024-01-15T10:30:00Z'
+        },
+        {
+          id: 'tx-2',
+          type: 'BONUS',
+          points: 100,
+          description: 'Referral bonus points',
+          createdAt: '2024-01-10T09:00:00Z'
+        },
+        {
+          id: 'tx-3',
+          type: 'EARNED',
+          points: 160,
+          description: 'Purchase points for Order #RV-2024-002',
+          createdAt: '2024-01-20T14:15:00Z'
+        }
+      ];
+
+      const mockMembershipTier = {
+        name: 'Gold Member',
+        benefits: [
+          '15% discount on all products',
+          'Free shipping on orders over $75',
+          'Priority customer support',
+          'Early access to new products'
+        ]
+      };
+
+      setOrders(mockOrders);
+      setLoyaltyTransactions(mockTransactions);
+      setMembershipTier(mockMembershipTier);
     } catch (error) {
       console.error('Failed to fetch customer data:', error);
     }
@@ -69,27 +127,15 @@ export const AccountPage = () => {
         return;
       }
 
-      const token = localStorage.getItem('customerToken');
-      const response = await fetch('/api/customers/points/redeem', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          points,
-          description: `Redeemed ${points} points for $${points / 20} discount`
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
-        setRedeemPoints('');
-        fetchCustomerData();
-      } else {
-        alert(data.message || 'Failed to redeem points');
+      if (points > (customer?.profile?.loyaltyPoints || 0)) {
+        alert('Insufficient points available');
+        return;
       }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      alert(`Successfully redeemed ${points} points for $${points / 20} discount! (Demo mode - no actual redemption)`);
+      setRedeemPoints('');
     } catch (error) {
       console.error('Failed to redeem points:', error);
       alert('Failed to redeem points');

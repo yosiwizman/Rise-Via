@@ -59,17 +59,25 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         return;
       }
 
-      const response = await fetch('/api/customers/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const mockCustomer = {
+        id: 'demo-customer-1',
+        email: 'demo@risevia.com',
+        firstName: 'Demo',
+        lastName: 'Customer',
+        profile: {
+          membershipTier: 'GOLD',
+          loyaltyPoints: 1250,
+          lifetimeValue: 2500.00,
+          totalOrders: 8,
+          segment: 'VIP',
+          isB2B: false,
+          referralCode: 'DEMO2024',
+          totalReferrals: 3
+        }
+      };
 
-      if (response.ok) {
-        const data = await response.json();
-        setCustomer(data.customer);
-        setIsAuthenticated(true);
-      } else {
-        localStorage.removeItem('customerToken');
-      }
+      setCustomer(mockCustomer);
+      setIsAuthenticated(true);
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('customerToken');
@@ -79,35 +87,63 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('/api/customers/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (email && password) {
+      const mockCustomer = {
+        id: 'demo-customer-1',
+        email: email,
+        firstName: 'Demo',
+        lastName: 'Customer',
+        profile: {
+          membershipTier: 'GOLD',
+          loyaltyPoints: 1250,
+          lifetimeValue: 2500.00,
+          totalOrders: 8,
+          segment: 'VIP',
+          isB2B: false,
+          referralCode: 'DEMO2024',
+          totalReferrals: 3
+        }
+      };
 
-    const data = await response.json();
-    if (data.success) {
-      localStorage.setItem('customerToken', data.token);
-      setCustomer(data.customer);
+      localStorage.setItem('customerToken', 'demo-token-123');
+      setCustomer(mockCustomer);
       setIsAuthenticated(true);
+      return { success: true, customer: mockCustomer };
     }
-    return data;
+    
+    return { success: false, message: 'Invalid credentials' };
   };
 
   const register = async (registrationData: any) => {
-    const response = await fetch('/api/customers/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registrationData)
-    });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (registrationData.email && registrationData.firstName && registrationData.lastName) {
+      const mockCustomer = {
+        id: 'demo-customer-new',
+        email: registrationData.email,
+        firstName: registrationData.firstName,
+        lastName: registrationData.lastName,
+        profile: {
+          membershipTier: 'GREEN',
+          loyaltyPoints: 0,
+          lifetimeValue: 0,
+          totalOrders: 0,
+          segment: 'New',
+          isB2B: false,
+          referralCode: `${registrationData.firstName.toUpperCase()}${new Date().getFullYear()}`,
+          totalReferrals: 0
+        }
+      };
 
-    const data = await response.json();
-    if (data.success) {
-      localStorage.setItem('customerToken', data.token);
-      setCustomer(data.customer);
+      localStorage.setItem('customerToken', 'demo-token-new');
+      setCustomer(mockCustomer);
       setIsAuthenticated(true);
+      return { success: true, customer: mockCustomer };
     }
-    return data;
+    
+    return { success: false, message: 'Missing required fields' };
   };
 
   const logout = () => {
