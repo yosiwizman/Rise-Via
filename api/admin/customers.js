@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
   if (req.method === 'GET') {
     const mockCustomers = [
       {
