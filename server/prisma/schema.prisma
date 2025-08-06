@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -12,7 +12,7 @@ model Admin {
   email     String   @unique
   username  String   @unique
   password  String
-  role      AdminRole @default(ADMIN)
+  role      String    @default("ADMIN")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -25,7 +25,7 @@ model Product {
   slug            String   @unique
   description     String?
   category        String
-  strainType      StrainType
+  strainType      String
   thcaPercentage  Float
   cbdPercentage   Float?
   price           Float
@@ -134,32 +134,18 @@ model InventoryItem {
 model PricingRule {
   id          String   @id @default(cuid())
   name        String
-  type        PricingType
+  type        String
   value       Float
   startDate   DateTime
   endDate     DateTime?
   active      Boolean  @default(true)
-  conditions  Json?
+  conditions  String?
   createdAt   DateTime @default(now())
   
   @@map("pricing_rules")
 }
 
-enum AdminRole {
-  SUPER_ADMIN
-  ADMIN
-  EDITOR
-}
-
-enum StrainType {
-  SATIVA
-  INDICA
-  HYBRID
-}
-
-enum PricingType {
-  PERCENTAGE_DISCOUNT
-  FIXED_DISCOUNT
-  FIXED_PRICE
-  BULK_DISCOUNT
-}
+// SQLite doesn't support enums, using strings with constraints instead
+// AdminRole: SUPER_ADMIN, ADMIN, EDITOR
+// StrainType: SATIVA, INDICA, HYBRID  
+// PricingType: PERCENTAGE_DISCOUNT, FIXED_DISCOUNT, FIXED_PRICE, BULK_DISCOUNT
