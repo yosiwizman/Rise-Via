@@ -33,8 +33,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
           onLoadedData={() => console.log('✅ Video loaded successfully!')}
           onError={(e) => console.error('Video error:', e)}
         >
-          <source src="/hero-video.mp4" type="video/mp4" />
-          <source src="/hero-video.webm" type="video/webm" />
+          <source src="https://res.cloudinary.com/dq6ddlsjq/video/upload/v1754348759/YOU_ARE_THE_ONE_lyi5ay.mp4" type="video/mp4" />
         </video>
 
         {/* Video Overlay */}

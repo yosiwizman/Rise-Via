@@ -9,9 +9,9 @@
       "thcaPercentage": 27.8,
       "price": 45.00,
       "images": [
-        "/products/blue-dream-1.jpg",
-        "/products/blue-dream-2.jpg",
-        "/products/blue-dream-3.jpg"
+        "https://images.unsplash.com/photo-1536819114556-1e10f967fb61?w=400",
+        "https://images.unsplash.com/photo-1503262028195-93c528f03218?w=400",
+        "https://images.unsplash.com/photo-1587132129911-80e544e7e8b5?w=400"
       ],
       "description": "A balanced hybrid with sweet berry aroma and uplifting effects.",
       "effects": ["Creative", "Energetic", "Happy"],
@@ -27,9 +27,9 @@
       "thcaPercentage": 24.5,
       "price": 42.00,
       "images": [
-        "/products/og-kush-1.jpg",
-        "/products/og-kush-2.jpg",
-        "/products/og-kush-3.jpg"
+        "https://images.unsplash.com/photo-1517849326435-5605e8502b49?w=400",
+        "https://images.unsplash.com/photo-1599685889851-b32732f657b2?w=400",
+        "https://images.unsplash.com/photo-1587132117816-061b35073a4e?w=400"
       ],
       "description": "Classic indica with earthy pine flavors and relaxing effects.",
       "effects": ["Relaxed", "Sleepy", "Euphoric"],
@@ -45,9 +45,9 @@
       "thcaPercentage": 26.2,
       "price": 48.00,
       "images": [
-        "/products/sour-diesel-1.jpg",
-        "/products/sour-diesel-2.jpg",
-        "/products/sour-diesel-3.jpg"
+        "https://images.unsplash.com/photo-1556928045-16f7f50be0f3?w=400",
+        "https://images.unsplash.com/photo-1536819114556-1e10f967fb61?w=400",
+        "https://images.unsplash.com/photo-1503262028195-93c528f03218?w=400"
       ],
       "description": "Energizing sativa with diesel aroma and cerebral effects.",
       "effects": ["Energetic", "Focused", "Uplifted"],
@@ -63,9 +63,9 @@
       "thcaPercentage": 23.8,
       "price": 46.00,
       "images": [
-        "/products/purple-haze-1.jpg",
-        "/products/purple-haze-2.jpg",
-        "/products/purple-haze-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Purple+Haze",
+        "https://images.unsplash.com/photo-1517849326435-5605e8502b49?w=400",
+        "https://images.unsplash.com/photo-1599685889851-b32732f657b2?w=400"
       ],
       "description": "Legendary sativa with sweet berry flavors and creative buzz.",
       "effects": ["Creative", "Euphoric", "Energetic"],
@@ -81,9 +81,9 @@
       "thcaPercentage": 25.1,
       "price": 44.00,
       "images": [
-        "/products/granddaddy-purple-1.jpg",
-        "/products/granddaddy-purple-2.jpg",
-        "/products/granddaddy-purple-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Granddaddy+Purple",
+        "https://images.unsplash.com/photo-1587132129911-80e544e7e8b5?w=400",
+        "https://images.unsplash.com/photo-1556928045-16f7f50be0f3?w=400"
       ],
       "description": "Premium indica with grape and berry flavors for deep relaxation.",
       "effects": ["Relaxed", "Sleepy", "Happy"],
@@ -99,9 +99,9 @@
       "thcaPercentage": 22.9,
       "price": 43.00,
       "images": [
-        "/products/white-widow-1.jpg",
-        "/products/white-widow-2.jpg",
-        "/products/white-widow-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=White+Widow",
+        "https://images.unsplash.com/photo-1536819114556-1e10f967fb61?w=400",
+        "https://images.unsplash.com/photo-1503262028195-93c528f03218?w=400"
       ],
       "description": "Balanced hybrid with resinous buds and euphoric effects.",
       "effects": ["Euphoric", "Relaxed", "Creative"],
@@ -117,9 +117,9 @@
       "thcaPercentage": 28.3,
       "price": 50.00,
       "images": [
-        "/products/green-crack-1.jpg",
-        "/products/green-crack-2.jpg",
-        "/products/green-crack-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Green+Crack",
+        "https://images.unsplash.com/photo-1517849326435-5605e8502b49?w=400",
+        "https://images.unsplash.com/photo-1599685889851-b32732f657b2?w=400"
       ],
       "description": "High-energy sativa with citrus flavors and mental clarity.",
       "effects": ["Energetic", "Focused", "Happy"],
@@ -135,9 +135,9 @@
       "thcaPercentage": 21.7,
       "price": 41.00,
       "images": [
-        "/products/northern-lights-1.jpg",
-        "/products/northern-lights-2.jpg",
-        "/products/northern-lights-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Northern+Lights",
+        "https://images.unsplash.com/photo-1587132117816-061b35073a4e?w=400",
+        "https://images.unsplash.com/photo-1556928045-16f7f50be0f3?w=400"
       ],
       "description": "Classic indica with sweet and spicy flavors for relaxation.",
       "effects": ["Relaxed", "Sleepy", "Euphoric"],
@@ -153,9 +153,9 @@
       "thcaPercentage": 24.6,
       "price": 47.00,
       "images": [
-        "/products/jack-herer-1.jpg",
-        "/products/jack-herer-2.jpg",
-        "/products/jack-herer-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Jack+Herer",
+        "https://images.unsplash.com/photo-1536819114556-1e10f967fb61?w=400",
+        "https://images.unsplash.com/photo-1503262028195-93c528f03218?w=400"
       ],
       "description": "Award-winning sativa with pine and spice flavors.",
       "effects": ["Creative", "Energetic", "Focused"],
@@ -171,9 +171,9 @@
       "thcaPercentage": 26.8,
       "price": 49.00,
       "images": [
-        "/products/girl-scout-cookies-1.jpg",
-        "/products/girl-scout-cookies-2.jpg",
-        "/products/girl-scout-cookies-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Girl+Scout+Cookies",
+        "https://images.unsplash.com/photo-1587132129911-80e544e7e8b5?w=400",
+        "https://images.unsplash.com/photo-1517849326435-5605e8502b49?w=400"
       ],
       "description": "Popular hybrid with sweet and earthy flavors.",
       "effects": ["Euphoric", "Relaxed", "Happy"],
@@ -189,9 +189,9 @@
       "thcaPercentage": 23.4,
       "price": 45.00,
       "images": [
-        "/products/ak-47-1.jpg",
-        "/products/ak-47-2.jpg",
-        "/products/ak-47-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=AK-47",
+        "https://images.unsplash.com/photo-1599685889851-b32732f657b2?w=400",
+        "https://images.unsplash.com/photo-1587132117816-061b35073a4e?w=400"
       ],
       "description": "Potent hybrid with sour and sweet flavors.",
       "effects": ["Relaxed", "Creative", "Happy"],
@@ -207,9 +207,9 @@
       "thcaPercentage": 25.7,
       "price": 48.00,
       "images": [
-        "/products/pineapple-express-1.jpg",
-        "/products/pineapple-express-2.jpg",
-        "/products/pineapple-express-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Pineapple+Express",
+        "https://images.unsplash.com/photo-1556928045-16f7f50be0f3?w=400",
+        "https://images.unsplash.com/photo-1536819114556-1e10f967fb61?w=400"
       ],
       "description": "Tropical hybrid with pineapple and cedar flavors.",
       "effects": ["Energetic", "Creative", "Happy"],
@@ -225,9 +225,9 @@
       "thcaPercentage": 29.1,
       "price": 52.00,
       "images": [
-        "/products/gorilla-glue-1.jpg",
-        "/products/gorilla-glue-2.jpg",
-        "/products/gorilla-glue-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Gorilla+Glue",
+        "https://images.unsplash.com/photo-1503262028195-93c528f03218?w=400",
+        "https://images.unsplash.com/photo-1587132129911-80e544e7e8b5?w=400"
       ],
       "description": "Ultra-potent hybrid with chocolate and coffee notes.",
       "effects": ["Relaxed", "Euphoric", "Sleepy"],
@@ -243,9 +243,9 @@
       "thcaPercentage": 27.3,
       "price": 51.00,
       "images": [
-        "/products/wedding-cake-1.jpg",
-        "/products/wedding-cake-2.jpg",
-        "/products/wedding-cake-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Wedding+Cake",
+        "https://images.unsplash.com/photo-1517849326435-5605e8502b49?w=400",
+        "https://images.unsplash.com/photo-1599685889851-b32732f657b2?w=400"
       ],
       "description": "Premium hybrid with vanilla and earthy flavors.",
       "effects": ["Relaxed", "Euphoric", "Happy"],
@@ -261,9 +261,9 @@
       "thcaPercentage": 26.5,
       "price": 50.00,
       "images": [
-        "/products/gelato-1.jpg",
-        "/products/gelato-2.jpg",
-        "/products/gelato-3.jpg"
+        "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=Gelato",
+        "https://images.unsplash.com/photo-1587132117816-061b35073a4e?w=400",
+        "https://images.unsplash.com/photo-1556928045-16f7f50be0f3?w=400"
       ],
       "description": "Dessert-like hybrid with sweet citrus and lavender flavors.",
       "effects": ["Euphoric", "Creative", "Relaxed"],

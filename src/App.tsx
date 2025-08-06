@@ -18,6 +18,7 @@ import { CareersPage } from './pages/CareersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { WishlistPage } from './components/wishlist/WishlistPage';
 import { SharedWishlistPage } from './components/wishlist/WishlistShare';
+import { AdminPage } from './pages/AdminPage';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
@@ -32,6 +33,23 @@ function App() {
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/admin') {
+      setCurrentPage('admin');
+    } else if (path === '/shop') {
+      setCurrentPage('shop');
+    } else if (path === '/learn') {
+      setCurrentPage('learn');
+    } else if (path === '/legal') {
+      setCurrentPage('legal');
+    } else if (path === '/contact') {
+      setCurrentPage('contact');
+    } else if (path === '/wishlist') {
+      setCurrentPage('wishlist');
+    } else {
+      setCurrentPage('home');
+    }
+
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
@@ -82,6 +100,8 @@ function App() {
         return <WishlistPage />;
       case 'wishlist-shared':
         return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
