@@ -4,10 +4,13 @@ import { ShoppingBag } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
+import { ProductDetailModal } from '../components/ProductDetailModal';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const filteredProducts = useMemo(() => {
     return productsData.products.filter(product => 
@@ -15,9 +18,17 @@ export const ShopPage = () => {
     );
   }, [filter]);
 
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product);
+    setShowModal(true);
+  };
+
   const ProductCard = ({ product }: { product: any }) => {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative">
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
+        onClick={() => handleProductClick(product)}
+      >
         <div className="relative">
           <img 
             src={product.images[0]} 
@@ -25,17 +36,19 @@ export const ShopPage = () => {
             className="w-full h-48 object-cover"
           />
           <div className="absolute top-2 right-2">
-            <WishlistButton
-              item={{
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.images[0],
-                category: product.category,
-                effects: product.effects
-              }}
-              size="md"
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <WishlistButton
+                item={{
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: product.images[0],
+                  category: product.category,
+                  effects: product.effects
+                }}
+                size="md"
+              />
+            </div>
           </div>
         </div>
         <div className="p-4">
@@ -54,7 +67,10 @@ export const ShopPage = () => {
             ))}
           </div>
           <button 
-            onClick={() => console.log('🛒 Add to cart:', product.name)}
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('🛒 Add to cart:', product.name);
+            }}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
           >
             <ShoppingBag className="w-4 h-4 mr-2" />
@@ -168,6 +184,12 @@ export const ShopPage = () => {
           </motion.div>
         )}
       </div>
+
+      <ProductDetailModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        product={selectedProduct}
+      />
     </div>
   );
 };
