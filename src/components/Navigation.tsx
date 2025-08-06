@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, ShoppingBag, User, Search, Heart } from 'lucide-react';
+import { Menu, ShoppingBag, User, Search, Heart, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 import { useWishlist } from '../hooks/useWishlist';
@@ -18,7 +18,14 @@ interface NavigationProps {
 
 export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { getWishlistCount } = useWishlist();
+
+  const handleDarkModeToggle = () => {
+    console.log('🌓 Dark mode toggled!');
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+  };
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -78,7 +85,10 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
+              console.log('🔍 Search clicked!');
+              setSearchOpen(true);
+            }}>
               <Search className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => handleNavigation('wishlist')}>
@@ -91,11 +101,20 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
                 )}
               </div>
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
+              console.log('👤 User clicked!');
+              setUserMenuOpen(!userMenuOpen);
+            }}>
               <User className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
+              console.log('🛒 Cart clicked!');
+              setCartOpen(true);
+            }}>
               <ShoppingBag className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={handleDarkModeToggle}>
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
           </div>
 

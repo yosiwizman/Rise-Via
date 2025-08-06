@@ -23,17 +23,25 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
       />
       {/* Hero Section with Video Background */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Video Background Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-white to-teal-50">
-        </div>
-
-        {/* Hero Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 text-center max-w-4xl mx-auto px-4"
+        {/* Video Background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          onLoadedData={() => console.log('✅ Video loaded successfully!')}
+          onError={(e) => console.error('Video error:', e)}
         >
+          <source src="/hero-video.mp4" type="video/mp4" />
+          <source src="/hero-video.webm" type="video/webm" />
+        </video>
+
+        {/* Video Overlay */}
+        <div className="absolute inset-0 bg-black/30 z-1"></div>
+
+        {/* Move text and button to bottom */}
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10">
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
@@ -44,10 +52,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
               RiseViA
             </h1>
           </motion.div>
-        </motion.div>
 
-        {/* Move text and button to bottom */}
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

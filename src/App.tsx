@@ -44,6 +44,15 @@ function App() {
 
     priceTrackingService.startPriceTracking();
 
+    const script = document.createElement('script');
+    script.src = 'https://cdn.userway.org/widget.js';
+    script.setAttribute('data-account', 'FREE_ACCOUNT');
+    script.async = true;
+    script.onload = () => {
+      console.log('✅ ADA widget loaded!');
+    };
+    document.head.appendChild(script);
+
     return () => {
       priceTrackingService.stopPriceTracking();
     };
