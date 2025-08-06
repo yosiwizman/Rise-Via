@@ -23,6 +23,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
 import { B2BPage } from './pages/B2BPage';
+import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
@@ -56,6 +57,8 @@ function App() {
       setCurrentPage('login');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
+    } else if (path === '/health') {
+      setCurrentPage('health');
     } else {
       setCurrentPage('home');
     }
@@ -118,6 +121,8 @@ function App() {
         return <LoginPage />;
       case 'b2b':
         return <B2BPage />;
+      case 'health':
+        return <HealthCheck />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
