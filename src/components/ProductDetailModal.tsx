@@ -38,6 +38,9 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
                 src={product.images[currentImageIndex]} 
                 alt={product.name}
                 className="w-full h-80 object-cover rounded-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+                }}
               />
               {product.images.length > 1 && (
                 <>
@@ -71,7 +74,14 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
                       index === currentImageIndex ? 'border-risevia-purple' : 'border-gray-200'
                     }`}
                   >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={image} 
+                      alt={`${product.name} ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+                      }}
+                    />
                   </button>
                 ))}
               </div>

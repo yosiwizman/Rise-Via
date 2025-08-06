@@ -34,6 +34,9 @@ export const ShopPage = () => {
             src={product.images[0]} 
             alt={product.name}
             className="w-full h-48 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+            }}
           />
           <div className="absolute top-2 right-2">
             <div onClick={(e) => e.stopPropagation()}>

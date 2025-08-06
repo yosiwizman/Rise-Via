@@ -39,23 +39,12 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-black/30 z-1"></div>
 
-        {/* Move text and button to bottom */}
+        {/* Content positioned at bottom - removed large RiseViA title */}
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="mb-8"
-          >
-            <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-4">
-              RiseViA
-            </h1>
-          </motion.div>
-
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
             className="text-2xl md:text-3xl text-white mb-8 font-light"
           >
             Wellness, Naturally Elevated
@@ -64,7 +53,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
           >
             <Button
               onClick={() => onNavigate('shop')}
@@ -278,6 +267,9 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
                           src={strain.image_url}
                           alt={strain.strain_name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/api/placeholder/300/400';
+                          }}
                         />
                         <div className="absolute top-4 right-4">
                           <Badge className="bg-risevia-teal text-white">
