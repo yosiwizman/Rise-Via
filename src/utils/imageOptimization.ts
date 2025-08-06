@@ -72,15 +72,24 @@ export class ImageOptimizer {
    * Get optimized image URL (mock implementation for demo)
    */
   private static getOptimizedUrl(baseUrl: string, width: number, format?: string): string {
-    const url = new URL(baseUrl, window.location.origin);
-    url.searchParams.set('w', width.toString());
-    url.searchParams.set('q', this.QUALITY_SETTINGS.medium.toString());
-    
-    if (format) {
-      url.searchParams.set('f', format);
+    try {
+      if (!baseUrl || typeof baseUrl !== 'string') {
+        return '';
+      }
+      
+      const url = new URL(baseUrl, window.location.origin);
+      url.searchParams.set('w', width.toString());
+      url.searchParams.set('q', this.QUALITY_SETTINGS.medium.toString());
+      
+      if (format) {
+        url.searchParams.set('f', format);
+      }
+      
+      return url.toString();
+    } catch (error) {
+      console.warn('Failed to construct optimized URL for:', baseUrl, error);
+      return baseUrl || '';
     }
-    
-    return url.toString();
   }
 
   /**
