@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, ShoppingBag, User, Search, Heart, Moon, Sun } from 'lucide-react';
+import { Menu, ShoppingBag, User, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
-import { useWishlist } from '../hooks/useWishlist';
+import { useCart } from '../context/CartContext';
+import CartDrawer from './cart/CartDrawer';
+import SearchOverlay from './common/SearchOverlay';
 
 interface NavigationProps {
   currentPage: string;
@@ -16,16 +18,9 @@ interface NavigationProps {
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, cartOpen, setCartOpen, userMenuOpen, setUserMenuOpen, searchOpen: _searchOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const { getWishlistCount } = useWishlist();
-
-  const handleDarkModeToggle = () => {
-    console.log('🌓 Dark mode toggled!');
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+  const { getCartCount } = useCart();
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -85,36 +80,19 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
-              console.log('🔍 Search clicked!');
-              setSearchOpen(true);
-            }}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setSearchOpen(true)}>
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => handleNavigation('wishlist')}>
-              <div className="relative">
-                <Heart className="w-4 h-4" />
-                {getWishlistCount() > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {getWishlistCount()}
-                  </span>
-                )}
-              </div>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
-              console.log('👤 User clicked!');
-              setUserMenuOpen(!userMenuOpen);
-            }}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
               <User className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
-              console.log('🛒 Cart clicked!');
-              setCartOpen(true);
-            }}>
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple relative" onClick={() => setCartOpen(true)}>
               <ShoppingBag className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={handleDarkModeToggle}>
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {getCartCount() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {getCartCount()}
+                </span>
+              )}
             </Button>
           </div>
 
@@ -146,24 +124,18 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
                       <Search className="w-4 h-4 mr-2" />
                       Search
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => handleNavigation('wishlist')}>
-                      <div className="flex items-center">
-                        <Heart className="w-4 h-4 mr-2" />
-                        Wishlist
-                        {getWishlistCount() > 0 && (
-                          <span className="ml-auto bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                            {getWishlistCount()}
-                          </span>
-                        )}
-                      </div>
-                    </Button>
                     <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setUserMenuOpen(!userMenuOpen)}>
                       <User className="w-4 h-4 mr-2" />
                       Account
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
+                    <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple relative" onClick={() => setCartOpen(true)}>
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Cart
+                      {getCartCount() > 0 && (
+                        <span className="ml-auto bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {getCartCount()}
+                        </span>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -172,6 +144,12 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
           </div>
         </div>
       </div>
+      
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={_searchOpen} onClose={() => setSearchOpen(false)} />
     </motion.nav>
   );
 };

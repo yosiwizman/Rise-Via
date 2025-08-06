@@ -7,34 +7,44 @@
       "category": "flower",
       "strainType": "sativa",
       "thcaPercentage": 27.8,
+      "thcPercentage": 0.08,
       "price": 45.00,
-      "images": [
-        "/products/blue-dream-1.jpg",
-        "/products/blue-dream-2.jpg",
-        "/products/blue-dream-3.jpg"
-      ],
+      "images": ["/products/blue-dream-1.jpg", "/products/blue-dream-2.jpg", "/products/blue-dream-3.jpg"],
       "description": "A balanced hybrid with sweet berry aroma and uplifting effects.",
-      "effects": ["Creative", "Energetic", "Happy"],
-      "featured": true,
-      "inventory": 150
+      "effects": ["Uplifted", "Creative", "Energetic", "Happy"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.65},
+        {"name": "Pinene", "percentage": 0.42},
+        {"name": "Caryophyllene", "percentage": 0.38}
+      ],
+      "batchNumber": "BD-2024-001",
+      "harvestDate": "2024-11-15",
+      "labResultsUrl": "/lab-results/BD-2024-001.pdf",
+      "inventory": 150,
+      "featured": true
     },
     {
-      "id": "og-kush-002",
-      "name": "OG Kush",
-      "slug": "og-kush",
+      "id": "gelato-002",
+      "name": "Gelato",
+      "slug": "gelato",
       "category": "flower",
-      "strainType": "indica",
-      "thcaPercentage": 24.5,
-      "price": 42.00,
-      "images": [
-        "/products/og-kush-1.jpg",
-        "/products/og-kush-2.jpg",
-        "/products/og-kush-3.jpg"
+      "strainType": "hybrid",
+      "thcaPercentage": 30.1,
+      "thcPercentage": 0.12,
+      "price": 52.00,
+      "images": ["/products/gelato-1.jpg", "/products/gelato-2.jpg", "/products/gelato-3.jpg"],
+      "description": "Dessert-like hybrid with sweet flavors and balanced effects.",
+      "effects": ["Relaxed", "Happy", "Euphoric", "Creative"],
+      "terpenes": [
+        {"name": "Limonene", "percentage": 0.78},
+        {"name": "Caryophyllene", "percentage": 0.45},
+        {"name": "Linalool", "percentage": 0.32}
       ],
-      "description": "Classic indica with earthy pine flavors and relaxing effects.",
-      "effects": ["Relaxed", "Sleepy", "Euphoric"],
-      "featured": true,
-      "inventory": 120
+      "batchNumber": "GL-2024-002",
+      "harvestDate": "2024-11-18",
+      "labResultsUrl": "/lab-results/GL-2024-002.pdf",
+      "inventory": 125,
+      "featured": true
     },
     {
       "id": "sour-diesel-003",
@@ -42,233 +52,298 @@
       "slug": "sour-diesel",
       "category": "flower",
       "strainType": "sativa",
-      "thcaPercentage": 26.2,
+      "thcaPercentage": 28.5,
+      "thcPercentage": 0.09,
       "price": 48.00,
-      "images": [
-        "/products/sour-diesel-1.jpg",
-        "/products/sour-diesel-2.jpg",
-        "/products/sour-diesel-3.jpg"
+      "images": ["/products/sour-diesel-1.jpg", "/products/sour-diesel-2.jpg", "/products/sour-diesel-3.jpg"],
+      "description": "Energizing sativa with diesel aroma and dreamy cerebral effects.",
+      "effects": ["Energetic", "Creative", "Focused", "Uplifted"],
+      "terpenes": [
+        {"name": "Limonene", "percentage": 0.82},
+        {"name": "Caryophyllene", "percentage": 0.41},
+        {"name": "Myrcene", "percentage": 0.33}
       ],
-      "description": "Energizing sativa with diesel aroma and cerebral effects.",
-      "effects": ["Energetic", "Focused", "Uplifted"],
-      "featured": false,
-      "inventory": 95
+      "batchNumber": "SD-2024-003",
+      "harvestDate": "2024-11-22",
+      "labResultsUrl": "/lab-results/SD-2024-003.pdf",
+      "inventory": 175,
+      "featured": true
     },
     {
-      "id": "purple-haze-004",
-      "name": "Purple Haze",
-      "slug": "purple-haze",
-      "category": "flower",
-      "strainType": "sativa",
-      "thcaPercentage": 23.8,
-      "price": 46.00,
-      "images": [
-        "/products/purple-haze-1.jpg",
-        "/products/purple-haze-2.jpg",
-        "/products/purple-haze-3.jpg"
-      ],
-      "description": "Legendary sativa with sweet berry flavors and creative buzz.",
-      "effects": ["Creative", "Euphoric", "Energetic"],
-      "featured": true,
-      "inventory": 80
-    },
-    {
-      "id": "granddaddy-purple-005",
-      "name": "Granddaddy Purple",
-      "slug": "granddaddy-purple",
-      "category": "flower",
-      "strainType": "indica",
-      "thcaPercentage": 25.1,
-      "price": 44.00,
-      "images": [
-        "/products/granddaddy-purple-1.jpg",
-        "/products/granddaddy-purple-2.jpg",
-        "/products/granddaddy-purple-3.jpg"
-      ],
-      "description": "Premium indica with grape and berry flavors for deep relaxation.",
-      "effects": ["Relaxed", "Sleepy", "Happy"],
-      "featured": false,
-      "inventory": 110
-    },
-    {
-      "id": "white-widow-006",
-      "name": "White Widow",
-      "slug": "white-widow",
-      "category": "flower",
-      "strainType": "hybrid",
-      "thcaPercentage": 22.9,
-      "price": 43.00,
-      "images": [
-        "/products/white-widow-1.jpg",
-        "/products/white-widow-2.jpg",
-        "/products/white-widow-3.jpg"
-      ],
-      "description": "Balanced hybrid with resinous buds and euphoric effects.",
-      "effects": ["Euphoric", "Relaxed", "Creative"],
-      "featured": true,
-      "inventory": 140
-    },
-    {
-      "id": "green-crack-007",
+      "id": "green-crack-004",
       "name": "Green Crack",
       "slug": "green-crack",
       "category": "flower",
       "strainType": "sativa",
-      "thcaPercentage": 28.3,
-      "price": 50.00,
-      "images": [
-        "/products/green-crack-1.jpg",
-        "/products/green-crack-2.jpg",
-        "/products/green-crack-3.jpg"
+      "thcaPercentage": 26.3,
+      "thcPercentage": 0.07,
+      "price": 44.00,
+      "images": ["/products/green-crack-1.jpg", "/products/green-crack-2.jpg", "/products/green-crack-3.jpg"],
+      "description": "Invigorating sativa with citrus flavors and mental clarity.",
+      "effects": ["Energetic", "Focused", "Creative", "Alert"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.58},
+        {"name": "Limonene", "percentage": 0.47},
+        {"name": "Pinene", "percentage": 0.35}
       ],
-      "description": "High-energy sativa with citrus flavors and mental clarity.",
-      "effects": ["Energetic", "Focused", "Happy"],
-      "featured": false,
-      "inventory": 75
+      "batchNumber": "GC-2024-004",
+      "harvestDate": "2024-11-20",
+      "labResultsUrl": "/lab-results/GC-2024-004.pdf",
+      "inventory": 140,
+      "featured": false
     },
     {
-      "id": "northern-lights-008",
-      "name": "Northern Lights",
-      "slug": "northern-lights",
-      "category": "flower",
-      "strainType": "indica",
-      "thcaPercentage": 21.7,
-      "price": 41.00,
-      "images": [
-        "/products/northern-lights-1.jpg",
-        "/products/northern-lights-2.jpg",
-        "/products/northern-lights-3.jpg"
-      ],
-      "description": "Classic indica with sweet and spicy flavors for relaxation.",
-      "effects": ["Relaxed", "Sleepy", "Euphoric"],
-      "featured": false,
-      "inventory": 130
-    },
-    {
-      "id": "jack-herer-009",
+      "id": "jack-herer-005",
       "name": "Jack Herer",
       "slug": "jack-herer",
       "category": "flower",
       "strainType": "sativa",
-      "thcaPercentage": 24.6,
-      "price": 47.00,
-      "images": [
-        "/products/jack-herer-1.jpg",
-        "/products/jack-herer-2.jpg",
-        "/products/jack-herer-3.jpg"
+      "thcaPercentage": 29.1,
+      "thcPercentage": 0.10,
+      "price": 50.00,
+      "images": ["/products/jack-herer-1.jpg", "/products/jack-herer-2.jpg", "/products/jack-herer-3.jpg"],
+      "description": "Legendary sativa with spicy pine aroma and cerebral elevation.",
+      "effects": ["Creative", "Energetic", "Focused", "Happy"],
+      "terpenes": [
+        {"name": "Terpinolene", "percentage": 0.72},
+        {"name": "Caryophyllene", "percentage": 0.48},
+        {"name": "Pinene", "percentage": 0.41}
       ],
-      "description": "Award-winning sativa with pine and spice flavors.",
-      "effects": ["Creative", "Energetic", "Focused"],
-      "featured": true,
-      "inventory": 100
+      "batchNumber": "JH-2024-005",
+      "harvestDate": "2024-11-25",
+      "labResultsUrl": "/lab-results/JH-2024-005.pdf",
+      "inventory": 160,
+      "featured": true
     },
     {
-      "id": "girl-scout-cookies-010",
+      "id": "super-lemon-haze-006",
+      "name": "Super Lemon Haze",
+      "slug": "super-lemon-haze",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 27.6,
+      "thcPercentage": 0.08,
+      "price": 46.00,
+      "images": ["/products/super-lemon-haze-1.jpg", "/products/super-lemon-haze-2.jpg", "/products/super-lemon-haze-3.jpg"],
+      "description": "Zesty sativa with bright citrus flavors and uplifting energy.",
+      "effects": ["Energetic", "Happy", "Creative", "Uplifted"],
+      "terpenes": [
+        {"name": "Limonene", "percentage": 0.89},
+        {"name": "Myrcene", "percentage": 0.44},
+        {"name": "Caryophyllene", "percentage": 0.36}
+      ],
+      "batchNumber": "SLH-2024-006",
+      "harvestDate": "2024-11-28",
+      "labResultsUrl": "/lab-results/SLH-2024-006.pdf",
+      "inventory": 135,
+      "featured": false
+    },
+    {
+      "id": "og-kush-007",
+      "name": "OG Kush",
+      "slug": "og-kush",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 31.8,
+      "thcPercentage": 0.13,
+      "price": 55.00,
+      "images": ["/products/og-kush-1.jpg", "/products/og-kush-2.jpg", "/products/og-kush-3.jpg"],
+      "description": "Legendary strain with earthy pine flavors and relaxing effects.",
+      "effects": ["Relaxed", "Happy", "Euphoric", "Sleepy"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.71},
+        {"name": "Limonene", "percentage": 0.52},
+        {"name": "Caryophyllene", "percentage": 0.43}
+      ],
+      "batchNumber": "OG-2024-007",
+      "harvestDate": "2024-11-30",
+      "labResultsUrl": "/lab-results/OG-2024-007.pdf",
+      "inventory": 180,
+      "featured": true
+    },
+    {
+      "id": "white-widow-008",
+      "name": "White Widow",
+      "slug": "white-widow",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 29.3,
+      "thcPercentage": 0.11,
+      "price": 49.00,
+      "images": ["/products/white-widow-1.jpg", "/products/white-widow-2.jpg", "/products/white-widow-3.jpg"],
+      "description": "Classic hybrid strain with balanced effects and resinous white trichomes.",
+      "effects": ["Balanced", "Creative", "Relaxed", "Happy"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.63},
+        {"name": "Pinene", "percentage": 0.49},
+        {"name": "Caryophyllene", "percentage": 0.38}
+      ],
+      "batchNumber": "WW-2024-008",
+      "harvestDate": "2024-12-02",
+      "labResultsUrl": "/lab-results/WW-2024-008.pdf",
+      "inventory": 155,
+      "featured": false
+    },
+    {
+      "id": "girl-scout-cookies-009",
       "name": "Girl Scout Cookies",
       "slug": "girl-scout-cookies",
       "category": "flower",
       "strainType": "hybrid",
-      "thcaPercentage": 26.8,
-      "price": 49.00,
-      "images": [
-        "/products/girl-scout-cookies-1.jpg",
-        "/products/girl-scout-cookies-2.jpg",
-        "/products/girl-scout-cookies-3.jpg"
+      "thcaPercentage": 28.9,
+      "thcPercentage": 0.10,
+      "price": 51.00,
+      "images": ["/products/girl-scout-cookies-1.jpg", "/products/girl-scout-cookies-2.jpg", "/products/girl-scout-cookies-3.jpg"],
+      "description": "Sweet and earthy hybrid with euphoric and relaxing effects.",
+      "effects": ["Euphoric", "Relaxed", "Happy", "Creative"],
+      "terpenes": [
+        {"name": "Caryophyllene", "percentage": 0.67},
+        {"name": "Limonene", "percentage": 0.54},
+        {"name": "Humulene", "percentage": 0.31}
       ],
-      "description": "Popular hybrid with sweet and earthy flavors.",
-      "effects": ["Euphoric", "Relaxed", "Happy"],
-      "featured": true,
-      "inventory": 85
+      "batchNumber": "GSC-2024-009",
+      "harvestDate": "2024-12-05",
+      "labResultsUrl": "/lab-results/GSC-2024-009.pdf",
+      "inventory": 145,
+      "featured": true
     },
     {
-      "id": "ak-47-011",
-      "name": "AK-47",
-      "slug": "ak-47",
+      "id": "wedding-cake-010",
+      "name": "Wedding Cake",
+      "slug": "wedding-cake",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 29.5,
+      "thcPercentage": 0.11,
+      "price": 53.00,
+      "images": ["/products/wedding-cake-1.jpg", "/products/wedding-cake-2.jpg", "/products/wedding-cake-3.jpg"],
+      "description": "Relaxing indica with vanilla and earthy flavors.",
+      "effects": ["Relaxed", "Sleepy", "Happy", "Euphoric"],
+      "terpenes": [
+        {"name": "Limonene", "percentage": 0.76},
+        {"name": "Caryophyllene", "percentage": 0.51},
+        {"name": "Linalool", "percentage": 0.39}
+      ],
+      "batchNumber": "WC-2024-010",
+      "harvestDate": "2024-12-08",
+      "labResultsUrl": "/lab-results/WC-2024-010.pdf",
+      "inventory": 130,
+      "featured": false
+    },
+    {
+      "id": "northern-lights-011",
+      "name": "Northern Lights",
+      "slug": "northern-lights",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 31.2,
+      "thcPercentage": 0.12,
+      "price": 54.00,
+      "images": ["/products/northern-lights-1.jpg", "/products/northern-lights-2.jpg", "/products/northern-lights-3.jpg"],
+      "description": "Legendary indica strain known for its relaxing properties and pine aroma.",
+      "effects": ["Relaxed", "Sleepy", "Happy", "Euphoric"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.84},
+        {"name": "Pinene", "percentage": 0.47},
+        {"name": "Caryophyllene", "percentage": 0.35}
+      ],
+      "batchNumber": "NL-2024-011",
+      "harvestDate": "2024-12-10",
+      "labResultsUrl": "/lab-results/NL-2024-011.pdf",
+      "inventory": 165,
+      "featured": true
+    },
+    {
+      "id": "granddaddy-purple-012",
+      "name": "Granddaddy Purple",
+      "slug": "granddaddy-purple",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 30.7,
+      "thcPercentage": 0.12,
+      "price": 52.00,
+      "images": ["/products/granddaddy-purple-1.jpg", "/products/granddaddy-purple-2.jpg", "/products/granddaddy-purple-3.jpg"],
+      "description": "Classic indica with grape and berry flavors, perfect for evening relaxation.",
+      "effects": ["Relaxed", "Sleepy", "Happy", "Euphoric"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.79},
+        {"name": "Pinene", "percentage": 0.43},
+        {"name": "Caryophyllene", "percentage": 0.37}
+      ],
+      "batchNumber": "GDP-2024-012",
+      "harvestDate": "2024-12-12",
+      "labResultsUrl": "/lab-results/GDP-2024-012.pdf",
+      "inventory": 140,
+      "featured": false
+    },
+    {
+      "id": "zkittlez-013",
+      "name": "Zkittlez",
+      "slug": "zkittlez",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 27.3,
+      "thcPercentage": 0.09,
+      "price": 47.00,
+      "images": ["/products/zkittlez-1.jpg", "/products/zkittlez-2.jpg", "/products/zkittlez-3.jpg"],
+      "description": "Fruity indica with tropical flavors and calming effects.",
+      "effects": ["Relaxed", "Happy", "Sleepy", "Euphoric"],
+      "terpenes": [
+        {"name": "Humulene", "percentage": 0.68},
+        {"name": "Caryophyllene", "percentage": 0.52},
+        {"name": "Limonene", "percentage": 0.41}
+      ],
+      "batchNumber": "ZK-2024-013",
+      "harvestDate": "2024-12-15",
+      "labResultsUrl": "/lab-results/ZK-2024-013.pdf",
+      "inventory": 120,
+      "featured": false
+    },
+    {
+      "id": "runtz-014",
+      "name": "Runtz",
+      "slug": "runtz",
       "category": "flower",
       "strainType": "hybrid",
-      "thcaPercentage": 23.4,
-      "price": 45.00,
-      "images": [
-        "/products/ak-47-1.jpg",
-        "/products/ak-47-2.jpg",
-        "/products/ak-47-3.jpg"
+      "thcaPercentage": 28.7,
+      "thcPercentage": 0.10,
+      "price": 50.00,
+      "images": ["/products/runtz-1.jpg", "/products/runtz-2.jpg", "/products/runtz-3.jpg"],
+      "description": "Candy-flavored hybrid with euphoric and relaxing effects.",
+      "effects": ["Euphoric", "Relaxed", "Happy", "Creative"],
+      "terpenes": [
+        {"name": "Limonene", "percentage": 0.73},
+        {"name": "Caryophyllene", "percentage": 0.48},
+        {"name": "Linalool", "percentage": 0.36}
       ],
-      "description": "Potent hybrid with sour and sweet flavors.",
-      "effects": ["Relaxed", "Creative", "Happy"],
-      "featured": false,
-      "inventory": 90
+      "batchNumber": "RZ-2024-014",
+      "harvestDate": "2024-12-18",
+      "labResultsUrl": "/lab-results/RZ-2024-014.pdf",
+      "inventory": 155,
+      "featured": true
     },
     {
-      "id": "pineapple-express-012",
-      "name": "Pineapple Express",
-      "slug": "pineapple-express",
-      "category": "flower",
-      "strainType": "hybrid",
-      "thcaPercentage": 25.7,
-      "price": 48.00,
-      "images": [
-        "/products/pineapple-express-1.jpg",
-        "/products/pineapple-express-2.jpg",
-        "/products/pineapple-express-3.jpg"
-      ],
-      "description": "Tropical hybrid with pineapple and cedar flavors.",
-      "effects": ["Energetic", "Creative", "Happy"],
-      "featured": false,
-      "inventory": 105
-    },
-    {
-      "id": "gorilla-glue-013",
+      "id": "gorilla-glue-015",
       "name": "Gorilla Glue #4",
       "slug": "gorilla-glue-4",
       "category": "flower",
       "strainType": "hybrid",
-      "thcaPercentage": 29.1,
-      "price": 52.00,
-      "images": [
-        "/products/gorilla-glue-1.jpg",
-        "/products/gorilla-glue-2.jpg",
-        "/products/gorilla-glue-3.jpg"
+      "thcaPercentage": 32.4,
+      "thcPercentage": 0.14,
+      "price": 56.00,
+      "images": ["/products/gorilla-glue-1.jpg", "/products/gorilla-glue-2.jpg", "/products/gorilla-glue-3.jpg"],
+      "description": "Potent hybrid with earthy and sour flavors.",
+      "effects": ["Relaxed", "Euphoric", "Happy", "Sleepy"],
+      "terpenes": [
+        {"name": "Myrcene", "percentage": 0.81},
+        {"name": "Caryophyllene", "percentage": 0.56},
+        {"name": "Limonene", "percentage": 0.42}
       ],
-      "description": "Ultra-potent hybrid with chocolate and coffee notes.",
-      "effects": ["Relaxed", "Euphoric", "Sleepy"],
-      "featured": true,
-      "inventory": 65
-    },
-    {
-      "id": "wedding-cake-014",
-      "name": "Wedding Cake",
-      "slug": "wedding-cake",
-      "category": "flower",
-      "strainType": "hybrid",
-      "thcaPercentage": 27.3,
-      "price": 51.00,
-      "images": [
-        "/products/wedding-cake-1.jpg",
-        "/products/wedding-cake-2.jpg",
-        "/products/wedding-cake-3.jpg"
-      ],
-      "description": "Premium hybrid with vanilla and earthy flavors.",
-      "effects": ["Relaxed", "Euphoric", "Happy"],
-      "featured": true,
-      "inventory": 70
-    },
-    {
-      "id": "gelato-015",
-      "name": "Gelato",
-      "slug": "gelato",
-      "category": "flower",
-      "strainType": "hybrid",
-      "thcaPercentage": 26.5,
-      "price": 50.00,
-      "images": [
-        "/products/gelato-1.jpg",
-        "/products/gelato-2.jpg",
-        "/products/gelato-3.jpg"
-      ],
-      "description": "Dessert-like hybrid with sweet citrus and lavender flavors.",
-      "effects": ["Euphoric", "Creative", "Relaxed"],
-      "featured": true,
-      "inventory": 95
+      "batchNumber": "GG4-2024-015",
+      "harvestDate": "2024-12-20",
+      "labResultsUrl": "/lab-results/GG4-2024-015.pdf",
+      "inventory": 170,
+      "featured": true
     }
   ]
 }
