@@ -5,11 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
 import productsData from '../data/products.json';
 
-interface ShopPageProps {
-  isStateBlocked?: boolean;
-}
-
-export const ShopPage = ({ isStateBlocked = false }: ShopPageProps) => {
+export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
 
   const filteredProducts = useMemo(() => {
