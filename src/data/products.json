@@ -1,0 +1,274 @@
+{
+  "products": [
+    {
+      "id": "blue-dream-001",
+      "name": "Blue Dream",
+      "slug": "blue-dream",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 27.8,
+      "price": 45.00,
+      "images": [
+        "/products/blue-dream-1.jpg",
+        "/products/blue-dream-2.jpg",
+        "/products/blue-dream-3.jpg"
+      ],
+      "description": "A balanced hybrid with sweet berry aroma and uplifting effects.",
+      "effects": ["Creative", "Energetic", "Happy"],
+      "featured": true,
+      "inventory": 150
+    },
+    {
+      "id": "og-kush-002",
+      "name": "OG Kush",
+      "slug": "og-kush",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 24.5,
+      "price": 42.00,
+      "images": [
+        "/products/og-kush-1.jpg",
+        "/products/og-kush-2.jpg",
+        "/products/og-kush-3.jpg"
+      ],
+      "description": "Classic indica with earthy pine flavors and relaxing effects.",
+      "effects": ["Relaxed", "Sleepy", "Euphoric"],
+      "featured": true,
+      "inventory": 120
+    },
+    {
+      "id": "sour-diesel-003",
+      "name": "Sour Diesel",
+      "slug": "sour-diesel",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 26.2,
+      "price": 48.00,
+      "images": [
+        "/products/sour-diesel-1.jpg",
+        "/products/sour-diesel-2.jpg",
+        "/products/sour-diesel-3.jpg"
+      ],
+      "description": "Energizing sativa with diesel aroma and cerebral effects.",
+      "effects": ["Energetic", "Focused", "Uplifted"],
+      "featured": false,
+      "inventory": 95
+    },
+    {
+      "id": "purple-haze-004",
+      "name": "Purple Haze",
+      "slug": "purple-haze",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 23.8,
+      "price": 46.00,
+      "images": [
+        "/products/purple-haze-1.jpg",
+        "/products/purple-haze-2.jpg",
+        "/products/purple-haze-3.jpg"
+      ],
+      "description": "Legendary sativa with sweet berry flavors and creative buzz.",
+      "effects": ["Creative", "Euphoric", "Energetic"],
+      "featured": true,
+      "inventory": 80
+    },
+    {
+      "id": "granddaddy-purple-005",
+      "name": "Granddaddy Purple",
+      "slug": "granddaddy-purple",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 25.1,
+      "price": 44.00,
+      "images": [
+        "/products/granddaddy-purple-1.jpg",
+        "/products/granddaddy-purple-2.jpg",
+        "/products/granddaddy-purple-3.jpg"
+      ],
+      "description": "Premium indica with grape and berry flavors for deep relaxation.",
+      "effects": ["Relaxed", "Sleepy", "Happy"],
+      "featured": false,
+      "inventory": 110
+    },
+    {
+      "id": "white-widow-006",
+      "name": "White Widow",
+      "slug": "white-widow",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 22.9,
+      "price": 43.00,
+      "images": [
+        "/products/white-widow-1.jpg",
+        "/products/white-widow-2.jpg",
+        "/products/white-widow-3.jpg"
+      ],
+      "description": "Balanced hybrid with resinous buds and euphoric effects.",
+      "effects": ["Euphoric", "Relaxed", "Creative"],
+      "featured": true,
+      "inventory": 140
+    },
+    {
+      "id": "green-crack-007",
+      "name": "Green Crack",
+      "slug": "green-crack",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 28.3,
+      "price": 50.00,
+      "images": [
+        "/products/green-crack-1.jpg",
+        "/products/green-crack-2.jpg",
+        "/products/green-crack-3.jpg"
+      ],
+      "description": "High-energy sativa with citrus flavors and mental clarity.",
+      "effects": ["Energetic", "Focused", "Happy"],
+      "featured": false,
+      "inventory": 75
+    },
+    {
+      "id": "northern-lights-008",
+      "name": "Northern Lights",
+      "slug": "northern-lights",
+      "category": "flower",
+      "strainType": "indica",
+      "thcaPercentage": 21.7,
+      "price": 41.00,
+      "images": [
+        "/products/northern-lights-1.jpg",
+        "/products/northern-lights-2.jpg",
+        "/products/northern-lights-3.jpg"
+      ],
+      "description": "Classic indica with sweet and spicy flavors for relaxation.",
+      "effects": ["Relaxed", "Sleepy", "Euphoric"],
+      "featured": false,
+      "inventory": 130
+    },
+    {
+      "id": "jack-herer-009",
+      "name": "Jack Herer",
+      "slug": "jack-herer",
+      "category": "flower",
+      "strainType": "sativa",
+      "thcaPercentage": 24.6,
+      "price": 47.00,
+      "images": [
+        "/products/jack-herer-1.jpg",
+        "/products/jack-herer-2.jpg",
+        "/products/jack-herer-3.jpg"
+      ],
+      "description": "Award-winning sativa with pine and spice flavors.",
+      "effects": ["Creative", "Energetic", "Focused"],
+      "featured": true,
+      "inventory": 100
+    },
+    {
+      "id": "girl-scout-cookies-010",
+      "name": "Girl Scout Cookies",
+      "slug": "girl-scout-cookies",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 26.8,
+      "price": 49.00,
+      "images": [
+        "/products/girl-scout-cookies-1.jpg",
+        "/products/girl-scout-cookies-2.jpg",
+        "/products/girl-scout-cookies-3.jpg"
+      ],
+      "description": "Popular hybrid with sweet and earthy flavors.",
+      "effects": ["Euphoric", "Relaxed", "Happy"],
+      "featured": true,
+      "inventory": 85
+    },
+    {
+      "id": "ak-47-011",
+      "name": "AK-47",
+      "slug": "ak-47",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 23.4,
+      "price": 45.00,
+      "images": [
+        "/products/ak-47-1.jpg",
+        "/products/ak-47-2.jpg",
+        "/products/ak-47-3.jpg"
+      ],
+      "description": "Potent hybrid with sour and sweet flavors.",
+      "effects": ["Relaxed", "Creative", "Happy"],
+      "featured": false,
+      "inventory": 90
+    },
+    {
+      "id": "pineapple-express-012",
+      "name": "Pineapple Express",
+      "slug": "pineapple-express",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 25.7,
+      "price": 48.00,
+      "images": [
+        "/products/pineapple-express-1.jpg",
+        "/products/pineapple-express-2.jpg",
+        "/products/pineapple-express-3.jpg"
+      ],
+      "description": "Tropical hybrid with pineapple and cedar flavors.",
+      "effects": ["Energetic", "Creative", "Happy"],
+      "featured": false,
+      "inventory": 105
+    },
+    {
+      "id": "gorilla-glue-013",
+      "name": "Gorilla Glue #4",
+      "slug": "gorilla-glue-4",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 29.1,
+      "price": 52.00,
+      "images": [
+        "/products/gorilla-glue-1.jpg",
+        "/products/gorilla-glue-2.jpg",
+        "/products/gorilla-glue-3.jpg"
+      ],
+      "description": "Ultra-potent hybrid with chocolate and coffee notes.",
+      "effects": ["Relaxed", "Euphoric", "Sleepy"],
+      "featured": true,
+      "inventory": 65
+    },
+    {
+      "id": "wedding-cake-014",
+      "name": "Wedding Cake",
+      "slug": "wedding-cake",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 27.3,
+      "price": 51.00,
+      "images": [
+        "/products/wedding-cake-1.jpg",
+        "/products/wedding-cake-2.jpg",
+        "/products/wedding-cake-3.jpg"
+      ],
+      "description": "Premium hybrid with vanilla and earthy flavors.",
+      "effects": ["Relaxed", "Euphoric", "Happy"],
+      "featured": true,
+      "inventory": 70
+    },
+    {
+      "id": "gelato-015",
+      "name": "Gelato",
+      "slug": "gelato",
+      "category": "flower",
+      "strainType": "hybrid",
+      "thcaPercentage": 26.5,
+      "price": 50.00,
+      "images": [
+        "/products/gelato-1.jpg",
+        "/products/gelato-2.jpg",
+        "/products/gelato-3.jpg"
+      ],
+      "description": "Dessert-like hybrid with sweet citrus and lavender flavors.",
+      "effects": ["Euphoric", "Creative", "Relaxed"],
+      "featured": true,
+      "inventory": 95
+    }
+  ]
+}
