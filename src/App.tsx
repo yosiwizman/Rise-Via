@@ -20,13 +20,11 @@ import { WishlistPage } from './components/wishlist/WishlistPage';
 import { SharedWishlistPage } from './components/wishlist/WishlistShare';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
-import { isStateBlocked } from './utils/stateBlocking';
 import { priceTrackingService } from './services/priceTracking';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
-  const [isUserStateBlocked, setIsUserStateBlocked] = useState(false);
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -37,7 +35,6 @@ function App() {
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
-      setIsUserStateBlocked(isStateBlocked(savedState));
     } else {
       setShowStateBlocker(true);
     }
@@ -60,7 +57,6 @@ function App() {
 
   const handleStateVerified = (state: string) => {
     setUserState(state);
-    setIsUserStateBlocked(isStateBlocked(state));
     setShowStateBlocker(false);
   };
 
@@ -69,7 +65,7 @@ function App() {
       case 'home':
         return <HomePage onNavigate={setCurrentPage} />;
       case 'shop':
-        return <ShopPage isStateBlocked={isUserStateBlocked} />;
+        return <ShopPage />;
       case 'learn':
         return <LearnPage />;
       case 'legal':
