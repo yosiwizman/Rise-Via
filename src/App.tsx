@@ -18,15 +18,18 @@ import { CareersPage } from './pages/CareersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { WishlistPage } from './components/wishlist/WishlistPage';
 import { SharedWishlistPage } from './components/wishlist/WishlistShare';
+import { AdminPage } from './pages/AdminPage';
+import { CustomerProvider } from './contexts/CustomerContext';
+import { AccountPage } from './pages/AccountPage';
+import { LoginPage } from './pages/LoginPage';
+import { B2BPage } from './pages/B2BPage';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
-import { isStateBlocked } from './utils/stateBlocking';
 import { priceTrackingService } from './services/priceTracking';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
-  const [isUserStateBlocked, setIsUserStateBlocked] = useState(false);
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -34,10 +37,32 @@ function App() {
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/admin') {
+      setCurrentPage('admin');
+    } else if (path === '/shop') {
+      setCurrentPage('shop');
+    } else if (path === '/learn') {
+      setCurrentPage('learn');
+    } else if (path === '/legal') {
+      setCurrentPage('legal');
+    } else if (path === '/contact') {
+      setCurrentPage('contact');
+    } else if (path === '/wishlist') {
+      setCurrentPage('wishlist');
+    } else if (path === '/account') {
+      setCurrentPage('account');
+    } else if (path === '/login') {
+      setCurrentPage('login');
+    } else if (path === '/b2b' || path === '/wholesale') {
+      setCurrentPage('b2b');
+    } else {
+      setCurrentPage('home');
+    }
+
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
-      setIsUserStateBlocked(isStateBlocked(savedState));
     } else {
       setShowStateBlocker(true);
     }
@@ -60,7 +85,6 @@ function App() {
 
   const handleStateVerified = (state: string) => {
     setUserState(state);
-    setIsUserStateBlocked(isStateBlocked(state));
     setShowStateBlocker(false);
   };
 
@@ -69,7 +93,7 @@ function App() {
       case 'home':
         return <HomePage onNavigate={setCurrentPage} />;
       case 'shop':
-        return <ShopPage isStateBlocked={isUserStateBlocked} />;
+        return <ShopPage />;
       case 'learn':
         return <LearnPage />;
       case 'legal':
@@ -86,43 +110,53 @@ function App() {
         return <WishlistPage />;
       case 'wishlist-shared':
         return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
+      case 'admin':
+        return <AdminPage />;
+      case 'account':
+        return <AccountPage />;
+      case 'login':
+        return <LoginPage />;
+      case 'b2b':
+        return <B2BPage />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
   };
 
   return (
-    <ErrorBoundary>
-      <AnalyticsProvider>
-        <div className="min-h-screen bg-risevia-black text-white">
-          <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-          
-          {showStateBlocker && (
-            <StateBlocker onStateVerified={handleStateVerified} />
-          )}
-          
-          {isAgeVerified && (
-            <>
-              <Navigation 
-                currentPage={currentPage} 
-                onNavigate={setCurrentPage}
-                cartOpen={cartOpen}
-                setCartOpen={setCartOpen}
-                userMenuOpen={userMenuOpen}
-                setUserMenuOpen={setUserMenuOpen}
-                searchOpen={searchOpen}
-                setSearchOpen={setSearchOpen}
-              />
-              <main>
-                {renderCurrentPage()}
-              </main>
-              <Footer onNavigate={setCurrentPage} />
-              <CookieConsentBanner />
-            </>
-          )}
-        </div>
-      </AnalyticsProvider>
-    </ErrorBoundary>
+    <CustomerProvider>
+      <ErrorBoundary>
+        <AnalyticsProvider>
+          <div className="min-h-screen bg-risevia-black text-white">
+            <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+            
+            {showStateBlocker && (
+              <StateBlocker onStateVerified={handleStateVerified} />
+            )}
+            
+            {isAgeVerified && (
+              <>
+                <Navigation 
+                  currentPage={currentPage} 
+                  onNavigate={setCurrentPage}
+                  cartOpen={cartOpen}
+                  setCartOpen={setCartOpen}
+                  userMenuOpen={userMenuOpen}
+                  setUserMenuOpen={setUserMenuOpen}
+                  searchOpen={searchOpen}
+                  setSearchOpen={setSearchOpen}
+                />
+                <main>
+                  {renderCurrentPage()}
+                </main>
+                <Footer onNavigate={setCurrentPage} />
+                <CookieConsentBanner />
+              </>
+            )}
+          </div>
+        </AnalyticsProvider>
+      </ErrorBoundary>
+    </CustomerProvider>
   );
 }
 
