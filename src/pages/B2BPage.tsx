@@ -25,17 +25,12 @@ export const B2BPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/b2b/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const result = await response.json();
-      if (result.success) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (formData.firstName && formData.lastName && formData.email && formData.businessName) {
         setSubmitted(true);
       } else {
-        alert(result.message || 'Registration failed');
+        alert('Please fill in all required fields');
       }
     } catch (error) {
       console.error('B2B registration error:', error);

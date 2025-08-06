@@ -34,14 +34,93 @@ export const CustomerList = () => {
 
   const fetchCustomers = async () => {
     try {
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (filterSegment !== 'all') params.append('segment', filterSegment);
-      if (filterB2B !== 'all') params.append('isB2B', filterB2B);
+      const mockCustomers = [
+        {
+          id: 'cust-1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@email.com',
+          createdAt: '2024-01-15T10:30:00Z',
+          profile: {
+            membershipTier: 'GOLD',
+            lifetimeValue: 2500.00,
+            totalOrders: 8,
+            segment: 'VIP',
+            isB2B: false,
+            loyaltyPoints: 1250
+          }
+        },
+        {
+          id: 'cust-2',
+          firstName: 'Sarah',
+          lastName: 'Johnson',
+          email: 'sarah.j@email.com',
+          createdAt: '2024-01-20T14:15:00Z',
+          profile: {
+            membershipTier: 'SILVER',
+            lifetimeValue: 850.00,
+            totalOrders: 3,
+            segment: 'Regular',
+            isB2B: false,
+            loyaltyPoints: 425
+          }
+        },
+        {
+          id: 'cust-3',
+          firstName: 'Green',
+          lastName: 'Dispensary LLC',
+          email: 'orders@greendispensary.com',
+          createdAt: '2024-01-10T09:00:00Z',
+          profile: {
+            membershipTier: 'PLATINUM',
+            lifetimeValue: 15000.00,
+            totalOrders: 25,
+            segment: 'VIP',
+            isB2B: true,
+            loyaltyPoints: 5000
+          }
+        },
+        {
+          id: 'cust-4',
+          firstName: 'Mike',
+          lastName: 'Wilson',
+          email: 'mike.w@email.com',
+          createdAt: '2024-01-25T16:45:00Z',
+          profile: {
+            membershipTier: 'GREEN',
+            lifetimeValue: 125.00,
+            totalOrders: 1,
+            segment: 'New',
+            isB2B: false,
+            loyaltyPoints: 125
+          }
+        }
+      ];
+
+      let filteredCustomers = mockCustomers;
       
-      const response = await fetch(`/api/admin/customers?${params}`);
-      const data = await response.json();
-      setCustomers(data.customers || []);
+      if (searchTerm) {
+        filteredCustomers = filteredCustomers.filter(customer =>
+          customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      if (filterSegment !== 'all') {
+        filteredCustomers = filteredCustomers.filter(customer =>
+          customer.profile?.segment === filterSegment
+        );
+      }
+      
+      if (filterB2B !== 'all') {
+        const isB2BFilter = filterB2B === 'true';
+        filteredCustomers = filteredCustomers.filter(customer =>
+          customer.profile?.isB2B === isB2BFilter
+        );
+      }
+
+      setCustomers(filteredCustomers);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
     } finally {
