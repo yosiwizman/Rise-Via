@@ -33,6 +33,23 @@ function App() {
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/admin') {
+      setCurrentPage('admin');
+    } else if (path === '/shop') {
+      setCurrentPage('shop');
+    } else if (path === '/learn') {
+      setCurrentPage('learn');
+    } else if (path === '/legal') {
+      setCurrentPage('legal');
+    } else if (path === '/contact') {
+      setCurrentPage('contact');
+    } else if (path === '/wishlist') {
+      setCurrentPage('wishlist');
+    } else {
+      setCurrentPage('home');
+    }
+
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
