@@ -56,13 +56,44 @@ app.post('/api/admin/products', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
-
 app.post('/api/customers/register', async (req, res) => {
   try {
     const { email, firstName, lastName, password, phone, dateOfBirth, referredBy } = req.body;
+    
+    if (!email || !firstName || !lastName || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: email, firstName, lastName, password' 
+      });
+    }
+    
+    let parsedDateOfBirth = null;
+    if (dateOfBirth) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(dateOfBirth)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid date format. Please use YYYY-MM-DD format.' 
+        });
+      }
+      
+      parsedDateOfBirth = new Date(dateOfBirth);
+      if (isNaN(parsedDateOfBirth.getTime())) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid date of birth' 
+        });
+      }
+      
+      const now = new Date();
+      const minAge = new Date(now.getFullYear() - 120, now.getMonth(), now.getDate());
+      if (parsedDateOfBirth > now || parsedDateOfBirth < minAge) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid date of birth' 
+        });
+      }
+    }
     
     const existingCustomer = await prisma.customer.findUnique({ where: { email } });
     if (existingCustomer) {
@@ -79,7 +110,7 @@ app.post('/api/customers/register', async (req, res) => {
         lastName,
         password: hashedPassword,
         phone,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        dateOfBirth: parsedDateOfBirth,
         profile: {
           create: {
             referralCode,
@@ -374,6 +405,10 @@ app.get('/api/b2b/pricing', authMiddleware, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch B2B pricing', error: error.message });
   }
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {
