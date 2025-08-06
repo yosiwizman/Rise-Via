@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
+import { supabase } from '../lib/supabase';
 
 interface Order {
   id: string;
@@ -46,63 +47,35 @@ export const AccountPage = () => {
 
   const fetchCustomerData = async () => {
     try {
-      const mockOrders = [
-        {
-          id: 'order-1',
-          orderNumber: 'RV-2024-001',
-          total: 89.99,
-          status: 'Delivered',
-          createdAt: '2024-01-15T10:30:00Z',
-          items: [
-            {
-              product: { name: 'Purple Haze THCA', images: ['/images/purple-haze.jpg'] },
-              quantity: 1,
-              price: 89.99
-            }
-          ]
-        },
-        {
-          id: 'order-2',
-          orderNumber: 'RV-2024-002',
-          total: 159.98,
-          status: 'Processing',
-          createdAt: '2024-01-20T14:15:00Z',
-          items: [
-            {
-              product: { name: 'OG Kush THCA', images: ['/images/og-kush.jpg'] },
-              quantity: 2,
-              price: 79.99
-            }
-          ]
-        }
-      ];
+      if (!customer?.id) return;
 
-      const mockTransactions = [
-        {
-          id: 'tx-1',
-          type: 'EARNED',
-          points: 90,
-          description: 'Purchase points for Order #RV-2024-001',
-          createdAt: '2024-01-15T10:30:00Z'
-        },
-        {
-          id: 'tx-2',
-          type: 'BONUS',
-          points: 100,
-          description: 'Referral bonus points',
-          createdAt: '2024-01-10T09:00:00Z'
-        },
-        {
-          id: 'tx-3',
-          type: 'EARNED',
-          points: 160,
-          description: 'Purchase points for Order #RV-2024-002',
-          createdAt: '2024-01-20T14:15:00Z'
-        }
-      ];
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_id', customer.id)
+        .order('created_at', { ascending: false });
 
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('loyalty_transactions')
+        .select('*')
+        .eq('customer_id', customer.id)
+        .order('created_at', { ascending: false });
+
+      if (!ordersError && ordersData) {
+        setOrders(ordersData);
+      } else {
+        setOrders([]);
+      }
+
+      if (!transactionsError && transactionsData) {
+        setLoyaltyTransactions(transactionsData);
+      } else {
+        setLoyaltyTransactions([]);
+      }
+
+      const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const mockMembershipTier = {
-        name: 'Gold Member',
+        name: `${tierName} Member`,
         benefits: [
           '15% discount on all products',
           'Free shipping on orders over $75',
@@ -110,9 +83,6 @@ export const AccountPage = () => {
           'Early access to new products'
         ]
       };
-
-      setOrders(mockOrders);
-      setLoyaltyTransactions(mockTransactions);
       setMembershipTier(mockMembershipTier);
     } catch (error) {
       console.error('Failed to fetch customer data:', error);
@@ -127,15 +97,36 @@ export const AccountPage = () => {
         return;
       }
 
-      if (points > (customer?.profile?.loyaltyPoints || 0)) {
+      const currentPoints = customer?.customer_profiles?.[0]?.loyalty_points || 0;
+      if (points > currentPoints) {
         alert('Insufficient points available');
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      alert(`Successfully redeemed ${points} points for $${points / 20} discount! (Demo mode - no actual redemption)`);
+      const { error } = await supabase
+        .from('customer_profiles')
+        .update({ 
+          loyalty_points: currentPoints - points 
+        })
+        .eq('customer_id', customer?.id);
+
+      if (error) {
+        alert('Failed to redeem points');
+        return;
+      }
+
+      await supabase
+        .from('loyalty_transactions')
+        .insert([{
+          customer_id: customer?.id,
+          type: 'REDEEMED',
+          points: -points,
+          description: `Redeemed ${points} points for $${points / 20} discount`
+        }]);
+
+      alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
       setRedeemPoints('');
+      fetchCustomerData();
     } catch (error) {
       console.error('Failed to redeem points:', error);
       alert('Failed to redeem points');
@@ -143,8 +134,9 @@ export const AccountPage = () => {
   };
 
   const copyReferralCode = () => {
-    if (customer?.profile?.referralCode) {
-      navigator.clipboard.writeText(customer.profile.referralCode);
+    const referralCode = customer?.customer_profiles?.[0]?.referral_code || customer?.profile?.referralCode;
+    if (referralCode) {
+      navigator.clipboard.writeText(referralCode);
       alert('Referral code copied to clipboard!');
     }
   };
@@ -199,18 +191,18 @@ export const AccountPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Membership Status</CardTitle>
-            {getTierIcon(customer?.profile?.membershipTier || 'GREEN')}
+            {getTierIcon(customer?.customer_profiles?.[0]?.membership_tier || customer?.profile?.membershipTier || 'GREEN')}
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Badge className={getTierColor(customer?.profile?.membershipTier || 'GREEN')}>
+              <Badge className={getTierColor(customer?.customer_profiles?.[0]?.membership_tier || customer?.profile?.membershipTier || 'GREEN')}>
                 {membershipTier?.name || 'Green Member'}
               </Badge>
               <div className="text-sm text-gray-600">
-                Lifetime Value: ${(customer?.profile?.lifetimeValue || 0).toFixed(2)}
+                Lifetime Value: ${(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0).toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">
-                Total Orders: {customer?.profile?.totalOrders || 0}
+                Total Orders: {customer?.customer_profiles?.[0]?.total_orders || customer?.profile?.totalOrders || 0}
               </div>
               {membershipTier?.benefits && (
                 <div className="mt-2">
@@ -232,7 +224,7 @@ export const AccountPage = () => {
           <CardContent>
             <div className="space-y-3">
               <div className="text-2xl font-bold text-risevia-purple">
-                {customer?.profile?.loyaltyPoints || 0}
+                {customer?.customer_profiles?.[0]?.loyalty_points || customer?.profile?.loyaltyPoints || 0}
               </div>
               <div className="text-sm text-gray-600">
                 Points available
@@ -272,14 +264,14 @@ export const AccountPage = () => {
               <div className="text-sm text-gray-600">Your referral code:</div>
               <div className="flex items-center space-x-2">
                 <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
-                  {customer?.profile?.referralCode}
+                  {customer?.customer_profiles?.[0]?.referral_code || customer?.profile?.referralCode}
                 </code>
                 <Button size="sm" variant="outline" onClick={copyReferralCode}>
                   <Copy className="w-3 h-3" />
                 </Button>
               </div>
               <div className="text-sm text-gray-600">
-                Referrals: {customer?.profile?.totalReferrals || 0}
+                Referrals: {customer?.customer_profiles?.[0]?.total_referrals || customer?.profile?.totalReferrals || 0}
               </div>
               <div className="text-xs text-gray-500">
                 Earn 100 points for each successful referral!

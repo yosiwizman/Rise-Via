@@ -4,11 +4,14 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Download, Eye, User, Building } from 'lucide-react';
+import { customerService } from '../../services/customerService';
 
 interface Customer {
   id: string;
   firstName: string;
   lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   createdAt: string;
   profile?: {
@@ -19,6 +22,14 @@ interface Customer {
     isB2B: boolean;
     loyaltyPoints: number;
   };
+  customer_profiles?: Array<{
+    membership_tier: string;
+    lifetime_value: number;
+    total_orders: number;
+    segment: string;
+    is_b2b: boolean;
+    loyalty_points: number;
+  }>;
 }
 
 export const CustomerList = () => {
@@ -34,95 +45,16 @@ export const CustomerList = () => {
 
   const fetchCustomers = async () => {
     try {
-      const mockCustomers = [
-        {
-          id: 'cust-1',
-          firstName: 'John',
-          lastName: 'Smith',
-          email: 'john.smith@email.com',
-          createdAt: '2024-01-15T10:30:00Z',
-          profile: {
-            membershipTier: 'GOLD',
-            lifetimeValue: 2500.00,
-            totalOrders: 8,
-            segment: 'VIP',
-            isB2B: false,
-            loyaltyPoints: 1250
-          }
-        },
-        {
-          id: 'cust-2',
-          firstName: 'Sarah',
-          lastName: 'Johnson',
-          email: 'sarah.j@email.com',
-          createdAt: '2024-01-20T14:15:00Z',
-          profile: {
-            membershipTier: 'SILVER',
-            lifetimeValue: 850.00,
-            totalOrders: 3,
-            segment: 'Regular',
-            isB2B: false,
-            loyaltyPoints: 425
-          }
-        },
-        {
-          id: 'cust-3',
-          firstName: 'Green',
-          lastName: 'Dispensary LLC',
-          email: 'orders@greendispensary.com',
-          createdAt: '2024-01-10T09:00:00Z',
-          profile: {
-            membershipTier: 'PLATINUM',
-            lifetimeValue: 15000.00,
-            totalOrders: 25,
-            segment: 'VIP',
-            isB2B: true,
-            loyaltyPoints: 5000
-          }
-        },
-        {
-          id: 'cust-4',
-          firstName: 'Mike',
-          lastName: 'Wilson',
-          email: 'mike.w@email.com',
-          createdAt: '2024-01-25T16:45:00Z',
-          profile: {
-            membershipTier: 'GREEN',
-            lifetimeValue: 125.00,
-            totalOrders: 1,
-            segment: 'New',
-            isB2B: false,
-            loyaltyPoints: 125
-          }
-        }
-      ];
-
-      let filteredCustomers = mockCustomers;
+      const filters = {
+        segment: filterSegment,
+        isB2B: filterB2B
+      };
       
-      if (searchTerm) {
-        filteredCustomers = filteredCustomers.filter(customer =>
-          customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      if (filterSegment !== 'all') {
-        filteredCustomers = filteredCustomers.filter(customer =>
-          customer.profile?.segment === filterSegment
-        );
-      }
-      
-      if (filterB2B !== 'all') {
-        const isB2BFilter = filterB2B === 'true';
-        filteredCustomers = filteredCustomers.filter(customer =>
-          customer.profile?.isB2B === isB2BFilter
-        );
-      }
-
-      setCustomers(filteredCustomers);
+      const data = await customerService.search(searchTerm, filters);
+      setCustomers(data || []);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
@@ -152,14 +84,14 @@ export const CustomerList = () => {
     const csvContent = [
       ['Name', 'Email', 'Tier', 'Segment', 'Orders', 'LTV', 'Points', 'Type'].join(','),
       ...customers.map(customer => [
-        `${customer.firstName} ${customer.lastName}`,
+        `${customer.first_name || customer.firstName} ${customer.last_name || customer.lastName}`,
         customer.email,
-        customer.profile?.membershipTier || 'GREEN',
-        customer.profile?.segment || 'New',
-        customer.profile?.totalOrders || 0,
-        customer.profile?.lifetimeValue || 0,
-        customer.profile?.loyaltyPoints || 0,
-        customer.profile?.isB2B ? 'B2B' : 'B2C'
+        customer.customer_profiles?.[0]?.membership_tier || customer.profile?.membershipTier || 'GREEN',
+        customer.customer_profiles?.[0]?.segment || customer.profile?.segment || 'New',
+        customer.customer_profiles?.[0]?.total_orders || customer.profile?.totalOrders || 0,
+        customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0,
+        customer.customer_profiles?.[0]?.loyalty_points || customer.profile?.loyaltyPoints || 0,
+        customer.customer_profiles?.[0]?.is_b2b || customer.profile?.isB2B ? 'B2B' : 'B2C'
       ].join(','))
     ].join('\n');
 
@@ -195,7 +127,7 @@ export const CustomerList = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              {customers.filter(c => c.profile?.segment === 'VIP').length}
+              {customers.filter(c => c.customer_profiles?.[0]?.segment === 'VIP' || c.profile?.segment === 'VIP').length}
             </div>
             <div className="text-sm text-gray-600">VIP Customers</div>
           </CardContent>
@@ -203,7 +135,7 @@ export const CustomerList = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              {customers.filter(c => c.profile?.isB2B).length}
+              {customers.filter(c => c.customer_profiles?.[0]?.is_b2b || c.profile?.isB2B).length}
             </div>
             <div className="text-sm text-gray-600">B2B Customers</div>
           </CardContent>
@@ -211,7 +143,7 @@ export const CustomerList = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              ${customers.reduce((sum, c) => sum + (c.profile?.lifetimeValue || 0), 0).toFixed(0)}
+              ${customers.reduce((sum, c) => sum + (c.customer_profiles?.[0]?.lifetime_value || c.profile?.lifetimeValue || 0), 0).toFixed(0)}
             </div>
             <div className="text-sm text-gray-600">Total LTV</div>
           </CardContent>
@@ -274,26 +206,26 @@ export const CustomerList = () => {
                     <td className="p-3">
                       <div>
                         <div className="font-medium">
-                          {customer.firstName} {customer.lastName}
+                          {customer.first_name || customer.firstName} {customer.last_name || customer.lastName}
                         </div>
                         <div className="text-sm text-gray-600">{customer.email}</div>
                       </div>
                     </td>
                     <td className="p-3">
-                      <Badge className={getTierBadgeColor(customer.profile?.membershipTier || 'GREEN')}>
-                        {customer.profile?.membershipTier || 'GREEN'}
+                      <Badge className={getTierBadgeColor(customer.customer_profiles?.[0]?.membership_tier || customer.profile?.membershipTier || 'GREEN')}>
+                        {customer.customer_profiles?.[0]?.membership_tier || customer.profile?.membershipTier || 'GREEN'}
                       </Badge>
                     </td>
                     <td className="p-3">
-                      <Badge className={getSegmentBadgeColor(customer.profile?.segment || 'New')}>
-                        {customer.profile?.segment || 'New'}
+                      <Badge className={getSegmentBadgeColor(customer.customer_profiles?.[0]?.segment || customer.profile?.segment || 'New')}>
+                        {customer.customer_profiles?.[0]?.segment || customer.profile?.segment || 'New'}
                       </Badge>
                     </td>
-                    <td className="p-3">{customer.profile?.totalOrders || 0}</td>
-                    <td className="p-3">${(customer.profile?.lifetimeValue || 0).toFixed(2)}</td>
-                    <td className="p-3">{customer.profile?.loyaltyPoints || 0}</td>
+                    <td className="p-3">{customer.customer_profiles?.[0]?.total_orders || customer.profile?.totalOrders || 0}</td>
+                    <td className="p-3">${(customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0).toFixed(2)}</td>
+                    <td className="p-3">{customer.customer_profiles?.[0]?.loyalty_points || customer.profile?.loyaltyPoints || 0}</td>
                     <td className="p-3">
-                      {customer.profile?.isB2B ? (
+                      {customer.customer_profiles?.[0]?.is_b2b || customer.profile?.isB2B ? (
                         <Badge variant="outline">
                           <Building className="w-3 h-3 mr-1" />
                           B2B

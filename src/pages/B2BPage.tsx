@@ -5,6 +5,8 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
+import { customerService } from '../services/customerService';
+import { supabase } from '../lib/supabase';
 
 export const B2BPage = () => {
   const [formData, setFormData] = useState({
@@ -25,12 +27,30 @@ export const B2BPage = () => {
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (formData.firstName && formData.lastName && formData.email && formData.businessName) {
+      const customerData = await customerService.create({
+        email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone
+      });
+
+      if (customerData) {
+        await supabase
+          .from('customer_profiles')
+          .update({
+            is_b2b: true,
+            business_name: formData.businessName,
+            business_license: formData.businessLicense,
+            membership_tier: 'SILVER',
+            segment: 'B2B'
+          })
+          .eq('customer_id', customerData.id);
+      }
+
+      if (customerData) {
         setSubmitted(true);
       } else {
-        alert('Please fill in all required fields');
+        alert('Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('B2B registration error:', error);
