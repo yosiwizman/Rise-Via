@@ -1,0 +1,320 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { SEOHead } from '../components/SEOHead';
+import { CustomerList } from '../components/admin/CustomerList';
+
+export const AdminPage = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken === 'admin123') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginForm.username === 'admin' && loginForm.password === 'admin123') {
+      localStorage.setItem('adminToken', 'admin123');
+      setIsAuthenticated(true);
+    } else {
+      alert('Invalid credentials. Use admin/admin123 for demo.');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    setIsAuthenticated(false);
+    setActiveTab('dashboard');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 flex items-center justify-center">
+        <SEOHead
+          title="Admin Login - RiseViA"
+          description="Admin access to RiseViA cannabis e-commerce platform"
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
+        >
+          <div className="text-center mb-6">
+            <Shield className="w-12 h-12 mx-auto text-risevia-purple mb-4" />
+            <h1 className="text-2xl font-bold text-risevia-black">Admin Login</h1>
+            <p className="text-risevia-charcoal">Access the RiseViA admin dashboard</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={loginForm.username}
+                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                placeholder="Enter username"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                placeholder="Enter password"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal">
+              Login
+            </Button>
+          </form>
+          
+          <div className="mt-4 p-3 bg-gray-100 rounded text-sm text-gray-600">
+            <strong>Demo Credentials:</strong><br />
+            Username: admin<br />
+            Password: admin123
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const adminTabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'uploads', label: 'Media', icon: Upload },
+    { id: 'coi', label: 'COI Documents', icon: FileText },
+    { id: 'pricing', label: 'Pricing', icon: DollarSign },
+    { id: 'settings', label: 'Settings', icon: Settings }
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">15</div>
+                <p className="text-xs text-muted-foreground">Active cannabis strains</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">1,547</div>
+                <p className="text-xs text-muted-foreground">Units in stock</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">COI Documents</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12</div>
+                <p className="text-xs text-muted-foreground">Lab certificates</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg THC%</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">25.2%</div>
+                <p className="text-xs text-muted-foreground">THCA potency</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      
+      case 'customers':
+        return <CustomerList />;
+      
+      case 'products':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Cannabis Products</h3>
+                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+                    Add New Product
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Product management interface will be implemented here with:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>CRUD operations for cannabis strains</li>
+                    <li>THC/THCA percentage management</li>
+                    <li>Strain type classification (Sativa, Indica, Hybrid)</li>
+                    <li>Effects and terpene profiles</li>
+                    <li>Inventory tracking with variants (1g, 3.5g, 7g)</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      
+      case 'uploads':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Media Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Upload Product Images</h3>
+                  <p className="text-gray-600 mb-4">Drag and drop images or click to browse</p>
+                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+                    Choose Files
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Cloudinary integration features:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Multi-image upload for product galleries</li>
+                    <li>Automatic image optimization and resizing</li>
+                    <li>Cloud storage with CDN delivery</li>
+                    <li>Image transformation and effects</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      
+      case 'coi':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Certificate of Analysis (COI) Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Lab Certificates</h3>
+                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+                    Upload COI Document
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  COI document management features:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>PDF upload and storage for lab results</li>
+                    <li>Link COI documents to specific product batches</li>
+                    <li>QR code generation for easy COI access</li>
+                    <li>Compliance tracking and expiration alerts</li>
+                    <li>Public COI viewer for customer transparency</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      
+      default:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">This section is under development.</p>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50">
+      <SEOHead
+        title="Admin Dashboard - RiseViA"
+        description="Administrative interface for RiseViA cannabis e-commerce platform"
+      />
+      
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <Shield className="w-8 h-8 text-risevia-purple" />
+              <h1 className="text-2xl font-bold text-risevia-black">RiseViA Admin</h1>
+            </div>
+            <Button onClick={handleLogout} variant="outline">
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-64">
+            <nav className="space-y-2">
+              {adminTabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white'
+                        : 'text-risevia-charcoal hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="flex-1">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderTabContent()}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
