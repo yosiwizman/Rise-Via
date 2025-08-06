@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { SEOHead } from '../components/SEOHead';
+import { CustomerList } from '../components/admin/CustomerList';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -93,11 +94,11 @@ export const AdminPage = () => {
 
   const adminTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'customers', label: 'Customers', icon: Users },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'coi', label: 'COI Documents', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
-    { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -151,6 +152,9 @@ export const AdminPage = () => {
             </Card>
           </div>
         );
+      
+      case 'customers':
+        return <CustomerList />;
       
       case 'products':
         return (
