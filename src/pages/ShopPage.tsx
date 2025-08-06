@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
+import { WishlistButton } from '../components/wishlist/WishlistButton';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
@@ -16,12 +17,27 @@ export const ShopPage = () => {
 
   const ProductCard = ({ product }: { product: any }) => {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform">
-        <img 
-          src={product.images[0]} 
-          alt={product.name}
-          className="w-full h-48 object-cover"
-        />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative">
+        <div className="relative">
+          <img 
+            src={product.images[0]} 
+            alt={product.name}
+            className="w-full h-48 object-cover"
+          />
+          <div className="absolute top-2 right-2">
+            <WishlistButton
+              item={{
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                image: product.images[0],
+                category: product.category,
+                effects: product.effects
+              }}
+              size="md"
+            />
+          </div>
+        </div>
         <div className="p-4">
           <h3 className="font-bold text-lg mb-2 text-risevia-black dark:text-gray-100">{product.name}</h3>
           <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strainType}</p>

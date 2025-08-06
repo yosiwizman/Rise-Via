@@ -18,6 +18,7 @@ import { CareersPage } from './pages/CareersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { WishlistPage } from './components/wishlist/WishlistPage';
 import { SharedWishlistPage } from './components/wishlist/WishlistShare';
+import { AdminPage } from './pages/AdminPage';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
@@ -82,6 +83,8 @@ function App() {
         return <WishlistPage />;
       case 'wishlist-shared':
         return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
