@@ -53,8 +53,7 @@ export const OptimizedImage = ({
     return () => observer.disconnect();
   }, [priority]);
 
-  const sources = ImageOptimizer.getOptimizedImageSources(src);
-  ImageOptimizer.generateSrcSet(src);
+  const sources = src ? ImageOptimizer.getOptimizedImageSources(src) : { webp: [], fallback: [] };
   const blurPlaceholder = placeholder === 'blur' ? ImageOptimizer.generateBlurPlaceholder() : undefined;
 
   const handleLoad = () => {
