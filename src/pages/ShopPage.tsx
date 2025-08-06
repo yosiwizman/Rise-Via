@@ -12,6 +12,7 @@ import { SEOHead } from '../components/SEOHead';
 import { ProductWarnings } from '../components/ProductWarnings';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAnalytics } from '../components/AnalyticsPlaceholder';
+import { WishlistButton } from '../components/wishlist/WishlistButton';
 import strainsData from '../data/strains.json';
 
 interface ShopPageProps {
@@ -154,12 +155,19 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
               >
                 Add to Cart (Coming Soon)
               </Button>
-              <Button
-                variant="outline"
+              <WishlistButton
+                item={{
+                  id: strain.batch_id,
+                  name: strain.strain_name,
+                  price: 0,
+                  image: strain.image_url,
+                  category: strain.category,
+                  thcContent: strain.thca_potency,
+                  effects: []
+                }}
+                showLabel={true}
                 className="border-risevia-teal text-risevia-teal hover:bg-risevia-teal hover:text-white"
-              >
-                Save to Wishlist
-              </Button>
+              />
             </div>
           </div>
         )}
@@ -270,7 +278,20 @@ export const ShopPage = ({ isStateBlocked }: ShopPageProps) => {
                     alt={strain.strain_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 flex items-center space-x-2">
+                    <WishlistButton
+                      item={{
+                        id: strain.batch_id,
+                        name: strain.strain_name,
+                        price: 0, // Price not available in current data
+                        image: strain.image_url,
+                        category: strain.category,
+                        thcContent: strain.thca_potency,
+                        effects: []
+                      }}
+                      size="sm"
+                      className="bg-black/50 hover:bg-black/70"
+                    />
                     <Badge className="bg-risevia-teal text-white font-semibold">
                       {strain.thca_potency}%
                     </Badge>

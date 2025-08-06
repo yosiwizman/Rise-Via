@@ -6,6 +6,7 @@ import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -15,9 +16,12 @@ import { ShippingPage } from './pages/ShippingPage';
 import { LabResultsPage } from './pages/LabResultsPage';
 import { CareersPage } from './pages/CareersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { WishlistPage } from './components/wishlist/WishlistPage';
+import { SharedWishlistPage } from './components/wishlist/WishlistShare';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { isStateBlocked } from './utils/stateBlocking';
+import { priceTrackingService } from './services/priceTracking';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -37,6 +41,12 @@ function App() {
     } else {
       setShowStateBlocker(true);
     }
+
+    priceTrackingService.startPriceTracking();
+
+    return () => {
+      priceTrackingService.stopPriceTracking();
+    };
   }, []);
 
   const handleStateVerified = (state: string) => {
@@ -63,41 +73,47 @@ function App() {
         return <LabResultsPage />;
       case 'careers':
         return <CareersPage />;
+      case 'wishlist':
+        return <WishlistPage />;
+      case 'wishlist-shared':
+        return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
       default:
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
   };
 
   return (
-    <AnalyticsProvider>
-      <div className="min-h-screen bg-risevia-black text-white">
-        <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-        
-        {showStateBlocker && (
-          <StateBlocker onStateVerified={handleStateVerified} />
-        )}
-        
-        {isAgeVerified && (
-          <>
-            <Navigation 
-              currentPage={currentPage} 
-              onNavigate={setCurrentPage}
-              cartOpen={cartOpen}
-              setCartOpen={setCartOpen}
-              userMenuOpen={userMenuOpen}
-              setUserMenuOpen={setUserMenuOpen}
-              searchOpen={searchOpen}
-              setSearchOpen={setSearchOpen}
-            />
-            <main>
-              {renderCurrentPage()}
-            </main>
-            <Footer onNavigate={setCurrentPage} />
-            <CookieConsentBanner />
-          </>
-        )}
-      </div>
-    </AnalyticsProvider>
+    <ErrorBoundary>
+      <AnalyticsProvider>
+        <div className="min-h-screen bg-risevia-black text-white">
+          <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+          
+          {showStateBlocker && (
+            <StateBlocker onStateVerified={handleStateVerified} />
+          )}
+          
+          {isAgeVerified && (
+            <>
+              <Navigation 
+                currentPage={currentPage} 
+                onNavigate={setCurrentPage}
+                cartOpen={cartOpen}
+                setCartOpen={setCartOpen}
+                userMenuOpen={userMenuOpen}
+                setUserMenuOpen={setUserMenuOpen}
+                searchOpen={searchOpen}
+                setSearchOpen={setSearchOpen}
+              />
+              <main>
+                {renderCurrentPage()}
+              </main>
+              <Footer onNavigate={setCurrentPage} />
+              <CookieConsentBanner />
+            </>
+          )}
+        </div>
+      </AnalyticsProvider>
+    </ErrorBoundary>
   );
 }
 
