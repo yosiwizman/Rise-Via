@@ -10,7 +10,7 @@ import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string; price: number; images: string[]; category: string; strainType: string; thcaPercentage: number; description: string; effects: string[]; inventory: number } | null>(null);
   const [showModal, setShowModal] = useState(false);
   const { addToCart } = useSupabaseCart();
 
@@ -20,12 +20,12 @@ export const ShopPage = () => {
     );
   }, [filter]);
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: { id: string; name: string; price: number; images: string[]; category: string; strainType: string; thcaPercentage: number; description: string; effects: string[]; inventory: number }) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
 
-  const ProductCard = ({ product }: { product: any }) => {
+  const ProductCard = ({ product }: { product: { id: string; name: string; price: number; images: string[]; category: string; strainType: string; thcaPercentage: number; description: string; effects: string[]; inventory: number } }) => {
     return (
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
@@ -199,7 +199,7 @@ export const ShopPage = () => {
       <ProductDetailModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        product={selectedProduct}
+        product={selectedProduct!}
       />
     </div>
   );

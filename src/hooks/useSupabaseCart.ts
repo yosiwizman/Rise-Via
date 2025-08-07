@@ -57,14 +57,16 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
         try {
           SecurityUtils.sanitizeInput(itemData.name);
           
-          let { data: cart, error } = await supabase
+          const { data: initialCart, error: cartError } = await supabase
             .from('carts')
             .select('id')
             .eq(state.customerId ? 'customer_id' : 'session_id', 
                 state.customerId || state.sessionId)
             .single();
 
-          if (error && error.code === 'PGRST116') {
+          let cart = initialCart;
+          
+          if (cartError && cartError.code === 'PGRST116') {
             const { data: newCart, error: createError } = await supabase
               .from('carts')
               .insert([{
@@ -75,8 +77,8 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
 
             if (createError) throw createError;
             cart = newCart;
-          } else if (error) {
-            throw error;
+          } else if (cartError) {
+            throw cartError;
           }
 
           if (!cart) {
@@ -222,15 +224,15 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const { data: cart, error: cartError } = await supabase
+          const { data: cart, error } = await supabase
             .from('carts')
             .select('id')
             .eq(state.customerId ? 'customer_id' : 'session_id', 
                 state.customerId || state.sessionId)
             .single();
 
-          if (cartError && cartError.code !== 'PGRST116') {
-            throw cartError;
+          if (error && error.code !== 'PGRST116') {
+            throw error;
           }
 
           if (cart) {
@@ -296,18 +298,34 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
 
           if (error) throw error;
 
-          const items: CartItem[] = (cart?.cart_items || []).map((item: any) => ({
-            id: item.id,
-            productId: item.product_id,
-            name: item.products.name,
-            price: item.products.price,
-            image: item.products.images[0] || '',
-            category: item.products.category,
-            strainType: item.products.strain,
-            thcaPercentage: item.products.thca_percentage,
-            quantity: item.quantity,
-            dateAdded: Date.now()
-          }));
+          const items: CartItem[] = (cart?.cart_items || []).map((item: {
+            id: string;
+            product_id: string;
+            quantity: number;
+            products: {
+              id: string;
+              name: string;
+              price: number;
+              images: string[];
+              category: string;
+              strain: string;
+              thca_percentage: number;
+            }[];
+          }) => {
+            const product = item.products[0];
+            return {
+              id: item.id,
+              productId: item.product_id,
+              name: product.name,
+              price: product.price,
+              image: product.images[0] || '',
+              category: product.category,
+              strainType: product.strain,
+              thcaPercentage: product.thca_percentage,
+              quantity: item.quantity,
+              dateAdded: Date.now()
+            };
+          });
 
           const stats = calculateStats(items);
 

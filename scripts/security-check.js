@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 console.log('🔒 Running security check...')
 
@@ -65,13 +65,13 @@ function checkFile(filePath) {
   }
 }
 
-const envLocalPath = path.join(__dirname, '../.env.local')
+const envLocalPath = path.join(process.cwd(), '.env.local')
 if (fs.existsSync(envLocalPath)) {
   console.log('✅ .env.local file exists (good for local development)')
   console.log('⚠️ Make sure .env.local is in .gitignore and not committed')
 }
 
-const gitignorePath = path.join(__dirname, '../.gitignore')
+const gitignorePath = path.join(process.cwd(), '.gitignore')
 if (fs.existsSync(gitignorePath)) {
   const gitignoreContent = fs.readFileSync(gitignorePath, 'utf8')
   if (!gitignoreContent.includes('.env.local')) {
@@ -82,7 +82,7 @@ if (fs.existsSync(gitignorePath)) {
   }
 }
 
-const srcPath = path.join(__dirname, '../src')
+const srcPath = path.join(process.cwd(), 'src')
 scanDirectory(srcPath)
 
 console.log('\n📊 Security Check Summary:')
