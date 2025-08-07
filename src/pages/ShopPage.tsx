@@ -5,12 +5,14 @@ import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
+import { useCart } from '../hooks/useCart';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const { addToCart } = useCart();
 
   const filteredProducts = useMemo(() => {
     return productsData.products.filter(product => 
@@ -69,7 +71,16 @@ export const ShopPage = () => {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🛒 Add to cart:', product.name);
+              addToCart({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                image: product.images[0],
+                category: product.category,
+                strainType: product.strainType,
+                thcaPercentage: product.thcaPercentage
+              });
+              console.log('✅ Added to cart:', product.name);
             }}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
           >
