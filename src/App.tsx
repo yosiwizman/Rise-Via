@@ -29,6 +29,7 @@ import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import MobileCartButton from './components/MobileCartButton';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -158,6 +159,7 @@ function App() {
                   {renderCurrentPage()}
                 </main>
                 <Footer onNavigate={setCurrentPage} />
+                <MobileCartButton />
                 <CookieConsentBanner />
               </>
             )}
