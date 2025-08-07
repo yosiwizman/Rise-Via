@@ -34,7 +34,7 @@ function App() {
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
@@ -150,7 +150,6 @@ function App() {
                   onNavigate={setCurrentPage}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
-                  searchOpen={searchOpen}
                   setSearchOpen={setSearchOpen}
                 />
                 <main>
