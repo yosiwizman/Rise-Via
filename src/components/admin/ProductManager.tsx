@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
+import { ProductEditor } from './ProductEditor';
 import productsData from '../../data/products.json';
 
 interface Product {
@@ -25,6 +26,8 @@ export const ProductManager: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [isProductEditorOpen, setIsProductEditorOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const loadedProducts = productsData.products.map(product => ({
@@ -141,6 +144,26 @@ export const ProductManager: React.FC = () => {
 
   const categories = [...new Set(products.map(p => p.category))];
 
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setIsProductEditorOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsProductEditorOpen(true);
+  };
+
+  const handleSaveProduct = (productData: any) => {
+    if (editingProduct) {
+      setProducts(prev => prev.map(p => 
+        p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
+      ));
+    } else {
+      setProducts(prev => [...prev, productData]);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -155,7 +178,10 @@ export const ProductManager: React.FC = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
-              <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+              <Button 
+                onClick={handleAddProduct}
+                className="bg-gradient-to-r from-risevia-purple to-risevia-teal"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
@@ -311,7 +337,7 @@ export const ProductManager: React.FC = () => {
                     <td className="p-3">
                       <div className="flex gap-1">
                         <Button
-                          onClick={() => console.log('Edit product:', product.id)}
+                          onClick={() => handleEditProduct(product)}
                           size="sm"
                           variant="ghost"
                         >
@@ -344,6 +370,13 @@ export const ProductManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <ProductEditor
+        isOpen={isProductEditorOpen}
+        onClose={() => setIsProductEditorOpen(false)}
+        onSave={handleSaveProduct}
+        product={editingProduct}
+      />
     </div>
   );
 };
