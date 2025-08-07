@@ -4,22 +4,22 @@ import { Menu, ShoppingBag, User, Search, Heart, Moon, Sun } from 'lucide-react'
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 import { useWishlist } from '../hooks/useWishlist';
+import { useCart } from '../hooks/useCart';
+import { CartSidebar } from './cart/CartSidebar';
 
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
-  cartOpen: boolean;
-  setCartOpen: (open: boolean) => void;
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
-  searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { getWishlistCount } = useWishlist();
+  const { getCartCount, isOpen: cartOpen, setCartOpen } = useCart();
 
   const handleDarkModeToggle = () => {
     console.log('🌓 Dark mode toggled!');
@@ -107,11 +107,15 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
             }}>
               <User className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
-              console.log('🛒 Cart clicked!');
-              setCartOpen(true);
-            }}>
-              <ShoppingBag className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
+              <div className="relative">
+                <ShoppingBag className="w-4 h-4" />
+                {getCartCount() > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {getCartCount()}
+                  </span>
+                )}
+              </div>
             </Button>
             <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={handleDarkModeToggle}>
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -162,8 +166,15 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
                       Account
                     </Button>
                     <Button variant="ghost" className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => setCartOpen(true)}>
-                      <ShoppingBag className="w-4 h-4 mr-2" />
-                      Cart
+                      <div className="flex items-center">
+                        <ShoppingBag className="w-4 h-4 mr-2" />
+                        Cart
+                        {getCartCount() > 0 && (
+                          <span className="ml-auto bg-risevia-teal text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {getCartCount()}
+                          </span>
+                        )}
+                      </div>
                     </Button>
                   </div>
                 </div>
@@ -172,6 +183,7 @@ export const Navigation = ({ currentPage, onNavigate, setCartOpen, userMenuOpen,
           </div>
         </div>
       </div>
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} onNavigate={onNavigate} />
     </motion.nav>
   );
 };

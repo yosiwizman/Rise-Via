@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 #root {
   max-width: none;
   width: 100%;
@@ -5,8 +7,6 @@
   padding: 0;
   text-align: left;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 .neon-glow {
   transition: all 0.3s ease;

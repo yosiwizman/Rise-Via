@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WishlistButton } from './wishlist/WishlistButton';
+import { useCart } from '../hooks/useCart';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface ProductDetailModalProps {
 
 export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { addToCart } = useCart();
 
   if (!product) return null;
 
@@ -121,7 +123,18 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             </div>
 
             <Button 
-              onClick={() => console.log('🛒 Add to cart from modal:', product.name)}
+              onClick={() => {
+                addToCart({
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: product.images[0],
+                  category: product.category,
+                  strainType: product.strainType,
+                  thcaPercentage: product.thcaPercentage
+                });
+                console.log('✅ Added to cart from modal:', product.name);
+              }}
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg hover:opacity-90 transition-opacity"
             >
               <ShoppingBag className="w-5 h-5 mr-2" />
