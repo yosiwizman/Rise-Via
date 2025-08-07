@@ -183,7 +183,7 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
           </div>
         </div>
       </div>
-      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} onNavigate={onNavigate} />
     </motion.nav>
   );
 };

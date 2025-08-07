@@ -10,9 +10,10 @@ import { CartItem } from '../../types/cart';
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigate: (page: string) => void;
 }
 
-export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
+export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) => {
   const { items, getCartTotal, removeFromCart, updateQuantity, clearCart } = useCart();
 
   const CartItemComponent = ({ item }: { item: CartItem }) => {
@@ -161,6 +162,8 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg"
               onClick={() => {
                 console.log('🚀 Proceeding to checkout...');
+                onNavigate('checkout');
+                onClose();
               }}
             >
               Proceed to Checkout
