@@ -220,14 +220,14 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ product, onClose, onSave 
           <div>
             <label className="block text-sm font-medium mb-1">Product Images</label>
             <div className="grid grid-cols-4 gap-4">
-              {form.images.map((img, idx) => (
+              {form.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative">
                   <img src={img} alt="" className="w-full h-24 object-cover rounded" />
                   <button
                     type="button"
                     onClick={() => setForm({
                       ...form,
-                      images: form.images.filter((_, i) => i !== idx)
+                      images: form.images.filter((_: string, i: number) => i !== idx)
                     })}
                     className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded text-xs"
                   >
