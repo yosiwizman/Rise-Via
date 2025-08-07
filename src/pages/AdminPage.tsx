@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, ShoppingBag } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, ShoppingBag, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,6 +9,8 @@ import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
 import { ProductManager } from '../components/admin/ProductManager';
 import { OrderManager } from '../components/admin/OrderManager';
+import ProductEditor from '../components/admin/ProductEditor';
+import EmailTester from '../components/admin/EmailTester';
 import { orderService } from '../services/orderService';
 import { productService } from '../services/productService';
 import { customerService } from '../services/customerService';
@@ -17,6 +19,8 @@ export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showProductEditor, setShowProductEditor] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [metrics, setMetrics] = useState({
     todaysSales: 0,
     todaysOrders: 0,
@@ -39,6 +43,16 @@ export const AdminPage = () => {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
+  
+  useEffect(() => {
+    const handleAddProduct = () => {
+      setEditingProduct(null);
+      setShowProductEditor(true);
+    };
+    
+    window.addEventListener('addProduct', handleAddProduct);
+    return () => window.removeEventListener('addProduct', handleAddProduct);
+  }, []);
 
   const loadMetrics = async () => {
     try {
@@ -142,7 +156,8 @@ export const AdminPage = () => {
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'coi', label: 'COI Documents', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'email', label: 'Email Tester', icon: Mail }
   ];
 
   const renderTabContent = () => {
@@ -224,7 +239,21 @@ export const AdminPage = () => {
         return <CustomerList />;
       
       case 'products':
-        return <ProductManager />;
+        return (
+          <>
+            <ProductManager />
+            {showProductEditor && (
+              <ProductEditor
+                product={editingProduct}
+                onClose={() => setShowProductEditor(false)}
+                onSave={() => {
+                  setShowProductEditor(false);
+                  // Reload products happens in ProductManager
+                }}
+              />
+            )}
+          </>
+        );
       
       case 'orders':
         return <OrderManager />;
@@ -288,6 +317,69 @@ export const AdminPage = () => {
           </Card>
         );
       
+      case 'pricing':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Pricing Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                <p className="font-bold">Pricing Management</p>
+                <p>Pricing is now managed individually for each product.</p>
+                <Button 
+                  onClick={() => setActiveTab('products')}
+                  className="mt-2 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                >
+                  Go to Products
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+        
+      case 'settings':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="font-bold mb-4">Store Settings</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Store Name</label>
+                      <input type="text" defaultValue="Rise Via" className="w-full border rounded px-3 py-2" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Contact Email</label>
+                      <input type="email" defaultValue="support@risevia.com" className="w-full border rounded px-3 py-2" />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="font-bold mb-4">API Keys</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Stripe</label>
+                      <input type="password" placeholder="sk_test_..." className="w-full border rounded px-3 py-2" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Resend</label>
+                      <input type="password" placeholder="re_..." className="w-full border rounded px-3 py-2" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+        
+      case 'email':
+        return <EmailTester />;
+        
       default:
         return (
           <Card>

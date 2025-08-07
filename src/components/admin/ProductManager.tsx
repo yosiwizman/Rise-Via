@@ -244,7 +244,15 @@ export const ProductManager = () => {
               >
                 {updatingImages ? 'Updating...' : 'Update Images'}
               </Button>
-              <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+              <Button 
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    const event = new CustomEvent('addProduct');
+                    window.dispatchEvent(event);
+                  }
+                }}
+                className="bg-gradient-to-r from-risevia-purple to-risevia-teal"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
