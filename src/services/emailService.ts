@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
 
-export const emailService = {
+const emailService = {
   sendWelcomeEmail: async (to: string, name: string) => {
     try {
       const { data, error } = await resend.emails.send({
@@ -27,7 +27,7 @@ export const emailService = {
     }
   },
 
-  sendOrderConfirmation: async (to: string, orderData: any) => {
+  sendOrderConfirmation: async (to: string, orderData: { orderNumber: string; total: number }) => {
     try {
       const { data, error } = await resend.emails.send({
         from: 'Rise Via <orders@risevia.com>',
@@ -48,5 +48,40 @@ export const emailService = {
       console.error('Failed to send order confirmation:', error);
       return { success: false, error };
     }
+  },
+
+  sendOrderStatusUpdate: async (to: string, orderData: { orderNumber: string; total: number }, newStatus: string) => {
+    try {
+      const statusMessages = {
+        pending: 'Your order has been received and is being processed.',
+        processing: 'Your order is currently being prepared for shipment.',
+        shipped: 'Your order has been shipped and is on its way!',
+        delivered: 'Your order has been successfully delivered.',
+        cancelled: 'Your order has been cancelled.'
+      };
+
+      const { data, error } = await resend.emails.send({
+        from: 'Rise Via <orders@risevia.com>',
+        to,
+        subject: `Order Update #${orderData.orderNumber} - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+        html: `
+          <h1>Order Status Update</h1>
+          <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+          <p><strong>Status:</strong> ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</p>
+          <p>${statusMessages[newStatus as keyof typeof statusMessages] || 'Your order status has been updated.'}</p>
+          <p><strong>Total:</strong> $${orderData.total}</p>
+          <p>Thank you for choosing Rise Via!</p>
+        `
+      });
+      
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send order status update:', error);
+      return { success: false, error };
+    }
   }
 };
+
+export { emailService };
+export default emailService;
