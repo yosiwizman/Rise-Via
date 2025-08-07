@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, ShoppingBag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
+import { ProductManager } from '../components/admin/ProductManager';
+import { OrderManager } from '../components/admin/OrderManager';
+import { orderService } from '../services/orderService';
+import { productService } from '../services/productService';
+import { customerService } from '../services/customerService';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [metrics, setMetrics] = useState({
+    todaysSales: 0,
+    todaysOrders: 0,
+    lowStockCount: 0,
+    totalCustomers: 0
+  });
+  const [metricsLoading, setMetricsLoading] = useState(true);
 
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
@@ -19,6 +31,36 @@ export const AdminPage = () => {
       setIsAuthenticated(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadMetrics();
+      const interval = setInterval(loadMetrics, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
+  const loadMetrics = async () => {
+    try {
+      setMetricsLoading(true);
+      const [orderStats, lowStockCount, customers] = await Promise.all([
+        orderService.getOrderStats(),
+        productService.getLowStockCount(),
+        customerService.getAll()
+      ]);
+
+      setMetrics({
+        todaysSales: orderStats.todaysSales,
+        todaysOrders: orderStats.todaysOrders,
+        lowStockCount,
+        totalCustomers: customers.length
+      });
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    } finally {
+      setMetricsLoading(false);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +138,7 @@ export const AdminPage = () => {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'products', label: 'Products', icon: Package },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'coi', label: 'COI Documents', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
@@ -109,45 +152,69 @@ export const AdminPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">15</div>
-                <p className="text-xs text-muted-foreground">Active cannabis strains</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,547</div>
-                <p className="text-xs text-muted-foreground">Units in stock</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">COI Documents</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">Lab certificates</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg THC%</CardTitle>
+                <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">25.2%</div>
-                <p className="text-xs text-muted-foreground">THCA potency</p>
+                <div className="text-2xl font-bold">
+                  {metricsLoading ? (
+                    <div className="w-6 h-6 border-2 border-risevia-purple border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    `$${metrics.todaysSales.toFixed(2)}`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Revenue today</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today's Orders</CardTitle>
+                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {metricsLoading ? (
+                    <div className="w-6 h-6 border-2 border-risevia-purple border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    metrics.todaysOrders
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Orders placed today</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {metricsLoading ? (
+                    <div className="w-6 h-6 border-2 border-risevia-purple border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    metrics.lowStockCount
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Products need restocking</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {metricsLoading ? (
+                    <div className="w-6 h-6 border-2 border-risevia-purple border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    metrics.totalCustomers
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Registered customers</p>
               </CardContent>
             </Card>
           </div>
@@ -157,33 +224,10 @@ export const AdminPage = () => {
         return <CustomerList />;
       
       case 'products':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Cannabis Products</h3>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Add New Product
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Product management interface will be implemented here with:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>CRUD operations for cannabis strains</li>
-                    <li>THC/THCA percentage management</li>
-                    <li>Strain type classification (Sativa, Indica, Hybrid)</li>
-                    <li>Effects and terpene profiles</li>
-                    <li>Inventory tracking with variants (1g, 3.5g, 7g)</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <ProductManager />;
+      
+      case 'orders':
+        return <OrderManager />;
       
       case 'uploads':
         return (
