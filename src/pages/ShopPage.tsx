@@ -5,14 +5,14 @@ import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
 
   const filteredProducts = useMemo(() => {
     return productsData.products.filter(product => 

@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-08-07T02:09:05.333Z",
+  "successful": 15,
+  "failed": 0,
+  "errors": [],
+  "totalInDb": 15,
+  "migratedProducts": [
+    {
+      "id": "4e112799-4eda-42a5-962d-0bf03c338e48",
+      "name": "Blue Dream",
+      "sku": "SKU-1754532544702-000"
+    },
+    {
+      "id": "fa5b855d-9844-4d9b-b58b-6eb91315c921",
+      "name": "OG Kush",
+      "sku": "SKU-1754532544703-001"
+    },
+    {
+      "id": "87aafa89-0bdb-4b56-9850-eae63f7fb541",
+      "name": "Sour Diesel",
+      "sku": "SKU-1754532544703-002"
+    },
+    {
+      "id": "25b266fa-1d33-43b8-a834-46c259bf9e25",
+      "name": "Purple Haze",
+      "sku": "SKU-1754532544703-003"
+    },
+    {
+      "id": "e30c3823-ea95-4576-8746-204f8246fc49",
+      "name": "Granddaddy Purple",
+      "sku": "SKU-1754532544703-004"
+    },
+    {
+      "id": "bf5ab71f-ea91-47c6-92e1-77f4ec98bc83",
+      "name": "White Widow",
+      "sku": "SKU-1754532544703-005"
+    },
+    {
+      "id": "3d92c883-b153-4fa6-8465-e10ef8e3b468",
+      "name": "Green Crack",
+      "sku": "SKU-1754532544703-006"
+    },
+    {
+      "id": "1b4d39da-ed04-408a-9321-ff404c67e591",
+      "name": "Northern Lights",
+      "sku": "SKU-1754532544703-007"
+    },
+    {
+      "id": "39450038-1992-478e-bb5f-3afce33458fa",
+      "name": "Jack Herer",
+      "sku": "SKU-1754532544703-008"
+    },
+    {
+      "id": "1c1e52bc-ff96-43a8-9c0b-65a14f727580",
+      "name": "Girl Scout Cookies",
+      "sku": "SKU-1754532544703-009"
+    },
+    {
+      "id": "9814cad6-5de3-42f8-87c7-346e9cd34def",
+      "name": "AK-47",
+      "sku": "SKU-1754532544703-010"
+    },
+    {
+      "id": "26fd2e65-92d8-4feb-a1fd-9bf805545e73",
+      "name": "Pineapple Express",
+      "sku": "SKU-1754532544703-011"
+    },
+    {
+      "id": "2d3f5a74-c676-4f5a-8cbf-5dbafd3a63b7",
+      "name": "Gorilla Glue #4",
+      "sku": "SKU-1754532544703-012"
+    },
+    {
+      "id": "b74a23b4-bc2a-404d-9c82-40e29fd0af59",
+      "name": "Wedding Cake",
+      "sku": "SKU-1754532544703-013"
+    },
+    {
+      "id": "b13d972d-5728-4cb4-ae87-798124071882",
+      "name": "Gelato",
+      "sku": "SKU-1754532544703-014"
+    }
+  ]
+}

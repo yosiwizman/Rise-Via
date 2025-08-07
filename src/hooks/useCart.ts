@@ -47,6 +47,10 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
+          
+          const updatedItem = updatedItems.find(item => item.productId === itemData.productId)!;
+          trackCartEvent('add', itemData, { quantity });
+          cartAnalytics.trackCartEvent('add', updatedItem, { quantity });
         } else {
           const newItem: CartItem = {
             ...itemData,
@@ -64,10 +68,10 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
+          
+          trackCartEvent('add', itemData, { quantity });
+          cartAnalytics.trackCartEvent('add', newItem, { quantity });
         }
-
-        trackCartEvent('add', itemData, { quantity });
-        cartAnalytics.trackCartEvent('add', itemData, { quantity });
       },
 
       removeFromCart: (itemId) => {

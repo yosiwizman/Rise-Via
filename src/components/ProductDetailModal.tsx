@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WishlistButton } from './wishlist/WishlistButton';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface ProductDetailModalProps {
 
 export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
 
   if (!product) return null;
 

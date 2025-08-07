@@ -32,7 +32,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
@@ -144,8 +143,6 @@ function App() {
                 <Navigation 
                   currentPage={currentPage} 
                   onNavigate={setCurrentPage}
-                  cartOpen={cartOpen}
-                  setCartOpen={setCartOpen}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
                   searchOpen={searchOpen}

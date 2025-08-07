@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { ShoppingBag, Plus, Minus, Trash2, X } from 'lucide-react';
-import { useCart } from '../../hooks/useCart';
+import { useSupabaseCart } from '../../hooks/useSupabaseCart';
 import { CartItem } from '../../types/cart';
 
 interface CartSidebarProps {
@@ -13,7 +13,7 @@ interface CartSidebarProps {
 }
 
 export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
-  const { items, getCartTotal, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { items, getCartTotal, removeFromCart, updateQuantity, clearCart, isLoading, error } = useSupabaseCart();
 
   const CartItemComponent = ({ item }: { item: CartItem }) => {
     const [isUpdating, setIsUpdating] = useState(false);
@@ -119,6 +119,16 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <div className="w-6 h-6 border-2 border-risevia-purple border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <ShoppingBag className="w-16 h-16 text-gray-300 mb-4" />

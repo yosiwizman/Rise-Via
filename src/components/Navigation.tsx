@@ -4,7 +4,7 @@ import { Menu, ShoppingBag, User, Search, Heart, Moon, Sun } from 'lucide-react'
 import { Button } from '../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 import { useWishlist } from '../hooks/useWishlist';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import { CartSidebar } from './cart/CartSidebar';
 
 interface NavigationProps {
@@ -16,12 +16,12 @@ interface NavigationProps {
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, searchOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const { getWishlistCount } = useWishlist();
-  const { getCartCount } = useCart();
+  const { getCartCount } = useSupabaseCart();
 
   const handleDarkModeToggle = () => {
     console.log('🌓 Dark mode toggled!');

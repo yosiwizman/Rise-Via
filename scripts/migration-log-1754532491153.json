@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-08-07T02:08:11.153Z",
+  "successful": 0,
+  "failed": 17,
+  "errors": [
+    {
+      "batch": 1,
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache",
+      "details": {
+        "code": "PGRST204",
+        "details": null,
+        "hint": null,
+        "message": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+      }
+    },
+    {
+      "product": "Blue Dream",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "OG Kush",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Sour Diesel",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Purple Haze",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Granddaddy Purple",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "White Widow",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Green Crack",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Northern Lights",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Jack Herer",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Girl Scout Cookies",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "batch": 2,
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache",
+      "details": {
+        "code": "PGRST204",
+        "details": null,
+        "hint": null,
+        "message": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+      }
+    },
+    {
+      "product": "AK-47",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Pineapple Express",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Gorilla Glue #4",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Wedding Cake",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    },
+    {
+      "product": "Gelato",
+      "error": "Could not find the 'allow_backorder' column of 'products' in the schema cache"
+    }
+  ],
+  "totalInDb": 0,
+  "migratedProducts": []
+}
