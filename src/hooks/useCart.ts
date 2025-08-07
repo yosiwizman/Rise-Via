@@ -64,10 +64,10 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
-        }
 
-        trackCartEvent('add', itemData, { quantity });
-        cartAnalytics.trackCartEvent('add', itemData, { quantity });
+          trackCartEvent('add', newItem, { quantity });
+          cartAnalytics.trackCartEvent('add', newItem, { quantity });
+        }
       },
 
       removeFromCart: (itemId) => {

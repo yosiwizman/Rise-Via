@@ -12,6 +12,7 @@ import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
 import { LegalPage } from './pages/LegalPage';
 import { ContactPage } from './pages/ContactPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { ShippingPage } from './pages/ShippingPage';
 import { LabResultsPage } from './pages/LabResultsPage';
 import { CareersPage } from './pages/CareersPage';
@@ -32,9 +33,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
@@ -121,6 +120,8 @@ function App() {
         return <LoginPage />;
       case 'b2b':
         return <B2BPage />;
+      case 'checkout':
+        return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
       case 'health':
         return <HealthCheck />;
       default:
@@ -144,12 +145,9 @@ function App() {
                 <Navigation 
                   currentPage={currentPage} 
                   onNavigate={setCurrentPage}
-                  cartOpen={cartOpen}
-                  setCartOpen={setCartOpen}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
-                  searchOpen={searchOpen}
-                  setSearchOpen={setSearchOpen}
+                  setSearchOpen={() => {}}
                 />
                 <main>
                   {renderCurrentPage()}

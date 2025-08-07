@@ -12,11 +12,10 @@ interface NavigationProps {
   onNavigate: (page: string) => void;
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
-  searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, searchOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -185,7 +184,7 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
           </div>
         </div>
       </div>
-      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} onNavigate={onNavigate} />
     </motion.nav>
   );
 };

@@ -10,9 +10,10 @@ import { CartItem } from '../../types/cart';
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
+export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) => {
   const { items, getCartTotal, removeFromCart, updateQuantity, clearCart } = useCart();
 
   const CartItemComponent = ({ item }: { item: CartItem }) => {
@@ -86,8 +87,8 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-lg bg-white dark:bg-gray-900">
-        <SheetHeader className="space-y-4">
+      <SheetContent side="right" className="w-full sm:w-96 max-w-full bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+        <SheetHeader className="p-4 border-b bg-white dark:bg-gray-900 flex-shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-xl font-bold gradient-text">
               Shopping Cart
@@ -118,7 +119,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
           )}
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto p-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <ShoppingBag className="w-16 h-16 text-gray-300 mb-4" />
@@ -148,7 +149,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t pt-4 space-y-4">
+          <div className="border-t p-4 bg-white dark:bg-gray-900 flex-shrink-0 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold text-risevia-black dark:text-gray-100">
                 Total:
@@ -161,6 +162,10 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg"
               onClick={() => {
                 console.log('🚀 Proceeding to checkout...');
+                if (onNavigate) {
+                  onNavigate('checkout');
+                  onClose();
+                }
               }}
             >
               Proceed to Checkout
