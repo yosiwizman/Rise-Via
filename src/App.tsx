@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -9,25 +9,26 @@ import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
-import { LearnPage } from './pages/LearnPage';
-import { LegalPage } from './pages/LegalPage';
-import { ContactPage } from './pages/ContactPage';
-import { ShippingPage } from './pages/ShippingPage';
-import { LabResultsPage } from './pages/LabResultsPage';
-import { CareersPage } from './pages/CareersPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { WishlistPage } from './components/wishlist/WishlistPage';
-import { SharedWishlistPage } from './components/wishlist/WishlistShare';
-import { AdminPage } from './pages/AdminPage';
 import { CustomerProvider } from './contexts/CustomerContext';
-import { AccountPage } from './pages/AccountPage';
-import { LoginPage } from './pages/LoginPage';
-import { B2BPage } from './pages/B2BPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+
+const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
+const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));
+const ShippingPage = lazy(() => import('./pages/ShippingPage').then(module => ({ default: module.ShippingPage })));
+const LabResultsPage = lazy(() => import('./pages/LabResultsPage').then(module => ({ default: module.LabResultsPage })));
+const CareersPage = lazy(() => import('./pages/CareersPage').then(module => ({ default: module.CareersPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
+const WishlistPage = lazy(() => import('./components/wishlist/WishlistPage').then(module => ({ default: module.WishlistPage })));
+const SharedWishlistPage = lazy(() => import('./components/wishlist/WishlistShare').then(module => ({ default: module.SharedWishlistPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then(module => ({ default: module.AccountPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
+const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -93,6 +94,12 @@ function App() {
     setShowStateBlocker(false);
   };
 
+  const PageLoader = () => (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+    </div>
+  );
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'home':
@@ -100,35 +107,95 @@ function App() {
       case 'shop':
         return <ShopPage />;
       case 'learn':
-        return <LearnPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <LearnPage />
+          </Suspense>
+        );
       case 'legal':
-        return <LegalPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <LegalPage />
+          </Suspense>
+        );
       case 'contact':
-        return <ContactPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <ContactPage />
+          </Suspense>
+        );
       case 'shipping':
-        return <ShippingPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <ShippingPage />
+          </Suspense>
+        );
       case 'lab-results':
-        return <LabResultsPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <LabResultsPage />
+          </Suspense>
+        );
       case 'careers':
-        return <CareersPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <CareersPage />
+          </Suspense>
+        );
       case 'wishlist':
-        return <WishlistPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <WishlistPage />
+          </Suspense>
+        );
       case 'wishlist-shared':
-        return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />
+          </Suspense>
+        );
       case 'admin':
-        return <AdminPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <AdminPage />
+          </Suspense>
+        );
       case 'account':
-        return <AccountPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <AccountPage />
+          </Suspense>
+        );
       case 'login':
-        return <LoginPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <LoginPage />
+          </Suspense>
+        );
       case 'b2b':
-        return <B2BPage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <B2BPage />
+          </Suspense>
+        );
       case 'checkout':
-        return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />
+          </Suspense>
+        );
       case 'health':
-        return <HealthCheck />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <HealthCheck />
+          </Suspense>
+        );
       default:
-        return <NotFoundPage onNavigate={setCurrentPage} />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <NotFoundPage onNavigate={setCurrentPage} />
+          </Suspense>
+        );
     }
   };
 

@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
+import { ProductManager } from '../components/admin/ProductManager';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -157,33 +158,7 @@ export const AdminPage = () => {
         return <CustomerList />;
       
       case 'products':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Cannabis Products</h3>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Add New Product
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Product management interface will be implemented here with:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>CRUD operations for cannabis strains</li>
-                    <li>THC/THCA percentage management</li>
-                    <li>Strain type classification (Sativa, Indica, Hybrid)</li>
-                    <li>Effects and terpene profiles</li>
-                    <li>Inventory tracking with variants (1g, 3.5g, 7g)</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <ProductManager />;
       
       case 'uploads':
         return (
