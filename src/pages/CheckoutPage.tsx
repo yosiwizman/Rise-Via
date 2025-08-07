@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { SEOHead } from '../components/SEOHead';
 import { ProductWarnings } from '../components/ProductWarnings';
-import { StripeCheckout } from '../components/StripeCheckout';
+// import { StripeCheckout } from '../components/StripeCheckout';
 import { ShippingInfo } from '../components/ShippingInfo';
 
 interface CheckoutPageProps {
@@ -316,7 +316,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                     </CardContent>
                   </Card>
                 )}
-                <StripeCheckout
+                {/* <StripeCheckout
                   onSuccess={(orderId) => {
                     setOrderSuccess(orderId);
                     setPaymentError(null);
@@ -326,7 +326,10 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                     setOrderSuccess(null);
                   }}
                   customerInfo={formData}
-                />
+                /> */}
+                <div className="bg-risevia-charcoal border-risevia-purple/20 rounded-lg p-6 text-center">
+                  <p className="text-gray-300">Payment processing temporarily disabled for testing</p>
+                </div>
               </div>
             )}
           </motion.div>
