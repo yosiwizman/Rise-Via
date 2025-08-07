@@ -9,7 +9,18 @@ import { useSupabaseCart } from '../hooks/useSupabaseCart';
 interface ProductDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: any;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    images: string[];
+    category: string;
+    strainType: string;
+    thcaPercentage: number;
+    description: string;
+    effects: string[];
+    inventory: number;
+  };
 }
 
 export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailModalProps) => {

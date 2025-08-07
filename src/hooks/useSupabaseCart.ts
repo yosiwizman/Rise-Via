@@ -57,14 +57,14 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
         try {
           SecurityUtils.sanitizeInput(itemData.name);
           
-          let { data: cart, error: cartError } = await supabase
+          let { data: cart, error } = await supabase
             .from('carts')
             .select('id')
             .eq(state.customerId ? 'customer_id' : 'session_id', 
                 state.customerId || state.sessionId)
             .single();
 
-          if (cartError && cartError.code === 'PGRST116') {
+          if (error && error.code === 'PGRST116') {
             const { data: newCart, error: createError } = await supabase
               .from('carts')
               .insert([{
@@ -75,8 +75,8 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
 
             if (createError) throw createError;
             cart = newCart;
-          } else if (cartError) {
-            throw cartError;
+          } else if (error) {
+            throw error;
           }
 
           if (!cart) {
@@ -263,7 +263,7 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
         const state = get();
         
         try {
-          const { data: cart, error: cartError } = await supabase
+          const { data: cart, error } = await supabase
             .from('carts')
             .select(`
               id,
@@ -286,7 +286,7 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
                 state.customerId || state.sessionId)
             .single();
 
-          if (cartError && cartError.code === 'PGRST116') {
+          if (error && error.code === 'PGRST116') {
             set({
               items: [],
               stats: { ...initialStats, dateCreated: Date.now() }
@@ -294,9 +294,9 @@ export const useSupabaseCart = create<SupabaseCartStore>()(
             return;
           }
 
-          if (cartError) throw cartError;
+          if (error) throw error;
 
-          const items: CartItem[] = cart.cart_items.map((item: any) => ({
+          const items: CartItem[] = (cart?.cart_items || []).map((item: any) => ({
             id: item.id,
             productId: item.product_id,
             name: item.products.name,

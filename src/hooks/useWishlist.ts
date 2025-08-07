@@ -144,7 +144,7 @@ export const useWishlist = create<WishlistStore>()(
       importWishlist: async (shareCode) => {
         try {
           const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
-          const shareData = existingShares.find((share: any) => share.shareCode === shareCode);
+          const shareData = existingShares.find((share: { shareCode: string }) => share.shareCode === shareCode);
 
           if (!shareData) {
             throw new Error('Share code not found');
@@ -214,7 +214,8 @@ export const useWishlist = create<WishlistStore>()(
         const state = get();
         const updatedItems = state.items.map(item => {
           if (item.id === itemId) {
-            const { priceAlert: _, ...itemWithoutAlert } = item;
+            const { priceAlert, ...itemWithoutAlert } = item;
+            void priceAlert;
             return itemWithoutAlert;
           }
           return item;
@@ -241,9 +242,10 @@ export const useWishlist = create<WishlistStore>()(
             return items.sort((a, b) => b.price - a.price);
           case 'dateAdded':
             return items.sort((a, b) => b.dateAdded - a.dateAdded);
-          case 'priority':
+          case 'priority': {
             const priorityOrder = { high: 3, medium: 2, low: 1 };
             return items.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+          }
           default:
             return items;
         }
@@ -289,10 +291,10 @@ function calculateStats(items: WishlistItem[]): WishlistStats {
 function trackWishlistEvent(
   action: 'add' | 'remove' | 'share' | 'import' | 'clear',
   item?: WishlistItem,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `wishlist_${action}`, {
+    (window as unknown as { gtag: (event: string, action: string, params: Record<string, unknown>) => void }).gtag('event', `wishlist_${action}`, {
       event_category: 'wishlist',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,

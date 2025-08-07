@@ -93,7 +93,7 @@ export class ComplianceManager {
       reasons.push('No state information provided');
       
       if (ipAddress) {
-        const geoResult = this.performIPGeolocation(ipAddress);
+        const geoResult = this.performIPGeolocation();
         if (geoResult.state && BLOCKED_STATES.includes(geoResult.state)) {
           return {
             isValid: false,
@@ -176,7 +176,7 @@ export class ComplianceManager {
   /**
    * Perform IP geolocation (mock implementation)
    */
-  private static performIPGeolocation(_ipAddress: string): { state?: string; uncertainty: number } {
+  private static performIPGeolocation(): { state?: string; uncertainty: number } {
     return {
       state: undefined,
       uncertainty: 0.2

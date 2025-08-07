@@ -142,7 +142,7 @@ test.describe('RiseViA Critical User Flows', () => {
     await expect(page.locator('text=Shopping Cart')).toBeVisible();
   });
 
-  test('should test PWA installation prompt', async ({ page, context }) => {
+  test('should test PWA installation prompt', async ({ page }) => {
     const response = await page.goto('/manifest.json');
     expect(response?.status()).toBe(200);
     

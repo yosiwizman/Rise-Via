@@ -34,8 +34,8 @@ interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (data: any) => Promise<any>;
+  login: (email: string, password: string) => Promise<{ success: boolean; user?: unknown; error?: string }>;
+  register: (data: { email: string; password: string; firstName: string; lastName: string; phone?: string }) => Promise<{ success: boolean; customer?: unknown; error?: string }>;
   logout: () => void;
   checkAuthStatus: () => Promise<void>;
 }
@@ -100,11 +100,11 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const result: any = await authService.login(email, password);
+      const result = await authService.login(email, password);
       if (result.success || result.user) {
         if (result.user) {
           const customers = await customerService.getAll();
-          const customerData = customers.find((c: any) => c.email === result.user.email);
+          const customerData = customers.find((c: { email: string }) => c.email === (result.user as { email: string })?.email);
           if (customerData) {
             setCustomer(customerData);
             setIsAuthenticated(true);
@@ -114,13 +114,13 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         return result;
       }
       return { success: false, message: 'Invalid credentials' };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login failed:', error);
-      return { success: false, message: error.message || 'Login failed' };
+      return { success: false, message: (error as Error).message || 'Login failed' };
     }
   };
 
-  const register = async (registrationData: any) => {
+  const register = async (registrationData: { email: string; password: string; firstName: string; lastName: string; phone?: string }) => {
     try {
       const authResult = await authService.register(
         registrationData.email,
@@ -146,9 +146,9 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       return { success: false, message: 'Registration failed' };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Registration failed:', error);
-      return { success: false, message: error.message || 'Registration failed' };
+      return { success: false, message: (error as Error).message || 'Registration failed' };
     }
   };
 

@@ -24,7 +24,7 @@ export class ErrorHandler {
   static handleError(
     error: Error,
     errorInfo?: ErrorInfo,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): void {
     const errorDetails: ErrorDetails = {
       message: error.message,
@@ -206,7 +206,7 @@ export class ErrorHandler {
     error: Error,
     endpoint: string,
     statusCode?: number,
-    responseData?: any
+    responseData?: unknown
   ): void {
     this.handleError(error, undefined, {
       type: 'api_error',

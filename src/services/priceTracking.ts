@@ -123,7 +123,7 @@ export class PriceTrackingService {
     this.trackPriceAlertEvent('triggered', alertData);
   }
 
-  private storeTriggeredAlert(alertData: any): void {
+  private storeTriggeredAlert(alertData: { itemId: string; currentPrice: number; targetPrice: number; percentageChange: number; triggeredAt: number }): void {
     try {
       const existingAlerts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
       existingAlerts.push(alertData);
@@ -138,7 +138,7 @@ export class PriceTrackingService {
     }
   }
 
-  private async showBrowserNotification(alertData: any): Promise<void> {
+  private async showBrowserNotification(alertData: { itemId: string; currentPrice: number; targetPrice: number; percentageChange: number; triggeredAt: number }): Promise<void> {
     if (!('Notification' in window)) return;
 
     if (Notification.permission === 'granted') {
@@ -179,9 +179,9 @@ export class PriceTrackingService {
     localStorage.setItem('price-check-activity', JSON.stringify(existingActivity));
   }
 
-  private trackPriceAlertEvent(action: string, data: any): void {
+  private trackPriceAlertEvent(action: string, data: { itemId: string; currentPrice: number; targetPrice: number; percentageChange: number }): void {
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      (window as any).gtag('event', `price_alert_${action}`, {
+      (window as unknown as { gtag: (event: string, action: string, params: Record<string, unknown>) => void }).gtag('event', `price_alert_${action}`, {
         event_category: 'price_alerts',
         event_label: data.itemId,
         value: data.currentPrice,
@@ -208,7 +208,7 @@ export class PriceTrackingService {
     localStorage.setItem('price-alert-analytics', JSON.stringify(existingAnalytics));
   }
 
-  public getTriggeredAlerts(): any[] {
+  public getTriggeredAlerts(): { itemId: string; currentPrice: number; targetPrice: number; percentageChange: number; triggeredAt: number }[] {
     try {
       return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
     } catch (error) {
@@ -217,7 +217,7 @@ export class PriceTrackingService {
     }
   }
 
-  public getPriceCheckActivity(): any[] {
+  public getPriceCheckActivity(): { timestamp: number; itemsChecked: number; alertsTriggered: number; averagePriceChange: number; results: { itemId: string; priceDropped: boolean; percentageChange: number }[] }[] {
     try {
       return JSON.parse(localStorage.getItem('price-check-activity') || '[]');
     } catch (error) {
