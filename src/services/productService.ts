@@ -45,7 +45,27 @@ interface BulkUpdateData {
 }
 
 export const productService = {
-  async getAll() {
+  async getAll(page: number = 1, limit: number = 20) {
+    const offset = (page - 1) * limit;
+    
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        categories (
+          name,
+          slug
+        ),
+        product_variants (*)
+      `)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getAllProducts() {
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -158,22 +178,19 @@ export const productService = {
   },
 
   async getLowStockProducts(threshold?: number) {
-    let query = supabase
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('track_inventory', true)
       .eq('in_stock', true);
-
-    if (threshold) {
-      query = query.lte('quantity', threshold);
-    } else {
-      query = query.filter('quantity', 'lte', supabase.rpc('get_low_stock_alert'));
-    }
-
-    const { data, error } = await query.order('quantity', { ascending: true });
     
     if (error) throw error;
-    return data;
+    
+    const lowStockProducts = data?.filter(product => 
+      product.quantity <= (threshold || product.low_stock_alert)
+    ) || [];
+    
+    return lowStockProducts.sort((a, b) => a.quantity - b.quantity);
   },
 
   async getLowStockCount() {
@@ -264,5 +281,58 @@ export const productService = {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  },
+
+  async getProductCount() {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) throw error;
+    return count || 0;
+  },
+
+  async updateProductImages() {
+    const productImageUpdates = [
+      { name: 'Purple Haze', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400' },
+      { name: 'Granddaddy Purple', image: 'https://images.unsplash.com/photo-1583912267550-3a0b5fb4e3d3?w=400' },
+      { name: 'White Widow', image: 'https://images.unsplash.com/photo-1536431311719-398b6704d4cc?w=400' },
+      { name: 'Green Crack', image: 'https://images.unsplash.com/photo-1574781330855-d0db2706b3d0?w=400' },
+      { name: 'Northern Lights', image: 'https://images.unsplash.com/photo-1605007493699-05d82c7f9f85?w=400' },
+      { name: 'Jack Herer', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
+      { name: 'Girl Scout Cookies', image: 'https://images.unsplash.com/photo-1576424275780-5b5b5b5b5b5b?w=400' },
+      { name: 'AK-47', image: 'https://images.unsplash.com/photo-1583912267550-3a0b5fb4e3d3?w=400' },
+      { name: 'Pineapple Express', image: 'https://images.unsplash.com/photo-1574781330855-d0db2706b3d0?w=400' },
+      { name: 'Gorilla Glue #4', image: 'https://images.unsplash.com/photo-1605007493699-05d82c7f9f85?w=400' },
+      { name: 'Wedding Cake', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' }
+    ];
+
+    const results = [];
+    for (const update of productImageUpdates) {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .update({ 
+            thumbnail: update.image,
+            images: [update.image],
+            updated_at: new Date().toISOString()
+          })
+          .eq('name', update.name)
+          .select();
+
+        if (error) {
+          console.error(`Error updating ${update.name}:`, error);
+          results.push({ name: update.name, success: false, error });
+        } else {
+          console.log(`Updated ${update.name} image`);
+          results.push({ name: update.name, success: true, data });
+        }
+      } catch (error) {
+        console.error(`Failed to update ${update.name}:`, error);
+        results.push({ name: update.name, success: false, error });
+      }
+    }
+
+    return results;
   }
 };

@@ -6,12 +6,20 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Truck
+  Truck,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { orderService } from '../../services/orderService';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../ui/pagination';
 
 interface Order {
   id: string;
@@ -45,16 +53,31 @@ export const OrderManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [currentPage]);
 
-  const loadOrders = async () => {
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      loadOrders(1);
+    }
+  }, [searchTerm, filterStatus]);
+
+  const loadOrders = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await orderService.getAll();
+      const [data, count] = await Promise.all([
+        orderService.getAll(page, itemsPerPage),
+        orderService.getOrderCount()
+      ]);
       setOrders(data || []);
+      setTotalOrders(count);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -118,6 +141,11 @@ export const OrderManager = () => {
   };
 
   const statusOptions = ['all', 'pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
+  const totalPages = Math.ceil(totalOrders / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   if (loading) {
     return (
@@ -257,6 +285,47 @@ export const OrderManager = () => {
                 No orders found matching your criteria.
               </div>
             )}
+
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+
+            <div className="text-center text-sm text-gray-500 mt-4">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalOrders)} of {totalOrders} orders
+            </div>
           </div>
         </CardContent>
       </Card>

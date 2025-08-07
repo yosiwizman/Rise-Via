@@ -171,10 +171,10 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         });
 
         try {
-          await emailService.sendWelcomeEmail(
-            registrationData.email,
-            registrationData.firstName
-          );
+          await emailService.sendWelcomeEmail({
+            email: registrationData.email,
+            name: registrationData.firstName
+          });
         } catch (emailError) {
           console.error('Welcome email failed:', emailError);
         }

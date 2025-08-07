@@ -8,12 +8,21 @@ import {
   Search, 
   AlertTriangle,
   Check,
-  X
+  X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { productService } from '../../services/productService';
+import { emailService } from '../../services/emailService';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../ui/pagination';
 
 interface Product {
   id: string;
@@ -39,16 +48,32 @@ export const ProductManager = () => {
   const [filterStrain, setFilterStrain] = useState('all');
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ price: number; quantity: number }>({ price: 0, quantity: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [updatingImages, setUpdatingImages] = useState(false);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [currentPage]);
 
-  const loadProducts = async () => {
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      loadProducts(1);
+    }
+  }, [searchTerm, filterStrain]);
+
+  const loadProducts = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await productService.getAll();
+      const [data, count] = await Promise.all([
+        productService.getAll(page, itemsPerPage),
+        productService.getProductCount()
+      ]);
       setProducts(data || []);
+      setTotalProducts(count);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -97,6 +122,8 @@ export const ProductManager = () => {
       });
       await loadProducts();
       setSelectedProducts([]);
+      
+      await checkAndSendLowStockAlerts();
     } catch (error) {
       console.error('Error updating product status:', error);
       alert('Error updating product status');
@@ -118,6 +145,8 @@ export const ProductManager = () => {
       });
       await loadProducts();
       setEditingProduct(null);
+      
+      await checkAndSendLowStockAlerts();
     } catch (error) {
       console.error('Error updating product:', error);
       alert('Error updating product');
@@ -129,8 +158,45 @@ export const ProductManager = () => {
     setEditValues({ price: 0, quantity: 0 });
   };
 
-  const handleExportCSV = () => {
-    productService.exportToCSV(filteredProducts);
+  const handleExportCSV = async () => {
+    try {
+      const allProducts = await productService.getAllProducts();
+      productService.exportToCSV(allProducts || []);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Error exporting CSV');
+    }
+  };
+
+  const handleUpdateImages = async () => {
+    if (confirm('Update product images for the 11 specified products? This will replace existing images.')) {
+      try {
+        setUpdatingImages(true);
+        const results = await productService.updateProductImages();
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
+        
+        alert(`Image update complete: ${successful} successful, ${failed} failed`);
+        await loadProducts();
+      } catch (error) {
+        console.error('Error updating images:', error);
+        alert('Error updating product images');
+      } finally {
+        setUpdatingImages(false);
+      }
+    }
+  };
+
+  const checkAndSendLowStockAlerts = async () => {
+    try {
+      const lowStockProducts = await productService.getLowStockProducts();
+      if (lowStockProducts && lowStockProducts.length > 0) {
+        await emailService.sendLowStockAlert(lowStockProducts);
+        console.log(`Low stock alert sent for ${lowStockProducts.length} products`);
+      }
+    } catch (error) {
+      console.error('Error checking/sending low stock alerts:', error);
+    }
   };
 
   const filteredProducts = products.filter(product => {
@@ -145,6 +211,11 @@ export const ProductManager = () => {
   };
 
   const strainOptions = ['all', 'Sativa', 'Indica', 'Hybrid'];
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   if (loading) {
     return (
@@ -165,10 +236,19 @@ export const ProductManager = () => {
               <Package className="w-5 h-5 mr-2" />
               Product Management
             </div>
-            <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleUpdateImages}
+                disabled={updatingImages}
+                variant="outline"
+              >
+                {updatingImages ? 'Updating...' : 'Update Images'}
+              </Button>
+              <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -360,6 +440,47 @@ export const ProductManager = () => {
                 No products found matching your criteria.
               </div>
             )}
+
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+
+            <div className="text-center text-sm text-gray-500 mt-4">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalProducts)} of {totalProducts} products
+            </div>
           </div>
         </CardContent>
       </Card>
