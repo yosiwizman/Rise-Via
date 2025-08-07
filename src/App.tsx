@@ -23,6 +23,7 @@ import { AdminPage } from './pages/AdminPage';
 import { CustomerProvider } from './contexts/CustomerContext';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import { B2BPage } from './pages/B2BPage';
 import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
@@ -54,6 +55,8 @@ function App() {
       setCurrentPage('account');
     } else if (path === '/login') {
       setCurrentPage('login');
+    } else if (path === '/register') {
+      setCurrentPage('register');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
     } else if (path === '/health') {
@@ -118,6 +121,8 @@ function App() {
         return <AccountPage />;
       case 'login':
         return <LoginPage />;
+      case 'register':
+        return <RegisterPage onNavigate={setCurrentPage} />;
       case 'b2b':
         return <B2BPage />;
       case 'checkout':

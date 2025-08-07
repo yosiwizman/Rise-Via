@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
+import { emailService } from '../services/emailService';
+import { supabase } from '../lib/supabase';
 
 interface Customer {
   id: string;
@@ -61,38 +63,41 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+      if (event === 'SIGNED_OUT') {
+        setCustomer(null);
+        setIsAuthenticated(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        checkAuthStatus();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('customerToken');
-      if (!token) {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user) {
         setLoading(false);
         return;
       }
 
-      const mockCustomer = {
-        id: 'demo-customer-1',
-        email: 'demo@risevia.com',
-        firstName: 'Demo',
-        lastName: 'Customer',
-        profile: {
-          membershipTier: 'GOLD',
-          loyaltyPoints: 1250,
-          lifetimeValue: 2500.00,
-          totalOrders: 8,
-          segment: 'VIP',
-          isB2B: false,
-          referralCode: 'DEMO2024',
-          totalReferrals: 3
-        }
-      };
-
-      setCustomer(mockCustomer);
-      setIsAuthenticated(true);
+      const customers = await customerService.getAll();
+      const customerData = customers.find((c: any) => c.email === user.email);
+      
+      if (customerData) {
+        setCustomer(customerData);
+        setIsAuthenticated(true);
+      } else {
+        console.warn('User authenticated but no customer record found');
+        setIsAuthenticated(false);
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('customerToken');
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -100,23 +105,41 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const result: any = await authService.login(email, password);
-      if (result.success || result.user) {
-        if (result.user) {
-          const customers = await customerService.getAll();
-          const customerData = customers.find((c: any) => c.email === result.user.email);
-          if (customerData) {
-            setCustomer(customerData);
-            setIsAuthenticated(true);
-            return { success: true, customer: customerData };
-          }
+      setLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const customers = await customerService.getAll();
+        const customerData = customers.find((c: any) => c.email === email);
+        
+        if (customerData) {
+          setCustomer(customerData);
+          setIsAuthenticated(true);
+          return { success: true, customer: customerData };
+        } else {
+          setCustomer({
+            id: data.user.id,
+            email: data.user.email!,
+            firstName: data.user.user_metadata.first_name || '',
+            lastName: data.user.user_metadata.last_name || ''
+          });
+          setIsAuthenticated(true);
+          return { success: true };
         }
-        return result;
       }
-      return { success: false, message: 'Invalid credentials' };
+      
+      return { success: false, message: 'Login failed' };
     } catch (error: any) {
       console.error('Login failed:', error);
       return { success: false, message: error.message || 'Login failed' };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,6 +163,15 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           phone: registrationData.phone
         });
 
+        try {
+          await emailService.sendWelcomeEmail(
+            registrationData.email,
+            registrationData.firstName
+          );
+        } catch (emailError) {
+          console.error('Welcome email failed:', emailError);
+        }
+
         setCustomer(customerData);
         setIsAuthenticated(true);
         return { success: true, customer: customerData };
@@ -154,7 +186,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   const logout = async () => {
     try {
-      await authService.logout();
+      await supabase.auth.signOut();
       setCustomer(null);
       setIsAuthenticated(false);
     } catch (error) {
