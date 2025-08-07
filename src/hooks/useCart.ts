@@ -49,7 +49,7 @@ export const useCart = create<CartStore>()(
           });
           
           const updatedItem = updatedItems.find(item => item.productId === itemData.productId)!;
-          trackCartEvent('add', itemData, { quantity });
+          trackCartEvent('add', updatedItem, { quantity });
           cartAnalytics.trackCartEvent('add', updatedItem, { quantity });
         } else {
           const newItem: CartItem = {
@@ -69,7 +69,7 @@ export const useCart = create<CartStore>()(
             error: null
           });
           
-          trackCartEvent('add', itemData, { quantity });
+          trackCartEvent('add', newItem, { quantity });
           cartAnalytics.trackCartEvent('add', newItem, { quantity });
         }
       },
@@ -166,11 +166,11 @@ function calculateStats(items: CartItem[]): CartStats {
 
 function trackCartEvent(
   action: 'add' | 'remove' | 'update' | 'clear',
-  item?: any,
-  metadata?: Record<string, any>
+  item?: CartItem,
+  metadata?: Record<string, unknown>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `cart_${action}`, {
+    (window as unknown as { gtag: (event: string, action: string, params: Record<string, unknown>) => void }).gtag('event', `cart_${action}`, {
       event_category: 'cart',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,

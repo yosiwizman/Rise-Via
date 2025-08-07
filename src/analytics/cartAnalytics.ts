@@ -17,7 +17,7 @@ export class CartAnalyticsService {
   public trackCartEvent(
     action: 'add' | 'remove' | 'update' | 'clear' | 'checkout_start',
     item?: CartItem,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     const eventData = {
       action,
@@ -37,7 +37,7 @@ export class CartAnalyticsService {
     console.log('🛒 Cart Analytics Event:', eventData);
   }
 
-  private storeAnalyticsEvent(eventData: any): void {
+  private storeAnalyticsEvent(eventData: Record<string, unknown>): void {
     try {
       const existingEvents = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
       existingEvents.push(eventData);
@@ -52,9 +52,9 @@ export class CartAnalyticsService {
     }
   }
 
-  private sendToGoogleAnalytics(eventData: any): void {
+  private sendToGoogleAnalytics(eventData: Record<string, unknown>): void {
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      (window as any).gtag('event', `cart_${eventData.action}`, {
+      (window as unknown as { gtag: (event: string, action: string, params: Record<string, unknown>) => void }).gtag('event', `cart_${eventData.action}`, {
         event_category: 'cart',
         event_label: eventData.itemName || 'bulk_action',
         value: eventData.itemPrice || 0,

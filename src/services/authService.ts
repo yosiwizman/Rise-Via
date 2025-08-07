@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 export const authService = {
-  async login(email: string, password: string): Promise<any> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: unknown; error?: string }> {
     if (email === 'admin' && password === 'admin123') {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };
@@ -13,10 +13,10 @@ export const authService = {
     });
     
     if (error) throw error;
-    return data;
+    return { success: true, user: data.user };
   },
 
-  async register(email: string, password: string, metadata: any) {
+  async register(email: string, password: string, metadata: Record<string, unknown>) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
