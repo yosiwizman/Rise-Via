@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, ShoppingBag, AlertCircle, Users, TrendingUp, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
-interface DashboardMetrics {
+interface DashboardMetricsData {
   todaySales: number;
   todayOrders: number;
   totalCustomers: number;
@@ -53,7 +53,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, tre
 );
 
 export const DashboardMetrics: React.FC = () => {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
+  const [metrics, setMetrics] = useState<DashboardMetricsData>({
     todaySales: 0,
     todayOrders: 0,
     totalCustomers: 0,
@@ -71,7 +71,7 @@ export const DashboardMetrics: React.FC = () => {
       setLoading(true);
       
       
-      const mockMetrics: DashboardMetrics = {
+      const mockMetrics: DashboardMetricsData = {
         todaySales: Math.floor(Math.random() * 5000) + 1000,
         todayOrders: Math.floor(Math.random() * 50) + 10,
         totalCustomers: Math.floor(Math.random() * 1000) + 500,
