@@ -29,11 +29,21 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
           muted
           loop
           playsInline
+          poster="https://res.cloudinary.com/dcegcrkbw/image/upload/v1734100281/hero-poster.jpg"
           className="absolute inset-0 w-full h-full object-cover z-0"
           onLoadedData={() => console.log('✅ Video loaded successfully!')}
-          onError={(e) => console.error('Video error:', e)}
+          onError={(e) => {
+            console.error('Video error, showing fallback image:', e);
+            const video = e.currentTarget;
+            video.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = 'https://res.cloudinary.com/dcegcrkbw/image/upload/v1734100281/hero-poster.jpg';
+            img.className = 'absolute inset-0 w-full h-full object-cover z-0';
+            video.parentNode?.appendChild(img);
+          }}
         >
           <source src="https://res.cloudinary.com/dq6ddlsjq/video/upload/v1754348759/YOU_ARE_THE_ONE_lyi5ay.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
 
         {/* Video Overlay */}
