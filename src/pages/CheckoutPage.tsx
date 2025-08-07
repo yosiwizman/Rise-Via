@@ -33,8 +33,8 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
     termsAccepted: false
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [paymentError] = useState<string | null>(null);
+  const [orderSuccess] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
