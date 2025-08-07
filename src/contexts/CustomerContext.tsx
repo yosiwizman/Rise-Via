@@ -3,6 +3,7 @@ import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
 import { supabase } from '../lib/supabase';
+import { wishlistService } from '../services/wishlistService';
 
 interface Customer {
   id: string;
@@ -115,6 +116,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       if (error) throw error;
       
       if (data.user) {
+        try {
+          await wishlistService.migrateSessionWishlist(data.user.id);
+        } catch (migrationError) {
+          console.error('Wishlist migration failed:', migrationError);
+        }
+
         const customers = await customerService.getAll();
         const customerData = customers.find((c: any) => c.email === email);
         

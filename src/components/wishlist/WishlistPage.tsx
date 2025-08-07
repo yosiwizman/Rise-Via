@@ -35,8 +35,8 @@ export const WishlistPage = () => {
   const [alertPrice, setAlertPrice] = useState('');
 
   const filteredAndSortedItems = useMemo(() => {
-    return sortItems(sortBy).filter(item => 
-      filterPriority === 'all' || item.priority === filterPriority
+    return sortItems().filter(item => 
+      item && (filterPriority === 'all' || item.priority === filterPriority)
     );
   }, [items, sortBy, filterPriority, sortItems]);
 
@@ -60,7 +60,7 @@ export const WishlistPage = () => {
 
   const handleSavePriceAlert = () => {
     if (priceAlertItem && alertPrice) {
-      setPriceAlert(priceAlertItem.id, parseFloat(alertPrice));
+      setPriceAlert();
       setPriceAlertItem(null);
       setAlertPrice('');
     }
@@ -122,8 +122,8 @@ export const WishlistPage = () => {
             <Label className="text-sm font-medium">Priority:</Label>
             <Select
               value={item.priority}
-              onValueChange={(value: 'low' | 'medium' | 'high') => 
-                updateItemPriority(item.id, value)
+              onValueChange={(_value: 'low' | 'medium' | 'high') => 
+                updateItemPriority()
               }
             >
               <SelectTrigger className="w-24 h-8">
@@ -148,7 +148,7 @@ export const WishlistPage = () => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-risevia-teal">Alert at ${item.priceAlert.targetPrice}</span>
               <Button
-                onClick={() => removePriceAlert(item.id)}
+                onClick={() => removePriceAlert()}
                 size="sm"
                 variant="ghost"
                 className="text-red-500 hover:text-red-700"
@@ -348,14 +348,14 @@ export const WishlistPage = () => {
           transition={{ delay: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {filteredAndSortedItems.map((item, index) => (
+          {filteredAndSortedItems.filter(item => item !== null).map((item, index) => (
             <motion.div
-              key={item.id}
+              key={item!.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item} />
+              <WishlistItemCard item={item!} />
             </motion.div>
           ))}
         </motion.div>

@@ -1,320 +1,137 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types/wishlist';
-import { SecurityUtils } from '../utils/security';
-import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
+import { useState, useEffect } from 'react'
+import { wishlistService } from '../services/wishlistService'
+import { supabase } from '../lib/supabase'
+import productsData from '../data/products.json'
 
-const STORAGE_KEY = 'risevia-wishlist';
+export const useWishlist = () => {
+  const [wishlistItems, setWishlistItems] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-const initialStats: WishlistStats = {
-  totalItems: 0,
-  totalValue: 0,
-  averagePrice: 0,
-  categoryCounts: {},
-  priorityCounts: { low: 0, medium: 0, high: 0 },
-  dateCreated: Date.now(),
-  lastUpdated: Date.now()
-};
-
-export const useWishlist = create<WishlistStore>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      stats: initialStats,
-      isLoading: false,
-      error: null,
-
-      addToWishlist: (itemData) => {
-        const state = get();
-        
-        if (!SecurityUtils.checkRateLimit('wishlist_add', 20, 60000)) {
-          set({ error: 'Too many requests. Please wait before adding more items.' });
-          return;
-        }
-
-        const sanitizedName = SecurityUtils.sanitizeInput(itemData.name);
-        const sanitizedCategory = SecurityUtils.sanitizeInput(itemData.category);
-
-        const newItem: WishlistItem = {
-          ...itemData,
-          id: crypto.randomUUID(),
-          name: sanitizedName,
-          category: sanitizedCategory,
-          dateAdded: Date.now(),
-          priority: 'medium'
-        };
-
-        if (state.items.some(item => item.name === newItem.name)) {
-          set({ error: 'Item already in wishlist' });
-          return;
-        }
-
-        const updatedItems = [...state.items, newItem];
-        const updatedStats = calculateStats(updatedItems);
-
-        set({
-          items: updatedItems,
-          stats: updatedStats,
-          error: null
-        });
-
-        trackWishlistEvent('add', newItem);
-        wishlistAnalytics.trackWishlistEvent('add', newItem);
-      },
-
-      removeFromWishlist: (itemId) => {
-        const state = get();
-        const itemToRemove = state.items.find(item => item.id === itemId);
-        
-        if (!itemToRemove) return;
-
-        const updatedItems = state.items.filter(item => item.id !== itemId);
-        const updatedStats = calculateStats(updatedItems);
-
-        set({
-          items: updatedItems,
-          stats: updatedStats,
-          error: null
-        });
-
-        trackWishlistEvent('remove', itemToRemove);
-        wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
-      },
-
-      updateItemPriority: (itemId, priority) => {
-        const state = get();
-        const updatedItems = state.items.map(item =>
-          item.id === itemId ? { ...item, priority } : item
-        );
-        const updatedStats = calculateStats(updatedItems);
-
-        set({
-          items: updatedItems,
-          stats: updatedStats
-        });
-      },
-
-      clearWishlist: () => {
-        set({
-          items: [],
-          stats: { ...initialStats, dateCreated: Date.now() },
-          error: null
-        });
-
-        trackWishlistEvent('clear');
-        wishlistAnalytics.trackWishlistEvent('clear');
-      },
-
-      isInWishlist: (itemId) => {
-        const state = get();
-        return state.items.some(item => item.id === itemId || item.name === itemId);
-      },
-
-      getWishlistCount: () => {
-        return get().items.length;
-      },
-
-      generateShareLink: async () => {
-        const state = get();
-        
-        if (state.items.length === 0) {
-          throw new Error('Cannot share empty wishlist');
-        }
-
-        const shareCode = crypto.randomUUID();
-        const shareData = {
-          items: state.items,
-          shareCode,
-          createdAt: Date.now(),
-          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
-        };
-
-        const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
-        existingShares.push(shareData);
-        localStorage.setItem('wishlist_shares', JSON.stringify(existingShares));
-
-        const shareUrl = `${window.location.origin}/wishlist/shared/${shareCode}`;
-        
-        trackWishlistEvent('share', undefined, { shareCode, itemCount: state.items.length });
-        wishlistAnalytics.trackWishlistEvent('share', undefined, { shareCode, itemCount: state.items.length });
-        
-        return shareUrl;
-      },
-
-      importWishlist: async (shareCode) => {
-        try {
-          const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
-          const shareData = existingShares.find((share: any) => share.shareCode === shareCode);
-
-          if (!shareData) {
-            throw new Error('Share code not found');
-          }
-
-          if (shareData.expiresAt && Date.now() > shareData.expiresAt) {
-            throw new Error('Share link has expired');
-          }
-
-          const state = get();
-          const newItems = shareData.items.filter((sharedItem: WishlistItem) =>
-            !state.items.some(existingItem => existingItem.name === sharedItem.name)
-          );
-
-          if (newItems.length === 0) {
-            set({ error: 'All items from shared wishlist are already in your wishlist' });
-            return false;
-          }
-
-          const itemsToAdd = newItems.map((item: WishlistItem) => ({
-            ...item,
-            id: crypto.randomUUID(),
-            dateAdded: Date.now()
-          }));
-
-          const updatedItems = [...state.items, ...itemsToAdd];
-          const updatedStats = calculateStats(updatedItems);
-
-          set({
-            items: updatedItems,
-            stats: updatedStats,
-            error: null
-          });
-
-          trackWishlistEvent('import', undefined, { shareCode, importedCount: itemsToAdd.length });
-          wishlistAnalytics.trackWishlistEvent('import', undefined, { shareCode, importedCount: itemsToAdd.length });
-
-          return true;
-        } catch (error) {
-          set({ error: (error as Error).message });
-          return false;
-        }
-      },
-
-      setPriceAlert: (itemId, targetPrice) => {
-        const state = get();
-        const updatedItems = state.items.map(item => {
-          if (item.id === itemId) {
-            const priceAlert: PriceAlert = {
-              id: crypto.randomUUID(),
-              itemId,
-              targetPrice,
-              currentPrice: item.price,
-              isActive: true,
-              createdAt: Date.now(),
-              notificationSent: false
-            };
-            return { ...item, priceAlert };
-          }
-          return item;
-        });
-
-        set({ items: updatedItems });
-      },
-
-      removePriceAlert: (itemId) => {
-        const state = get();
-        const updatedItems = state.items.map(item => {
-          if (item.id === itemId) {
-            const { priceAlert: _, ...itemWithoutAlert } = item;
-            return itemWithoutAlert;
-          }
-          return item;
-        });
-
-        set({ items: updatedItems });
-      },
-
-      getItemsByCategory: (category) => {
-        return get().items.filter(item => item.category === category);
-      },
-
-      getItemsByPriority: (priority) => {
-        return get().items.filter(item => item.priority === priority);
-      },
-
-      sortItems: (sortBy) => {
-        const items = [...get().items];
-        
-        switch (sortBy) {
-          case 'name':
-            return items.sort((a, b) => a.name.localeCompare(b.name));
-          case 'price':
-            return items.sort((a, b) => b.price - a.price);
-          case 'dateAdded':
-            return items.sort((a, b) => b.dateAdded - a.dateAdded);
-          case 'priority':
-            const priorityOrder = { high: 3, medium: 2, low: 1 };
-            return items.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
-          default:
-            return items;
-        }
+  useEffect(() => {
+    migrateLocalStorageWishlist()
+    loadWishlist()
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await wishlistService.migrateSessionWishlist(session.user.id)
+        loadWishlist()
+      } else if (event === 'SIGNED_OUT') {
+        loadWishlist()
       }
-    }),
-    {
-      name: STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        items: state.items,
-        stats: state.stats
-      })
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const migrateLocalStorageWishlist = async () => {
+    const localWishlist = localStorage.getItem('risevia-wishlist')
+    if (localWishlist) {
+      try {
+        const { state } = JSON.parse(localWishlist)
+        if (state?.items && Array.isArray(state.items)) {
+          for (const item of state.items) {
+            const productId = item.id || item.name
+            if (productId) {
+              await wishlistService.addToWishlist(productId)
+            }
+          }
+          localStorage.removeItem('risevia-wishlist')
+          console.log('✅ Wishlist migrated to database')
+        }
+      } catch (error) {
+        console.error('Migration failed:', error)
+      }
     }
-  )
-);
+  }
 
-function calculateStats(items: WishlistItem[]): WishlistStats {
-  const totalItems = items.length;
-  const totalValue = items.reduce((sum, item) => sum + item.price, 0);
-  const averagePrice = totalItems > 0 ? totalValue / totalItems : 0;
+  const loadWishlist = async () => {
+    setLoading(true)
+    const { data, error } = await wishlistService.getWishlist()
+    if (error) {
+      setError(error.message)
+    } else {
+      setWishlistItems(data || [])
+    }
+    setLoading(false)
+  }
 
-  const categoryCounts = items.reduce((counts, item) => {
-    counts[item.category] = (counts[item.category] || 0) + 1;
-    return counts;
-  }, {} as Record<string, number>);
+  const addToWishlist = async (item: any) => {
+    const productId = item.id
+    const { error } = await wishlistService.addToWishlist(productId)
+    if (!error) {
+      await loadWishlist()
+    } else {
+      setError(error.message)
+    }
+  }
 
-  const priorityCounts = items.reduce((counts, item) => {
-    counts[item.priority] = (counts[item.priority] || 0) + 1;
-    return counts;
-  }, { low: 0, medium: 0, high: 0 });
+  const removeFromWishlist = async (itemId: string) => {
+    const { error } = await wishlistService.removeFromWishlist(itemId)
+    if (!error) {
+      await loadWishlist()
+    } else {
+      setError(error.message)
+    }
+  }
 
-  return {
-    totalItems,
-    totalValue,
-    averagePrice,
-    categoryCounts,
-    priorityCounts,
+  const isInWishlist = (itemId: string) => {
+    return wishlistItems.includes(itemId)
+  }
+
+  const getWishlistCount = () => {
+    return wishlistItems.length
+  }
+
+  const items = wishlistItems.map(productId => {
+    const product = productsData.products.find(p => p.id === productId)
+    if (product) {
+      return {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        category: product.category,
+        effects: product.effects,
+        dateAdded: Date.now(),
+        priority: 'medium' as const
+      }
+    }
+    return null
+  }).filter(Boolean)
+
+  const stats = {
+    totalItems: items.length,
+    totalValue: items.reduce((sum, item) => sum + (item?.price || 0), 0),
+    averagePrice: items.length > 0 ? items.reduce((sum, item) => sum + (item?.price || 0), 0) / items.length : 0,
+    categoryCounts: {},
+    priorityCounts: { low: 0, medium: items.length, high: 0 },
     dateCreated: Date.now(),
     lastUpdated: Date.now()
-  };
-}
-
-function trackWishlistEvent(
-  action: 'add' | 'remove' | 'share' | 'import' | 'clear',
-  item?: WishlistItem,
-  metadata?: Record<string, any>
-) {
-  if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `wishlist_${action}`, {
-      event_category: 'wishlist',
-      event_label: item?.name || 'bulk_action',
-      value: item?.price || 0,
-      ...metadata
-    });
   }
 
-  const analyticsData = {
-    action,
-    timestamp: Date.now(),
-    itemName: item?.name,
-    itemPrice: item?.price,
-    itemCategory: item?.category,
-    ...metadata
-  };
-
-  const existingAnalytics = JSON.parse(localStorage.getItem('wishlist_analytics') || '[]');
-  existingAnalytics.push(analyticsData);
-  
-  if (existingAnalytics.length > 1000) {
-    existingAnalytics.splice(0, existingAnalytics.length - 1000);
+  return {
+    items,
+    stats,
+    isLoading: loading,
+    error,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    getWishlistCount,
+    updateItemPriority: () => {},
+    clearWishlist: async () => {
+      for (const productId of wishlistItems) {
+        await wishlistService.removeFromWishlist(productId)
+      }
+      await loadWishlist()
+    },
+    generateShareLink: async () => { throw new Error('Sharing not implemented in core version') },
+    importWishlist: async () => false,
+    setPriceAlert: () => {},
+    removePriceAlert: () => {},
+    getItemsByCategory: () => [],
+    getItemsByPriority: () => [],
+    sortItems: () => items
   }
-  
-  localStorage.setItem('wishlist_analytics', JSON.stringify(existingAnalytics));
 }
