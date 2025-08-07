@@ -35,6 +35,7 @@ export const ShopPage = () => {
           <img 
             src={product.images[0]} 
             alt={product.name}
+            loading="lazy"
             className="w-full h-48 object-cover"
           />
           <div className="absolute top-2 right-2">
