@@ -2,6 +2,8 @@
 
 Premium THCA hemp products e-commerce platform with full compliance features.
 
+<!-- Redeployment trigger for environment variable configuration -->
+
 ## Features
 - Age verification (21+)
 - State shipping restrictions
