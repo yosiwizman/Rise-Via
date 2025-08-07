@@ -67,7 +67,6 @@ export const useCart = create<CartStore>()(
         }
 
         trackCartEvent('add', itemData, { quantity });
-        cartAnalytics.trackCartEvent('add', itemData, { quantity });
       },
 
       removeFromCart: (itemId) => {

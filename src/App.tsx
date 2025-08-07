@@ -23,6 +23,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
 import { B2BPage } from './pages/B2BPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
@@ -32,7 +33,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
@@ -57,6 +57,8 @@ function App() {
       setCurrentPage('login');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
+    } else if (path === '/checkout') {
+      setCurrentPage('checkout');
     } else if (path === '/health') {
       setCurrentPage('health');
     } else {
@@ -121,6 +123,8 @@ function App() {
         return <LoginPage />;
       case 'b2b':
         return <B2BPage />;
+      case 'checkout':
+        return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
       case 'health':
         return <HealthCheck />;
       default:
@@ -144,8 +148,6 @@ function App() {
                 <Navigation 
                   currentPage={currentPage} 
                   onNavigate={setCurrentPage}
-                  cartOpen={cartOpen}
-                  setCartOpen={setCartOpen}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
                   searchOpen={searchOpen}

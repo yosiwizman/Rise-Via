@@ -19,9 +19,8 @@ interface NavigationProps {
 export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, searchOpen, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const { getWishlistCount } = useWishlist();
-  const { getCartCount } = useCart();
+  const { getCartCount, isOpen: cartOpen, setCartOpen } = useCart();
 
   const handleDarkModeToggle = () => {
     console.log('🌓 Dark mode toggled!');
