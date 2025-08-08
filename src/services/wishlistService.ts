@@ -12,75 +12,76 @@ const getSessionToken = () => {
 export const wishlistService = {
   async getOrCreateSession() {
     const token = getSessionToken()
-    
+
     const { data: existingSession } = await supabase
       .from('wishlist_sessions')
       .select('*')
       .eq('session_token', token)
       .single()
-    
+
     if (existingSession) return existingSession
-    
+
     const { data: newSession, error } = await supabase
       .from('wishlist_sessions')
       .insert({ session_token: token })
       .select()
       .single()
-    
+
     if (error) console.error('Error creating session:', error)
     return newSession
   },
-  
+
   async getWishlistItems() {
     const session = await this.getOrCreateSession()
     if (!session) return []
-    
+
+?
     const { data } = await supabase
       .from('wishlist_items')
       .select('*')
       .eq('session_id', session.id)
-    
+
     return data || []
   },
-  
+
   async addToWishlist(productId: string) {
     const session = await this.getOrCreateSession()
     if (!session) return false
-    
+
     const { error } = await supabase
       .from('wishlist_items')
       .insert({
         session_id: session.id,
         product_id: productId
       })
-    
+
     return !error
   },
-  
+
   async removeFromWishlist(productId: string) {
     const session = await this.getOrCreateSession()
     if (!session) return false
-    
+
     const { error } = await supabase
       .from('wishlist_items')
       .delete()
       .eq('session_id', session.id)
       .eq('product_id', productId)
-    
+
     return !error
   },
 
   async isInWishlist(productId: string): Promise<boolean> {
     const session = await this.getOrCreateSession()
     if (!session) return false
-    
+
     const { data } = await supabase
       .from('wishlist_items')
       .select('id')
       .eq('session_id', session.id)
       .eq('product_id', productId)
       .single()
-    
+
     return !!data
   }
 }
