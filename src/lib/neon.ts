@@ -24,10 +24,11 @@ interface DbItemUpdate {
 }
 
 
-const neonConnectionString = import.meta.env.VITE_NEON_DATABASE_URL;
+const neonConnectionString = process.env.VITE_NEON_DATABASE_URL || 
+                             import.meta.env?.VITE_NEON_DATABASE_URL;
 
 if (!neonConnectionString) {
-  console.error('Missing Neon database URL');
+  console.error('Missing Neon database URL - check VITE_NEON_DATABASE_URL environment variable');
   throw new Error('Missing required Neon database URL');
 }
 
@@ -72,6 +73,7 @@ export const wishlistDb = {
   },
 
   async addItem(sessionId: string, item: DbWishlistItem) {
+    console.debug('🔄 Neon addItem called:', { sessionId, item });
     const sql = `
       INSERT INTO wishlist_items (
         session_id, product_id, name, price, image, category,
@@ -80,12 +82,14 @@ export const wishlistDb = {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
-    return executeQuery(sql, [
+    const result = await executeQuery(sql, [
       sessionId, item.product_id || item.id, item.name, item.price, item.image,
       item.category, item.thcContent, item.cbdContent, 
       JSON.stringify(item.effects), item.priority || 'medium', 
       item.priceAlert ? JSON.stringify(item.priceAlert) : null
     ]);
+    console.debug('🔄 Neon addItem result:', result);
+    return result;
   },
 
   async getItems(sessionId: string) {

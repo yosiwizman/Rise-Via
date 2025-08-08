@@ -14,7 +14,11 @@ import { useWishlist } from '../../hooks/useWishlist';
 import { WishlistItem } from '../../types/wishlist';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
-export const WishlistPage = () => {
+interface WishlistPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
   const {
     items,
     stats,
@@ -210,7 +214,7 @@ export const WishlistPage = () => {
               Start building your wishlist by browsing our premium THCA strains and saving your favorites.
             </p>
             <Button
-              onClick={() => window.history.back()}
+              onClick={() => onNavigate?.('shop')}
               className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
             >
               Browse Products

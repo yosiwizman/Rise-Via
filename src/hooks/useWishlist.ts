@@ -177,17 +177,58 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
           return;
         }
 
-        const updatedItems = [...state.items, newItem];
-        const updatedStats = calculateStats(updatedItems);
+        if (!state.sessionId) {
+          await get().initializeSession();
+        }
 
-        set({
-          items: updatedItems,
-          stats: updatedStats,
-          error: null
-        });
+        const currentState = get();
+        if (!currentState.sessionId) {
+          set({ error: 'Failed to initialize session' });
+          return;
+        }
 
-        trackWishlistEvent('add', newItem);
-        wishlistAnalytics.trackWishlistEvent('add', newItem);
+        set({ isLoading: true, error: null });
+
+        try {
+          console.debug('🔄 Adding item to Neon database:', { sessionId: currentState.sessionId, item: newItem });
+          const { error: dbError } = await wishlistDb.addItem(currentState.sessionId, {
+            product_id: newItem.id,
+            name: newItem.name,
+            price: newItem.price,
+            image: newItem.image || '',
+            category: newItem.category,
+            thc_content: newItem.thcContent,
+            cbd_content: newItem.cbdContent,
+            effects: newItem.effects,
+            priority: newItem.priority
+          });
+
+          if (dbError) {
+            console.error('❌ Database error adding item:', dbError);
+            throw dbError;
+          }
+
+          console.debug('✅ Item successfully added to database');
+
+          const updatedItems = [...currentState.items, newItem];
+          const updatedStats = calculateStats(updatedItems);
+
+          set({
+            items: updatedItems,
+            stats: updatedStats,
+            isLoading: false,
+            error: null
+          });
+
+          trackWishlistEvent('add', newItem);
+          wishlistAnalytics.trackWishlistEvent('add', newItem);
+        } catch (error) {
+          console.error('❌ Failed to add item to wishlist:', error);
+          set({ 
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to add item to wishlist' 
+          });
+        }
       },
 
   removeFromWishlist: async (itemId) => {
