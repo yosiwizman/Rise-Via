@@ -112,31 +112,31 @@ function App() {
           console.log('🔧 Positioning ADA widget to right-middle as requested');
           const element = adaWidget as HTMLElement;
           
-          element.style.setProperty('display', 'block', 'important');
-          element.style.setProperty('visibility', 'visible', 'important');
-          element.style.setProperty('opacity', '1', 'important');
-          element.style.setProperty('z-index', '999999', 'important');
-          element.style.setProperty('position', 'fixed', 'important');
-          element.style.setProperty('top', '50%', 'important');
-          element.style.setProperty('right', '20px', 'important');
-          element.style.setProperty('transform', 'translateY(-50%)', 'important');
-          element.style.setProperty('bottom', 'auto', 'important');
-          element.style.setProperty('left', 'auto', 'important');
-          element.style.setProperty('width', '60px', 'important');
-          element.style.setProperty('height', '60px', 'important');
-          element.style.setProperty('border-radius', '50%', 'important');
-          element.style.setProperty('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.15)', 'important');
-          element.style.setProperty('background-color', '#6366f1', 'important');
-          element.style.setProperty('border', '2px solid #8b5cf6', 'important');
-          element.style.setProperty('margin', '0', 'important');
-          element.style.setProperty('padding', '0', 'important');
+          element.style.removeProperty('left');
+          element.removeAttribute('style');
           
-          if (window.innerWidth <= 768) {
-            element.style.setProperty('right', '15px', 'important');
-            element.style.setProperty('width', '50px', 'important');
-            element.style.setProperty('height', '50px', 'important');
-            console.log('📱 Applied mobile-specific ADA widget styling');
-          }
+          element.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 999999 !important;
+            position: fixed !important;
+            top: 50% !important;
+            right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
+            left: auto !important;
+            transform: translateY(-50%) !important;
+            bottom: auto !important;
+            width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+            height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+            border-radius: 50% !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            background-color: #6366f1 !important;
+            border: 2px solid #8b5cf6 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          `;
+          
+          console.log('📱 Applied aggressive right-side positioning with cssText');
           
           let isHidden = false;
           element.addEventListener('contextmenu', (e) => {
@@ -149,6 +149,35 @@ function App() {
           
           element.title = 'Right-click to hide/show • Accessibility Widget';
           console.log('✅ ADA widget positioned to right-middle successfully');
+          
+          const maintainPosition = () => {
+            if (element.style.left !== 'auto' || !element.style.right.includes('px')) {
+              console.log('🔄 Re-applying right positioning due to external changes');
+              element.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                z-index: 999999 !important;
+                position: fixed !important;
+                top: 50% !important;
+                right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
+                left: auto !important;
+                transform: translateY(-50%) !important;
+                bottom: auto !important;
+                width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+                height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+                border-radius: 50% !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                background-color: #6366f1 !important;
+                border: 2px solid #8b5cf6 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              `;
+            }
+          };
+          
+          setInterval(maintainPosition, 2000);
+          
         } else {
           console.warn('⚠️ ADA widget not found, retrying...');
           setTimeout(positionWidget, 1000);
