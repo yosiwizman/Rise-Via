@@ -4,6 +4,22 @@ import { SecurityUtils } from '../utils/security';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
 import { wishlistDb } from '../lib/neon';
 
+interface DbItem {
+  id: string;
+  session_id: string;
+  product_id: string;
+  name: string;
+  price: string;
+  image: string;
+  category: string;
+  thc_content?: string;
+  cbd_content?: string;
+  effects?: string;
+  priority: 'low' | 'medium' | 'high';
+  price_alert?: string;
+  created_at: string;
+}
+
 
 const initialStats: WishlistStats = {
   totalItems: 0,
@@ -24,7 +40,7 @@ const getSessionToken = (): string => {
   return sessionToken;
 };
 
-const mapDbItemToWishlistItem = (dbItem: any): WishlistItem => ({
+const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => ({
   id: dbItem.id,
   name: dbItem.name,
   price: parseFloat(dbItem.price),
@@ -55,21 +71,22 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     try {
       const sessionToken = state.sessionToken;
       
-      let { data: sessionData, error: sessionError } = await wishlistDb.getSession(sessionToken);
+      const { data: sessionData, error: sessionError } = await wishlistDb.getSession(sessionToken);
       
+      let finalSessionData = sessionData;
       if (sessionError || !sessionData || sessionData.length === 0) {
         const { data: newSession, error: createError } = await wishlistDb.createSession(sessionToken);
         if (createError) throw createError;
-        sessionData = newSession;
+        finalSessionData = newSession;
       }
 
-      const sessionId = sessionData?.[0]?.id;
+      const sessionId = finalSessionData?.[0]?.id;
       if (!sessionId) throw new Error('Failed to get session ID');
 
       const { data: itemsData, error: itemsError } = await wishlistDb.getItems(sessionId);
       if (itemsError) throw itemsError;
 
-      const items = itemsData ? itemsData.map(mapDbItemToWishlistItem) : [];
+      const items = itemsData ? (itemsData as DbItem[]).map(mapDbItemToWishlistItem) : [];
 
       set({
         sessionId,
@@ -122,7 +139,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       const { data: itemsData, error } = await wishlistDb.getItems(state.sessionId);
       if (!error && itemsData) {
-        const items = itemsData.map(mapDbItemToWishlistItem);
+        const items = (itemsData as DbItem[]).map(mapDbItemToWishlistItem);
         set({
           items,
           stats: calculateStats(items)
@@ -322,7 +339,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       importWishlist: async (shareCode) => {
         try {
           const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
-          const shareData = existingShares.find((share: any) => share.shareCode === shareCode);
+          const shareData = existingShares.find((share: { shareCode: string }) => share.shareCode === shareCode);
 
           if (!shareData) {
             throw new Error('Share code not found');
@@ -437,7 +454,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       const updatedItems = state.items.map(item => {
         if (item.id === itemId) {
-          const { priceAlert: _, ...itemWithoutAlert } = item;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { priceAlert, ...itemWithoutAlert } = item;
           return itemWithoutAlert;
         }
         return item;
@@ -452,7 +470,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       
       const updatedItems = state.items.map(item => {
         if (item.id === itemId) {
-          const { priceAlert: _, ...itemWithoutAlert } = item;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { priceAlert, ...itemWithoutAlert } = item;
           return itemWithoutAlert;
         }
         return item;
@@ -477,15 +496,19 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         const items = [...get().items];
         
         switch (sortBy) {
-          case 'name':
+          case 'name': {
             return items.sort((a, b) => a.name.localeCompare(b.name));
-          case 'price':
+          }
+          case 'price': {
             return items.sort((a, b) => b.price - a.price);
-          case 'dateAdded':
+          }
+          case 'dateAdded': {
             return items.sort((a, b) => b.dateAdded - a.dateAdded);
-          case 'priority':
+          }
+          case 'priority': {
             const priorityOrder = { high: 3, medium: 2, low: 1 };
             return items.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+          }
           default:
             return items;
         }
@@ -521,10 +544,10 @@ function calculateStats(items: WishlistItem[]): WishlistStats {
 function trackWishlistEvent(
   action: 'add' | 'remove' | 'share' | 'import' | 'clear',
   item?: WishlistItem,
-  metadata?: Record<string, any>
+  metadata?: Record<string, string | number>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `wishlist_${action}`, {
+    (window as { gtag: (...args: unknown[]) => void }).gtag('event', `wishlist_${action}`, {
       event_category: 'wishlist',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,

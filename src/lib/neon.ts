@@ -1,7 +1,30 @@
 import { neon } from '@neondatabase/serverless';
 
-const neonConnectionString = import.meta.env.VITE_NEON_DATABASE_URL || 
-  'postgresql://neondb_owner:npg_aQ8CrMKeH2BS@ep-dry-paper-adqei518.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require';
+interface DbSessionUpdate {
+  user_id?: string;
+}
+
+interface DbWishlistItem {
+  id?: string;
+  product_id?: string;
+  name: string;
+  price: number;
+  image?: string;
+  category: string;
+  thcContent?: string;
+  cbdContent?: string;
+  effects?: string[];
+  priority?: 'low' | 'medium' | 'high';
+  priceAlert?: object;
+}
+
+interface DbItemUpdate {
+  priority?: 'low' | 'medium' | 'high';
+  price_alert?: object | null;
+}
+
+
+const neonConnectionString = import.meta.env.VITE_NEON_DATABASE_URL;
 
 if (!neonConnectionString) {
   console.error('Missing Neon database URL');
@@ -10,7 +33,7 @@ if (!neonConnectionString) {
 
 export const neonClient = neon(neonConnectionString);
 
-export async function executeQuery(sql: string, params: any[] = []) {
+export async function executeQuery(sql: string, params: (string | number | null | undefined)[] = []) {
   try {
     const result = await neonClient(sql, params);
     return { data: result, error: null };
@@ -38,7 +61,7 @@ export const wishlistDb = {
     return executeQuery(sql, [sessionToken]);
   },
 
-  async updateSession(sessionToken: string, updates: any) {
+  async updateSession(sessionToken: string, updates: DbSessionUpdate) {
     const sql = `
       UPDATE wishlist_sessions 
       SET updated_at = NOW(), user_id = COALESCE($2, user_id)
@@ -48,7 +71,7 @@ export const wishlistDb = {
     return executeQuery(sql, [sessionToken, updates.user_id]);
   },
 
-  async addItem(sessionId: string, item: any) {
+  async addItem(sessionId: string, item: DbWishlistItem) {
     const sql = `
       INSERT INTO wishlist_items (
         session_id, product_id, name, price, image, category,
@@ -83,7 +106,7 @@ export const wishlistDb = {
     return executeQuery(sql, [itemId]);
   },
 
-  async updateItem(itemId: string, updates: any) {
+  async updateItem(itemId: string, updates: DbItemUpdate) {
     const sql = `
       UPDATE wishlist_items 
       SET priority = COALESCE($2, priority),
