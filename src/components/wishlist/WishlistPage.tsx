@@ -11,6 +11,8 @@ import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../hooks/use-toast';
 import { WishlistItem } from '../../types/wishlist';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
@@ -30,6 +32,8 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
     generateShareLink,
     sortItems
   } = useWishlist();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
 
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'dateAdded' | 'priority'>('dateAdded');
   const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -175,9 +179,23 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
 
           <div className="flex space-x-2">
             <Button
-              disabled
+              onClick={() => {
+                addToCart({
+                  productId: item.id,
+                  name: item.name,
+                  price: item.price,
+                  image: item.image,
+                  category: item.category,
+                  strainType: item.category || 'Unknown',
+                  thcaPercentage: 0
+                });
+                toast({
+                  title: "Added to Cart",
+                  description: `${item.name} has been added to your cart.`,
+                });
+              }}
               size="sm"
-              className="flex-1 bg-gray-600 text-gray-400 cursor-not-allowed"
+              className="flex-1 bg-risevia-teal hover:bg-risevia-teal/80 text-white"
             >
               <ShoppingCart size={14} className="mr-1" />
               Add to Cart

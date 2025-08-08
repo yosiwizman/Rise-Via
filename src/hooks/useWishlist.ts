@@ -257,6 +257,12 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
             error: null
           });
 
+          if (typeof window !== 'undefined' && window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('wishlist-item-added', {
+              detail: { name: newItem.name }
+            }));
+          }
+
           trackWishlistEvent('add', newItem);
           wishlistAnalytics.trackWishlistEvent('add', newItem);
         } catch (error) {
@@ -290,6 +296,12 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         error: null
       });
 
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('wishlist-item-removed', {
+          detail: { name: itemToRemove.name }
+        }));
+      }
+
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
     } catch (error) {
@@ -304,6 +316,12 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         isLoading: false,
         error: null
       });
+
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('wishlist-item-removed', {
+          detail: { name: itemToRemove.name }
+        }));
+      }
 
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);

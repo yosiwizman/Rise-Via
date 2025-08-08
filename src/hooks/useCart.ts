@@ -66,6 +66,12 @@ export const useCart = create<CartStore>()(
           });
         }
 
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('cart-item-added', {
+            detail: { name: sanitizedName, quantity }
+          }));
+        }
+
         trackCartEvent('add', itemData, { quantity });
       },
 
