@@ -66,7 +66,7 @@ jobs:
           npm run lint:summary >> tech-debt-report.md || true
       
       - name: Upload Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tech-debt-report
           path: tech-debt-report.md
@@ -132,7 +132,7 @@ jobs:
         continue-on-error: true
       
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build
           path: dist/
@@ -168,7 +168,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: tech-debt-report
       
