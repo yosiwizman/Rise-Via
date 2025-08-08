@@ -7,6 +7,7 @@ import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { CustomerProvider } from './contexts/CustomerContext';
@@ -212,6 +213,7 @@ function App() {
             
             {isAgeVerified && (
               <>
+                <WishlistInitializer />
                 <Navigation 
                   currentPage={currentPage} 
                   onNavigate={setCurrentPage}
