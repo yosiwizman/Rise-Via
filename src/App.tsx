@@ -80,37 +80,65 @@ function App() {
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
     script.setAttribute('data-account', 'FREE_ACCOUNT');
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-position', '6');
     script.async = true;
     script.onload = () => {
       console.log('✅ ADA widget loaded!');
-      setTimeout(() => {
+      
+      const positionWidget = () => {
         const adaWidget = document.querySelector('[aria-label*="Accessibility"]') || 
                          document.querySelector('[data-uw-feature-tour]') ||
-                         document.querySelector('.uw-s10-bottom-right');
+                         document.querySelector('.uw-s10-bottom-right') ||
+                         document.querySelector('#uw-widget');
+        
         if (adaWidget) {
-          (adaWidget as HTMLElement).style.zIndex = '9999';
-          (adaWidget as HTMLElement).style.position = 'fixed';
-          (adaWidget as HTMLElement).style.top = '50%';
-          (adaWidget as HTMLElement).style.left = '20px';
-          (adaWidget as HTMLElement).style.transform = 'translateY(-50%)';
-          (adaWidget as HTMLElement).style.bottom = 'auto';
-          (adaWidget as HTMLElement).style.right = 'auto';
-          (adaWidget as HTMLElement).style.width = '60px';
-          (adaWidget as HTMLElement).style.height = '60px';
-          (adaWidget as HTMLElement).style.borderRadius = '50%';
-          (adaWidget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          console.log('🔧 Positioning ADA widget for mobile compatibility');
+          const element = adaWidget as HTMLElement;
+          
+          element.style.display = 'block !important';
+          element.style.visibility = 'visible !important';
+          element.style.zIndex = '999999';
+          element.style.position = 'fixed';
+          element.style.top = '50%';
+          element.style.left = '20px';
+          element.style.transform = 'translateY(-50%)';
+          element.style.bottom = 'auto';
+          element.style.right = 'auto';
+          element.style.width = '60px';
+          element.style.height = '60px';
+          element.style.borderRadius = '50%';
+          element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          element.style.backgroundColor = '#6366f1';
+          element.style.border = '2px solid #8b5cf6';
+          
+          if (window.innerWidth <= 768) {
+            element.style.left = '15px';
+            element.style.width = '50px';
+            element.style.height = '50px';
+            console.log('📱 Applied mobile-specific ADA widget styling');
+          }
           
           let isHidden = false;
-          (adaWidget as HTMLElement).addEventListener('contextmenu', (e) => {
+          element.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             isHidden = !isHidden;
-            (adaWidget as HTMLElement).style.opacity = isHidden ? '0.3' : '1';
-            (adaWidget as HTMLElement).style.pointerEvents = isHidden ? 'none' : 'auto';
+            element.style.opacity = isHidden ? '0.3' : '1';
+            element.style.pointerEvents = isHidden ? 'none' : 'auto';
+            console.log(`🔄 ADA widget ${isHidden ? 'hidden' : 'shown'}`);
           });
           
-          (adaWidget as HTMLElement).title = 'Right-click to hide/show • Accessibility Widget';
+          element.title = 'Right-click to hide/show • Accessibility Widget';
+          console.log('✅ ADA widget positioned successfully');
+        } else {
+          console.warn('⚠️ ADA widget not found, retrying...');
+          setTimeout(positionWidget, 500);
         }
-      }, 1000);
+      };
+      
+      setTimeout(positionWidget, 500);
+      setTimeout(positionWidget, 2000);
+      window.addEventListener('resize', positionWidget);
     };
     document.head.appendChild(script);
 
