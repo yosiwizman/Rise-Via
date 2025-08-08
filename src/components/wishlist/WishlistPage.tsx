@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Alert, AlertDescription } from '../ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
 import { WishlistItem } from '../../types/wishlist';
@@ -369,6 +369,9 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Share Your Wishlist</DialogTitle>
+              <DialogDescription className="sr-only">
+                Generate and share a link to your wishlist with friends
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-risevia-charcoal">
@@ -402,6 +405,9 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Set Price Alert</DialogTitle>
+              <DialogDescription className="sr-only">
+                Set a price alert to get notified when {priceAlertItem?.name} reaches your target price
+              </DialogDescription>
             </DialogHeader>
             {priceAlertItem && (
               <div className="space-y-4">
