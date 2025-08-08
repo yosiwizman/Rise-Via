@@ -87,35 +87,54 @@ function App() {
       console.log('✅ ADA widget loaded!');
       
       const positionWidget = () => {
-        const adaWidget = document.querySelector('[aria-label*="Accessibility"]') || 
-                         document.querySelector('[data-uw-feature-tour]') ||
-                         document.querySelector('.uw-s10-bottom-right') ||
-                         document.querySelector('#uw-widget');
+        const selectors = [
+          '[aria-label*="Accessibility"]',
+          '[data-uw-feature-tour]',
+          '.uw-s10-bottom-right',
+          '.uw-s10-top-right',
+          '.uw-s10-middle-right',
+          '#uw-widget',
+          '[class*="uw-"]',
+          'iframe[src*="userway"]',
+          'div[style*="position: fixed"]'
+        ];
+        
+        let adaWidget = null;
+        for (const selector of selectors) {
+          adaWidget = document.querySelector(selector);
+          if (adaWidget) {
+            console.log(`🎯 Found ADA widget with selector: ${selector}`);
+            break;
+          }
+        }
         
         if (adaWidget) {
-          console.log('🔧 Positioning ADA widget for mobile compatibility');
+          console.log('🔧 Positioning ADA widget to left-middle as requested');
           const element = adaWidget as HTMLElement;
           
-          element.style.display = 'block !important';
-          element.style.visibility = 'visible !important';
-          element.style.zIndex = '999999';
-          element.style.position = 'fixed';
-          element.style.top = '50%';
-          element.style.left = '20px';
-          element.style.transform = 'translateY(-50%)';
-          element.style.bottom = 'auto';
-          element.style.right = 'auto';
-          element.style.width = '60px';
-          element.style.height = '60px';
-          element.style.borderRadius = '50%';
-          element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-          element.style.backgroundColor = '#6366f1';
-          element.style.border = '2px solid #8b5cf6';
+          element.style.setProperty('display', 'block', 'important');
+          element.style.setProperty('visibility', 'visible', 'important');
+          element.style.setProperty('opacity', '1', 'important');
+          element.style.setProperty('z-index', '999999', 'important');
+          element.style.setProperty('position', 'fixed', 'important');
+          element.style.setProperty('top', '50%', 'important');
+          element.style.setProperty('left', '20px', 'important');
+          element.style.setProperty('transform', 'translateY(-50%)', 'important');
+          element.style.setProperty('bottom', 'auto', 'important');
+          element.style.setProperty('right', 'auto', 'important');
+          element.style.setProperty('width', '60px', 'important');
+          element.style.setProperty('height', '60px', 'important');
+          element.style.setProperty('border-radius', '50%', 'important');
+          element.style.setProperty('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.15)', 'important');
+          element.style.setProperty('background-color', '#6366f1', 'important');
+          element.style.setProperty('border', '2px solid #8b5cf6', 'important');
+          element.style.setProperty('margin', '0', 'important');
+          element.style.setProperty('padding', '0', 'important');
           
           if (window.innerWidth <= 768) {
-            element.style.left = '15px';
-            element.style.width = '50px';
-            element.style.height = '50px';
+            element.style.setProperty('left', '15px', 'important');
+            element.style.setProperty('width', '50px', 'important');
+            element.style.setProperty('height', '50px', 'important');
             console.log('📱 Applied mobile-specific ADA widget styling');
           }
           
@@ -123,22 +142,30 @@ function App() {
           element.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             isHidden = !isHidden;
-            element.style.opacity = isHidden ? '0.3' : '1';
-            element.style.pointerEvents = isHidden ? 'none' : 'auto';
+            element.style.setProperty('opacity', isHidden ? '0.3' : '1', 'important');
+            element.style.setProperty('pointer-events', isHidden ? 'none' : 'auto', 'important');
             console.log(`🔄 ADA widget ${isHidden ? 'hidden' : 'shown'}`);
           });
           
           element.title = 'Right-click to hide/show • Accessibility Widget';
-          console.log('✅ ADA widget positioned successfully');
+          console.log('✅ ADA widget positioned to left-middle successfully');
         } else {
           console.warn('⚠️ ADA widget not found, retrying...');
-          setTimeout(positionWidget, 500);
+          setTimeout(positionWidget, 1000);
         }
       };
       
       setTimeout(positionWidget, 500);
-      setTimeout(positionWidget, 2000);
+      setTimeout(positionWidget, 1500);
+      setTimeout(positionWidget, 3000);
+      setTimeout(positionWidget, 5000);
+      
       window.addEventListener('resize', positionWidget);
+      
+      const observer = new MutationObserver(() => {
+        positionWidget();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
     };
     document.head.appendChild(script);
 
