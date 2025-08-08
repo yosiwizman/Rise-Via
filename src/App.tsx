@@ -14,6 +14,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import { Toaster } from './components/ui/sonner';
 
 const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
 const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
@@ -246,6 +247,7 @@ function App() {
           </div>
         </AnalyticsProvider>
       </ErrorBoundary>
+      <Toaster />
     </CustomerProvider>
   );
 }

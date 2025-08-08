@@ -3,6 +3,7 @@ import { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types
 import { SecurityUtils } from '../utils/security';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
 import { wishlistDb } from '../lib/neon';
+import { toast } from 'sonner';
 
 interface DbItem {
   id: string;
@@ -259,6 +260,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
           trackWishlistEvent('add', newItem);
           wishlistAnalytics.trackWishlistEvent('add', newItem);
+
+          toast.success(`${newItem.name} added to wishlist!`, {
+            description: `$${newItem.price} • ${newItem.category}`,
+            duration: 3000,
+          });
         } catch (error) {
           console.error('❌ Failed to add item to wishlist:', error);
           set({ 
@@ -292,6 +298,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
+
+      toast.success(`${itemToRemove.name} removed from wishlist`, {
+        description: 'Item successfully removed',
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Failed to remove item from wishlist:', error);
       
@@ -307,6 +318,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
+
+      toast.success(`${itemToRemove.name} removed from wishlist`, {
+        description: 'Item successfully removed',
+        duration: 2000,
+      });
     }
   },
 
