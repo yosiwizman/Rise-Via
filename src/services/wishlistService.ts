@@ -35,7 +35,6 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return []
 
-?
     const { data } = await supabase
       .from('wishlist_items')
       .select('*')
