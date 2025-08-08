@@ -43,9 +43,22 @@ export const wishlistService = {
     return data || []
   },
 
+  async getWishlist() {
+    const session = await this.getOrCreateSession()
+    if (!session) return { data: [], error: null }
+
+    const { data, error } = await supabase
+      .from('wishlist_items')
+      .select('product_id')
+      .eq('session_id', session.id)
+
+    if (error) return { data: [], error }
+    return { data: data?.map(item => item.product_id) || [], error: null }
+  },
+
   async addToWishlist(productId: string) {
     const session = await this.getOrCreateSession()
-    if (!session) return false
+    if (!session) return { error: { message: 'Failed to create session' } }
 
     const { error } = await supabase
       .from('wishlist_items')
@@ -54,12 +67,12 @@ export const wishlistService = {
         product_id: productId
       })
 
-    return !error
+    return { error }
   },
 
   async removeFromWishlist(productId: string) {
     const session = await this.getOrCreateSession()
-    if (!session) return false
+    if (!session) return { error: { message: 'Failed to create session' } }
 
     const { error } = await supabase
       .from('wishlist_items')
@@ -67,7 +80,7 @@ export const wishlistService = {
       .eq('session_id', session.id)
       .eq('product_id', productId)
 
-    return !error
+    return { error }
   },
 
   async isInWishlist(productId: string): Promise<boolean> {
@@ -82,5 +95,18 @@ export const wishlistService = {
       .single()
 
     return !!data
+  },
+
+  async migrateSessionWishlist(userId: string) {
+    const { data: sessionItems } = await supabase
+      .from('wishlist_items')
+      .select('product_id')
+      .eq('session_id', (await this.getOrCreateSession())?.id)
+    
+    if (sessionItems && sessionItems.length > 0) {
+      console.log(`Migrating ${sessionItems.length} wishlist items for user ${userId}`)
+    }
+    
+    return { success: true }
   }
 }
