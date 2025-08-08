@@ -11,6 +11,10 @@ import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
 import { LegalPage } from './pages/LegalPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { ContactPage } from './pages/ContactPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ShippingPage } from './pages/ShippingPage';
@@ -48,6 +52,14 @@ function App() {
       setCurrentPage('learn');
     } else if (path === '/legal') {
       setCurrentPage('legal');
+    } else if (path === '/privacy') {
+      setCurrentPage('privacy');
+    } else if (path === '/terms') {
+      setCurrentPage('terms');
+    } else if (path === '/reset-password') {
+      setCurrentPage('reset-password');
+    } else if (path === '/orders' || path === '/account/orders') {
+      setCurrentPage('orders');
     } else if (path === '/contact') {
       setCurrentPage('contact');
     } else if (path === '/wishlist') {
@@ -104,6 +116,14 @@ function App() {
         return <LearnPage />;
       case 'legal':
         return <LegalPage />;
+      case 'privacy':
+        return <PrivacyPage />;
+      case 'terms':
+        return <TermsPage />;
+      case 'reset-password':
+        return <ResetPasswordPage />;
+      case 'orders':
+        return <OrderTrackingPage />;
       case 'contact':
         return <ContactPage />;
       case 'shipping':
