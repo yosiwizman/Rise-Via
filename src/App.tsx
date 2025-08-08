@@ -109,7 +109,7 @@ function App() {
         }
         
         if (adaWidget) {
-          console.log('🔧 Positioning ADA widget to left-middle as requested');
+          console.log('🔧 Positioning ADA widget to right-middle as requested');
           const element = adaWidget as HTMLElement;
           
           element.style.setProperty('display', 'block', 'important');
@@ -118,10 +118,10 @@ function App() {
           element.style.setProperty('z-index', '999999', 'important');
           element.style.setProperty('position', 'fixed', 'important');
           element.style.setProperty('top', '50%', 'important');
-          element.style.setProperty('left', '20px', 'important');
+          element.style.setProperty('right', '20px', 'important');
           element.style.setProperty('transform', 'translateY(-50%)', 'important');
           element.style.setProperty('bottom', 'auto', 'important');
-          element.style.setProperty('right', 'auto', 'important');
+          element.style.setProperty('left', 'auto', 'important');
           element.style.setProperty('width', '60px', 'important');
           element.style.setProperty('height', '60px', 'important');
           element.style.setProperty('border-radius', '50%', 'important');
@@ -132,7 +132,7 @@ function App() {
           element.style.setProperty('padding', '0', 'important');
           
           if (window.innerWidth <= 768) {
-            element.style.setProperty('left', '15px', 'important');
+            element.style.setProperty('right', '15px', 'important');
             element.style.setProperty('width', '50px', 'important');
             element.style.setProperty('height', '50px', 'important');
             console.log('📱 Applied mobile-specific ADA widget styling');
@@ -148,7 +148,7 @@ function App() {
           });
           
           element.title = 'Right-click to hide/show • Accessibility Widget';
-          console.log('✅ ADA widget positioned to left-middle successfully');
+          console.log('✅ ADA widget positioned to right-middle successfully');
         } else {
           console.warn('⚠️ ADA widget not found, retrying...');
           setTimeout(positionWidget, 1000);
