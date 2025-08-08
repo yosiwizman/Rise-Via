@@ -6,6 +6,13 @@
   margin: 0;
   padding: 0;
   text-align: left;
+  overflow-x: hidden;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
 }
 
 .neon-glow {
@@ -58,6 +65,8 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #F8F9FA;
   color: #1F2937;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 @keyframes glow {

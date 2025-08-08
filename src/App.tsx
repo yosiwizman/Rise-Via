@@ -90,12 +90,25 @@ function App() {
         if (adaWidget) {
           (adaWidget as HTMLElement).style.zIndex = '9999';
           (adaWidget as HTMLElement).style.position = 'fixed';
-          (adaWidget as HTMLElement).style.bottom = '20px';
-          (adaWidget as HTMLElement).style.right = '20px';
-          (adaWidget as HTMLElement).style.top = 'auto';
-          (adaWidget as HTMLElement).style.left = 'auto';
+          (adaWidget as HTMLElement).style.top = '50%';
+          (adaWidget as HTMLElement).style.left = '20px';
+          (adaWidget as HTMLElement).style.transform = 'translateY(-50%)';
+          (adaWidget as HTMLElement).style.bottom = 'auto';
+          (adaWidget as HTMLElement).style.right = 'auto';
           (adaWidget as HTMLElement).style.width = '60px';
           (adaWidget as HTMLElement).style.height = '60px';
+          (adaWidget as HTMLElement).style.borderRadius = '50%';
+          (adaWidget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          
+          let isHidden = false;
+          (adaWidget as HTMLElement).addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            isHidden = !isHidden;
+            (adaWidget as HTMLElement).style.opacity = isHidden ? '0.3' : '1';
+            (adaWidget as HTMLElement).style.pointerEvents = isHidden ? 'none' : 'auto';
+          });
+          
+          (adaWidget as HTMLElement).title = 'Right-click to hide/show • Accessibility Widget';
         }
       }, 1000);
     };
