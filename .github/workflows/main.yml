@@ -36,14 +36,15 @@ jobs:
       - run: npm ci
       - run: node scripts/security-check.js
       
-  dependency-review:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v3
-        with:
-          fail-on-severity: moderate
+  # dependency-review:
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/dependency-review-action@v3
+  #       with:
+  #         fail-on-severity: moderate
+  #   # Disabled: Requires GitHub Advanced Security (paid feature)
           
   lighthouse:
     runs-on: ubuntu-latest
