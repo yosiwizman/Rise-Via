@@ -1,10 +1,25 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types/wishlist';
 import { SecurityUtils } from '../utils/security';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
+import { wishlistDb } from '../lib/neon';
 
-const STORAGE_KEY = 'risevia-wishlist';
+interface DbItem {
+  id: string;
+  session_id: string;
+  product_id: string;
+  name: string;
+  price: string;
+  image: string;
+  category: string;
+  thc_content?: string;
+  cbd_content?: string;
+  effects?: string;
+  priority: 'low' | 'medium' | 'high';
+  price_alert?: string;
+  created_at: string;
+}
+
 
 const initialStats: WishlistStats = {
   totalItems: 0,
@@ -16,15 +31,128 @@ const initialStats: WishlistStats = {
   lastUpdated: Date.now()
 };
 
-export const useWishlist = create<WishlistStore>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      stats: initialStats,
-      isLoading: false,
-      error: null,
+const getSessionToken = (): string => {
+  let sessionToken = sessionStorage.getItem('risevia_wishlist_session');
+  if (!sessionToken) {
+    sessionToken = crypto.randomUUID();
+    sessionStorage.setItem('risevia_wishlist_session', sessionToken);
+  }
+  return sessionToken;
+};
 
-      addToWishlist: (itemData) => {
+const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => ({
+  id: dbItem.id,
+  name: dbItem.name,
+  price: parseFloat(dbItem.price),
+  image: dbItem.image,
+  category: dbItem.category,
+  thcContent: dbItem.thc_content,
+  cbdContent: dbItem.cbd_content,
+  effects: dbItem.effects ? JSON.parse(dbItem.effects) : undefined,
+  priority: dbItem.priority,
+  priceAlert: dbItem.price_alert ? JSON.parse(dbItem.price_alert) : undefined,
+  dateAdded: dbItem.created_at ? new Date(dbItem.created_at).getTime() : Date.now()
+});
+
+export const useWishlist = create<WishlistStore>()((set, get) => ({
+  items: [],
+  stats: initialStats,
+  isLoading: false,
+  error: null,
+  sessionToken: getSessionToken(),
+  sessionId: null,
+
+  initializeSession: async () => {
+    const state = get();
+    if (state.sessionId) return;
+
+    set({ isLoading: true, error: null });
+
+    try {
+      const sessionToken = state.sessionToken;
+      
+      const { data: sessionData, error: sessionError } = await wishlistDb.getSession(sessionToken);
+      
+      let finalSessionData = sessionData;
+      if (sessionError || !sessionData || sessionData.length === 0) {
+        const { data: newSession, error: createError } = await wishlistDb.createSession(sessionToken);
+        if (createError) throw createError;
+        finalSessionData = newSession;
+      }
+
+      const sessionId = finalSessionData?.[0]?.id;
+      if (!sessionId) throw new Error('Failed to get session ID');
+
+      const { data: itemsData, error: itemsError } = await wishlistDb.getItems(sessionId);
+      if (itemsError) throw itemsError;
+
+      const items = itemsData ? (itemsData as DbItem[]).map(mapDbItemToWishlistItem) : [];
+
+      set({
+        sessionId,
+        items,
+        stats: calculateStats(items),
+        isLoading: false,
+        error: null
+      });
+
+      await get().migrateFromLocalStorage();
+    } catch (error) {
+      console.error('Failed to initialize wishlist session:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Failed to initialize session' 
+      });
+    }
+  },
+
+  migrateFromLocalStorage: async () => {
+    const localStorageKey = 'risevia-wishlist';
+    const localData = localStorage.getItem(localStorageKey);
+    
+    if (!localData) return;
+
+    try {
+      const parsedData = JSON.parse(localData);
+      const localItems = parsedData?.state?.items || [];
+      
+      if (localItems.length === 0) {
+        localStorage.removeItem(localStorageKey);
+        return;
+      }
+
+      const state = get();
+      if (!state.sessionId) return;
+
+      for (const item of localItems) {
+        const existingItem = state.items.find(dbItem => 
+          dbItem.name === item.name && dbItem.category === item.category
+        );
+        
+        if (!existingItem) {
+          await wishlistDb.addItem(state.sessionId, {
+            ...item,
+            product_id: item.id
+          });
+        }
+      }
+
+      const { data: itemsData, error } = await wishlistDb.getItems(state.sessionId);
+      if (!error && itemsData) {
+        const items = (itemsData as DbItem[]).map(mapDbItemToWishlistItem);
+        set({
+          items,
+          stats: calculateStats(items)
+        });
+      }
+
+      localStorage.removeItem(localStorageKey);
+    } catch (error) {
+      console.error('Failed to migrate localStorage data:', error);
+    }
+  },
+
+  addToWishlist: async (itemData) => {
         const state = get();
         
         if (!SecurityUtils.checkRateLimit('wishlist_add', 20, 60000)) {
@@ -62,48 +190,115 @@ export const useWishlist = create<WishlistStore>()(
         wishlistAnalytics.trackWishlistEvent('add', newItem);
       },
 
-      removeFromWishlist: (itemId) => {
-        const state = get();
-        const itemToRemove = state.items.find(item => item.id === itemId);
-        
-        if (!itemToRemove) return;
+  removeFromWishlist: async (itemId) => {
+    const state = get();
+    const itemToRemove = state.items.find(item => item.id === itemId);
+    
+    if (!itemToRemove) return;
 
-        const updatedItems = state.items.filter(item => item.id !== itemId);
-        const updatedStats = calculateStats(updatedItems);
+    set({ isLoading: true, error: null });
 
-        set({
-          items: updatedItems,
-          stats: updatedStats,
-          error: null
-        });
+    try {
+      const { error } = await wishlistDb.removeItem(itemId);
+      if (error) throw error;
 
-        trackWishlistEvent('remove', itemToRemove);
-        wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
-      },
+      const updatedItems = state.items.filter(item => item.id !== itemId);
+      const updatedStats = calculateStats(updatedItems);
 
-      updateItemPriority: (itemId, priority) => {
-        const state = get();
-        const updatedItems = state.items.map(item =>
-          item.id === itemId ? { ...item, priority } : item
-        );
-        const updatedStats = calculateStats(updatedItems);
+      set({
+        items: updatedItems,
+        stats: updatedStats,
+        isLoading: false,
+        error: null
+      });
 
-        set({
-          items: updatedItems,
-          stats: updatedStats
-        });
-      },
+      trackWishlistEvent('remove', itemToRemove);
+      wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
+    } catch (error) {
+      console.error('Failed to remove item from wishlist:', error);
+      
+      const updatedItems = state.items.filter(item => item.id !== itemId);
+      const updatedStats = calculateStats(updatedItems);
 
-      clearWishlist: () => {
-        set({
-          items: [],
-          stats: { ...initialStats, dateCreated: Date.now() },
-          error: null
-        });
+      set({
+        items: updatedItems,
+        stats: updatedStats,
+        isLoading: false,
+        error: null
+      });
 
-        trackWishlistEvent('clear');
-        wishlistAnalytics.trackWishlistEvent('clear');
-      },
+      trackWishlistEvent('remove', itemToRemove);
+      wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
+    }
+  },
+
+  updateItemPriority: async (itemId, priority) => {
+    const state = get();
+    set({ isLoading: true, error: null });
+
+    try {
+      const { error } = await wishlistDb.updateItem(itemId, { priority });
+      if (error) throw error;
+
+      const updatedItems = state.items.map(item =>
+        item.id === itemId ? { ...item, priority } : item
+      );
+      const updatedStats = calculateStats(updatedItems);
+
+      set({
+        items: updatedItems,
+        stats: updatedStats,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Failed to update item priority:', error);
+      
+      const updatedItems = state.items.map(item =>
+        item.id === itemId ? { ...item, priority } : item
+      );
+      const updatedStats = calculateStats(updatedItems);
+
+      set({
+        items: updatedItems,
+        stats: updatedStats,
+        isLoading: false
+      });
+    }
+  },
+
+  clearWishlist: async () => {
+    const state = get();
+    if (!state.sessionId) return;
+
+    set({ isLoading: true, error: null });
+
+    try {
+      const { error } = await wishlistDb.clearItems(state.sessionId);
+      if (error) throw error;
+
+      set({
+        items: [],
+        stats: { ...initialStats, dateCreated: Date.now() },
+        isLoading: false,
+        error: null
+      });
+
+      trackWishlistEvent('clear');
+      wishlistAnalytics.trackWishlistEvent('clear');
+    } catch (error) {
+      console.error('Failed to clear wishlist:', error);
+      
+      set({
+        items: [],
+        stats: { ...initialStats, dateCreated: Date.now() },
+        isLoading: false,
+        error: null
+      });
+
+      trackWishlistEvent('clear');
+      wishlistAnalytics.trackWishlistEvent('clear');
+    }
+  },
 
       isInWishlist: (itemId) => {
         const state = get();
@@ -144,7 +339,7 @@ export const useWishlist = create<WishlistStore>()(
       importWishlist: async (shareCode) => {
         try {
           const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
-          const shareData = existingShares.find((share: any) => share.shareCode === shareCode);
+          const shareData = existingShares.find((share: { shareCode: string }) => share.shareCode === shareCode);
 
           if (!shareData) {
             throw new Error('Share code not found');
@@ -189,39 +384,105 @@ export const useWishlist = create<WishlistStore>()(
         }
       },
 
-      setPriceAlert: (itemId, targetPrice) => {
-        const state = get();
-        const updatedItems = state.items.map(item => {
-          if (item.id === itemId) {
-            const priceAlert: PriceAlert = {
-              id: crypto.randomUUID(),
-              itemId,
-              targetPrice,
-              currentPrice: item.price,
-              isActive: true,
-              createdAt: Date.now(),
-              notificationSent: false
-            };
-            return { ...item, priceAlert };
-          }
-          return item;
-        });
+  setPriceAlert: async (itemId, targetPrice) => {
+    const state = get();
+    const priceAlert = {
+      targetPrice,
+      isActive: true,
+      createdAt: new Date().toISOString()
+    };
 
-        set({ items: updatedItems });
-      },
+    set({ isLoading: true, error: null });
 
-      removePriceAlert: (itemId) => {
-        const state = get();
-        const updatedItems = state.items.map(item => {
-          if (item.id === itemId) {
-            const { priceAlert: _, ...itemWithoutAlert } = item;
-            return itemWithoutAlert;
-          }
-          return item;
-        });
+    try {
+      const { error } = await wishlistDb.updateItem(itemId, { price_alert: priceAlert });
+      if (error) throw error;
 
-        set({ items: updatedItems });
-      },
+      const updatedItems = state.items.map(item => {
+        if (item.id === itemId) {
+          const fullPriceAlert: PriceAlert = {
+            id: crypto.randomUUID(),
+            itemId,
+            targetPrice,
+            currentPrice: item.price,
+            isActive: true,
+            createdAt: Date.now(),
+            notificationSent: false
+          };
+          return { ...item, priceAlert: fullPriceAlert };
+        }
+        return item;
+      });
+
+      set({
+        items: updatedItems,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Failed to set price alert:', error);
+      
+      const updatedItems = state.items.map(item => {
+        if (item.id === itemId) {
+          const fullPriceAlert: PriceAlert = {
+            id: crypto.randomUUID(),
+            itemId,
+            targetPrice,
+            currentPrice: item.price,
+            isActive: true,
+            createdAt: Date.now(),
+            notificationSent: false
+          };
+          return { ...item, priceAlert: fullPriceAlert };
+        }
+        return item;
+      });
+
+      set({
+        items: updatedItems,
+        isLoading: false
+      });
+    }
+  },
+
+  removePriceAlert: async (itemId) => {
+    const state = get();
+    set({ isLoading: true, error: null });
+
+    try {
+      const { error } = await wishlistDb.updateItem(itemId, { price_alert: null });
+      if (error) throw error;
+
+      const updatedItems = state.items.map(item => {
+        if (item.id === itemId) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { priceAlert, ...itemWithoutAlert } = item;
+          return itemWithoutAlert;
+        }
+        return item;
+      });
+
+      set({
+        items: updatedItems,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Failed to remove price alert:', error);
+      
+      const updatedItems = state.items.map(item => {
+        if (item.id === itemId) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { priceAlert, ...itemWithoutAlert } = item;
+          return itemWithoutAlert;
+        }
+        return item;
+      });
+
+      set({
+        items: updatedItems,
+        isLoading: false
+      });
+    }
+  },
 
       getItemsByCategory: (category) => {
         return get().items.filter(item => item.category === category);
@@ -235,30 +496,24 @@ export const useWishlist = create<WishlistStore>()(
         const items = [...get().items];
         
         switch (sortBy) {
-          case 'name':
+          case 'name': {
             return items.sort((a, b) => a.name.localeCompare(b.name));
-          case 'price':
+          }
+          case 'price': {
             return items.sort((a, b) => b.price - a.price);
-          case 'dateAdded':
+          }
+          case 'dateAdded': {
             return items.sort((a, b) => b.dateAdded - a.dateAdded);
-          case 'priority':
+          }
+          case 'priority': {
             const priorityOrder = { high: 3, medium: 2, low: 1 };
             return items.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+          }
           default:
             return items;
         }
       }
-    }),
-    {
-      name: STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        items: state.items,
-        stats: state.stats
-      })
-    }
-  )
-);
+}));
 
 function calculateStats(items: WishlistItem[]): WishlistStats {
   const totalItems = items.length;
@@ -289,10 +544,10 @@ function calculateStats(items: WishlistItem[]): WishlistStats {
 function trackWishlistEvent(
   action: 'add' | 'remove' | 'share' | 'import' | 'clear',
   item?: WishlistItem,
-  metadata?: Record<string, any>
+  metadata?: Record<string, string | number>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `wishlist_${action}`, {
+    (window as { gtag: (...args: unknown[]) => void }).gtag('event', `wishlist_${action}`, {
       event_category: 'wishlist',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,
