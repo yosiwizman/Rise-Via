@@ -40,19 +40,47 @@ const getSessionToken = (): string => {
   return sessionToken;
 };
 
-const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => ({
-  id: dbItem.id,
-  name: dbItem.name,
-  price: parseFloat(dbItem.price),
-  image: dbItem.image,
-  category: dbItem.category,
-  thcContent: dbItem.thc_content,
-  cbdContent: dbItem.cbd_content,
-  effects: dbItem.effects ? JSON.parse(dbItem.effects) : undefined,
-  priority: dbItem.priority,
-  priceAlert: dbItem.price_alert ? JSON.parse(dbItem.price_alert) : undefined,
-  dateAdded: dbItem.created_at ? new Date(dbItem.created_at).getTime() : Date.now()
-});
+const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => {
+  let effects: string[] = [];
+  try {
+    if (dbItem.effects) {
+      if (typeof dbItem.effects === 'string') {
+        if (dbItem.effects.startsWith('[') && dbItem.effects.endsWith(']')) {
+          effects = JSON.parse(dbItem.effects);
+        } else {
+          effects = dbItem.effects.split(',').map((effect: string) => effect.trim());
+        }
+      } else if (Array.isArray(dbItem.effects)) {
+        effects = dbItem.effects;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse effects, using empty array:', error);
+    effects = [];
+  }
+
+  let priceAlert;
+  try {
+    priceAlert = dbItem.price_alert ? JSON.parse(dbItem.price_alert) : undefined;
+  } catch (error) {
+    console.warn('Failed to parse price alert, using undefined:', error);
+    priceAlert = undefined;
+  }
+
+  return {
+    id: dbItem.id,
+    name: dbItem.name,
+    price: parseFloat(dbItem.price),
+    image: dbItem.image,
+    category: dbItem.category,
+    thcContent: dbItem.thc_content,
+    cbdContent: dbItem.cbd_content,
+    effects,
+    priority: dbItem.priority,
+    priceAlert,
+    dateAdded: dbItem.created_at ? new Date(dbItem.created_at).getTime() : Date.now()
+  };
+};
 
 export const useWishlist = create<WishlistStore>()((set, get) => ({
   items: [],
@@ -153,15 +181,21 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
   },
 
   addToWishlist: async (itemData) => {
+        console.log('🔵 addToWishlist called with:', itemData);
         const state = get();
         
+        console.log('🔵 Checking rate limit...');
         if (!SecurityUtils.checkRateLimit('wishlist_add', 20, 60000)) {
+          console.log('❌ Rate limit exceeded');
           set({ error: 'Too many requests. Please wait before adding more items.' });
           return;
         }
+        console.log('✅ Rate limit check passed');
 
+        console.log('🔵 Sanitizing inputs...');
         const sanitizedName = SecurityUtils.sanitizeInput(itemData.name);
         const sanitizedCategory = SecurityUtils.sanitizeInput(itemData.category);
+        console.log('✅ Inputs sanitized');
 
         const newItem: WishlistItem = {
           ...itemData,
@@ -172,10 +206,13 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
           priority: 'medium'
         };
 
+        console.log('🔵 Checking for duplicate items...');
         if (state.items.some(item => item.name === newItem.name)) {
+          console.log('❌ Item already in wishlist');
           set({ error: 'Item already in wishlist' });
           return;
         }
+        console.log('✅ No duplicate found');
 
         if (!state.sessionId) {
           await get().initializeSession();

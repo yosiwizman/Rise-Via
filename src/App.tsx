@@ -82,6 +82,21 @@ function App() {
     script.async = true;
     script.onload = () => {
       console.log('✅ ADA widget loaded!');
+      setTimeout(() => {
+        const adaWidget = document.querySelector('[aria-label*="Accessibility"]') || 
+                         document.querySelector('[data-uw-feature-tour]') ||
+                         document.querySelector('.uw-s10-bottom-right');
+        if (adaWidget) {
+          (adaWidget as HTMLElement).style.zIndex = '9999';
+          (adaWidget as HTMLElement).style.position = 'fixed';
+          (adaWidget as HTMLElement).style.bottom = '20px';
+          (adaWidget as HTMLElement).style.right = '20px';
+          (adaWidget as HTMLElement).style.top = 'auto';
+          (adaWidget as HTMLElement).style.left = 'auto';
+          (adaWidget as HTMLElement).style.width = '60px';
+          (adaWidget as HTMLElement).style.height = '60px';
+        }
+      }, 1000);
     };
     document.head.appendChild(script);
 
@@ -146,7 +161,7 @@ function App() {
       case 'wishlist':
         return (
           <Suspense fallback={<PageLoader />}>
-            <WishlistPage />
+            <WishlistPage onNavigate={setCurrentPage} />
           </Suspense>
         );
       case 'wishlist-shared':
