@@ -14,6 +14,8 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import { Toaster } from './components/ui/toaster';
+import { ToastEventHandler } from './components/ToastEventHandler';
 
 const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
 const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
@@ -87,14 +89,34 @@ function App() {
                          document.querySelector('[data-uw-feature-tour]') ||
                          document.querySelector('.uw-s10-bottom-right');
         if (adaWidget) {
-          (adaWidget as HTMLElement).style.zIndex = '9999';
-          (adaWidget as HTMLElement).style.position = 'fixed';
-          (adaWidget as HTMLElement).style.bottom = '20px';
-          (adaWidget as HTMLElement).style.right = '20px';
-          (adaWidget as HTMLElement).style.top = 'auto';
-          (adaWidget as HTMLElement).style.left = 'auto';
-          (adaWidget as HTMLElement).style.width = '60px';
-          (adaWidget as HTMLElement).style.height = '60px';
+          const element = adaWidget as HTMLElement;
+          element.style.zIndex = '9999';
+          element.style.position = 'fixed';
+          element.style.display = 'block';
+          element.style.visibility = 'visible';
+          element.removeAttribute('offscreen');
+          
+          if (window.innerWidth <= 768) {
+            element.style.bottom = '80px';
+            element.style.left = '20px';
+            element.style.right = 'auto';
+          } else {
+            element.style.bottom = '20px';
+            element.style.right = '20px';
+            element.style.left = 'auto';
+          }
+          element.style.top = 'auto';
+          element.style.width = '60px';
+          element.style.height = '60px';
+          
+          console.log('✅ ADA widget positioned:', {
+            mobile: window.innerWidth <= 768,
+            bottom: element.style.bottom,
+            left: element.style.left,
+            right: element.style.right,
+            display: element.style.display,
+            visibility: element.style.visibility
+          });
         }
       }, 1000);
     };
@@ -244,6 +266,8 @@ function App() {
               </>
             )}
           </div>
+          <ToastEventHandler />
+          <Toaster />
         </AnalyticsProvider>
       </ErrorBoundary>
     </CustomerProvider>
