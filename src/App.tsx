@@ -148,11 +148,48 @@ function App() {
           });
           
           element.title = 'Right-click to hide/show • Accessibility Widget';
-          console.log('✅ ADA widget positioned to right-middle successfully');
+          console.log('✅ ADA widget positioned to RIGHT side successfully');
+          
+          const styleObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                const currentStyle = element.getAttribute('style') || '';
+                if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
+                  console.log('🚫 UserWay tried to reposition to LEFT - forcing RIGHT immediately');
+                  element.style.cssText = `
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    z-index: 999999 !important;
+                    position: fixed !important;
+                    top: 50% !important;
+                    right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
+                    left: auto !important;
+                    transform: translateY(-50%) !important;
+                    bottom: auto !important;
+                    width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+                    height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
+                    border-radius: 50% !important;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                    background-color: #6366f1 !important;
+                    border: 2px solid #8b5cf6 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                  `;
+                }
+              }
+            });
+          });
+          
+          styleObserver.observe(element, {
+            attributes: true,
+            attributeFilter: ['style']
+          });
           
           const maintainPosition = () => {
-            if (element.style.left !== 'auto' || !element.style.right.includes('px')) {
-              console.log('🔄 Re-applying right positioning due to external changes');
+            const currentStyle = element.getAttribute('style') || '';
+            if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
+              console.log('🔄 Interval check: Re-applying RIGHT positioning');
               element.style.cssText = `
                 display: block !important;
                 visibility: visible !important;
@@ -176,7 +213,7 @@ function App() {
             }
           };
           
-          setInterval(maintainPosition, 2000);
+          setInterval(maintainPosition, 1000);
           
         } else {
           console.warn('⚠️ ADA widget not found, retrying...');
