@@ -197,8 +197,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
             price: newItem.price,
             image: newItem.image || '',
             category: newItem.category,
-            thc_content: newItem.thcContent,
-            cbd_content: newItem.cbdContent,
+            thcContent: newItem.thcContent,
+            cbdContent: newItem.cbdContent,
             effects: newItem.effects,
             priority: newItem.priority
           });
