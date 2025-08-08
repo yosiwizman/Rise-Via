@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -32,6 +32,9 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
       <DialogContent className="max-w-4xl bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl gradient-text">{product.name}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Product details for {product.name} - {product.strainType} strain with {product.thcaPercentage}% THCA
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
