@@ -6,13 +6,37 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "preview": "vite preview",
     "validate": "node scripts/build-validation.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test:coverage": "vitest --coverage",
+    
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:ci": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 69",
+    "lint:report": "eslint . --ext ts,tsx --format json --output-file eslint-report.json",
+    "lint:summary": "eslint . --ext ts,tsx --format compact | grep -E '(error|warning)' | awk '{print $NF}' | sort | uniq -c | sort -rn",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "lint:staged": "eslint --fix --max-warnings 0",
+    
     "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    
+    "security:check": "node scripts/security-check.js",
+    "audit": "npm audit --audit-level=moderate",
+    "deps:check": "npx npm-check-updates",
+    "deps:update": "npx npm-check-updates -u",
+    
+    "debt:report": "node scripts/tech-debt-reporter.js",
+    "debt:track": "node scripts/track-violations.js",
+    "debt:reduce": "npm run lint:fix && npm run format",
+    
+    "pre-commit": "lint-staged",
+    "ci": "npm run type-check && npm run lint:ci && npm run test && npm run build",
+    "ci:full": "npm run security:check && npm run ci && npm run debt:report",
     "prepare": "husky install"
   },
   "dependencies": {
