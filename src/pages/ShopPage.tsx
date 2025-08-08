@@ -6,11 +6,12 @@ import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { useCart } from '../hooks/useCart';
+import { Product } from '../types/product';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
   const { addToCart } = useCart();
 
@@ -20,12 +21,12 @@ export const ShopPage = () => {
     );
   }, [filter]);
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
 
-  const ProductCard = ({ product }: { product: any }) => {
+  const ProductCard = ({ product }: { product: Product }) => {
     return (
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
@@ -62,11 +63,11 @@ export const ShopPage = () => {
             <Badge className="bg-risevia-teal text-white">{product.thcaPercentage}% THCA</Badge>
           </div>
           <div className="flex flex-wrap gap-1 mb-4">
-            {product.effects.map((effect: string, index: number) => (
+            {product.effects?.map((effect: string, index: number) => (
               <Badge key={index} variant="outline" className="text-xs border-risevia-purple text-risevia-purple">
                 {effect}
               </Badge>
-            ))}
+            )) || []}
           </div>
           <button 
             onClick={(e) => {
@@ -77,8 +78,8 @@ export const ShopPage = () => {
                 price: product.price,
                 image: product.images[0],
                 category: product.category,
-                strainType: product.strainType,
-                thcaPercentage: product.thcaPercentage
+                strainType: product.strainType || '',
+                thcaPercentage: product.thcaPercentage || 0
               });
               console.log('✅ Added to cart:', product.name);
             }}

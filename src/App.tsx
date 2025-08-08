@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
-import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
@@ -15,6 +14,9 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
+import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
+import { TermsOfService } from './pages/legal/TermsOfService';
+import { AgeVerificationModal } from './components/AgeVerificationModal';
 import { ContactPage } from './pages/ContactPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ShippingPage } from './pages/ShippingPage';
@@ -54,8 +56,12 @@ function App() {
       setCurrentPage('legal');
     } else if (path === '/privacy') {
       setCurrentPage('privacy');
+    } else if (path === '/legal/privacy') {
+      setCurrentPage('legal-privacy');
     } else if (path === '/terms') {
       setCurrentPage('terms');
+    } else if (path === '/legal/terms') {
+      setCurrentPage('legal-terms');
     } else if (path === '/reset-password') {
       setCurrentPage('reset-password');
     } else if (path === '/orders' || path === '/account/orders') {
@@ -118,8 +124,12 @@ function App() {
         return <LegalPage />;
       case 'privacy':
         return <PrivacyPage />;
+      case 'legal-privacy':
+        return <PrivacyPolicy />;
       case 'terms':
         return <TermsPage />;
+      case 'legal-terms':
+        return <TermsOfService />;
       case 'reset-password':
         return <ResetPasswordPage />;
       case 'orders':
@@ -160,7 +170,7 @@ function App() {
       <ErrorBoundary>
         <AnalyticsProvider>
           <div className="min-h-screen bg-risevia-black text-white">
-            <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+            <AgeVerificationModal isOpen={showAgeGate} onVerify={verifyAge} />
             
             {showStateBlocker && (
               <StateBlocker onStateVerified={handleStateVerified} />

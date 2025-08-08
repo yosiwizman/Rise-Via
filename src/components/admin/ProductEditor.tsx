@@ -7,12 +7,13 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Product } from '../../types/product';
 
 interface ProductEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: any) => void;
-  product?: any;
+  onSave: (product: Product) => void;
+  product?: Product;
 }
 
 export const ProductEditor: React.FC<ProductEditorProps> = ({
@@ -23,25 +24,30 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
-    price: product?.price || '',
+    price: product?.price?.toString() || '',
     category: product?.category || '',
     strainType: product?.strainType || '',
-    thcaPercentage: product?.thcaPercentage || '',
+    thcaPercentage: product?.thcaPercentage?.toString() || '',
     description: product?.description || '',
     effects: product?.effects?.join(', ') || '',
-    inventory: product?.inventory || '',
+    inventory: product?.inventory?.toString() || '',
     featured: product?.featured || false
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const productData = {
-      ...formData,
+    const productData: Product = {
       id: product?.id || Date.now().toString(),
+      name: formData.name,
+      category: formData.category,
+      strainType: formData.strainType,
+      thcaPercentage: parseFloat(formData.thcaPercentage.toString()),
+      price: parseFloat(formData.price.toString()),
+      images: product?.images || [],
+      description: formData.description,
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
-      price: parseFloat(formData.price),
-      thcaPercentage: parseFloat(formData.thcaPercentage),
-      inventory: parseInt(formData.inventory)
+      featured: formData.featured,
+      inventory: parseInt(formData.inventory.toString())
     };
     onSave(productData);
     onClose();

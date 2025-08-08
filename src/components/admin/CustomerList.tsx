@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -39,11 +39,7 @@ export const CustomerList = () => {
   const [filterB2B, setFilterB2B] = useState('all');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [searchTerm, filterSegment, filterB2B]);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       const filters = {
         segment: filterSegment,
@@ -58,7 +54,11 @@ export const CustomerList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filterSegment, filterB2B]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const getTierBadgeColor = (tier: string) => {
     const colors = {

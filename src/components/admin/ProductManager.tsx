@@ -8,18 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
 import productsData from '../../data/products.json';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  thc: string;
-  type: string;
-  effects: string[];
-  inventory: number;
-  active: boolean;
-}
+import { Product } from '../../types/product';
 
 export const ProductManager: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,9 +22,10 @@ export const ProductManager: React.FC = () => {
     const loadedProducts = productsData.products.map(product => ({
       ...product,
       inventory: Math.floor(Math.random() * 100) + 10,
-      active: true,
-      thc: product.thcaPercentage.toString(),
-      type: product.strainType
+      featured: Math.random() > 0.7,
+      description: product.description || 'Premium cannabis product',
+      images: product.images || [],
+      strainType: product.strainType || 'hybrid'
     }));
     setProducts(loadedProducts);
   }, []);
@@ -126,10 +116,10 @@ export const ProductManager: React.FC = () => {
         `"${p.name}"`,
         p.price,
         p.category,
-        p.thc,
-        p.type,
+        p.thcaPercentage,
+        p.strainType,
         p.inventory,
-        p.active
+        p.featured
       ].join(','))
     ].join('\n');
 
@@ -154,13 +144,13 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
+  const handleSaveProduct = (product: Product) => {
     if (editingProduct) {
       setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
+        p.id === editingProduct.id ? { ...product, id: editingProduct.id } : p
       ));
     } else {
-      setProducts(prev => [...prev, productData]);
+      setProducts(prev => [...prev, product]);
     }
   };
 
@@ -295,7 +285,7 @@ export const ProductManager: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <div className="font-medium">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.type}</div>
+                      <div className="text-sm text-gray-500">{product.strainType}</div>
                     </td>
                     <td className="p-3">
                       <Input
@@ -311,7 +301,7 @@ export const ProductManager: React.FC = () => {
                         {product.category}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-sm">{product.thc}</td>
+                    <td className="p-3 font-mono text-sm">{product.thcaPercentage}%</td>
                     <td className="p-3">
                       <Input
                         type="number"
@@ -322,15 +312,15 @@ export const ProductManager: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <Select
-                        value={product.active ? 'active' : 'inactive'}
-                        onValueChange={(value) => handleQuickEdit(product, 'active', value === 'active')}
+                        value={product.featured ? 'featured' : 'normal'}
+                        onValueChange={(value) => handleQuickEdit(product, 'featured', value === 'featured')}
                       >
                         <SelectTrigger className="w-24 h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="featured">Featured</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
                         </SelectContent>
                       </Select>
                     </td>
@@ -375,7 +365,7 @@ export const ProductManager: React.FC = () => {
         isOpen={isProductEditorOpen}
         onClose={() => setIsProductEditorOpen(false)}
         onSave={handleSaveProduct}
-        product={editingProduct}
+        product={editingProduct || undefined}
       />
     </div>
   );

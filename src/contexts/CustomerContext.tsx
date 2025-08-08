@@ -37,8 +37,8 @@ interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (data: any) => Promise<any>;
+  login: (email: string, password: string) => Promise<{ success: boolean; customer?: Customer; message?: string }>;
+  register: (data: { email: string; password: string; firstName: string; lastName: string; phone?: string }) => Promise<{ success: boolean; customer?: Customer; message?: string }>;
   logout: () => void;
   checkAuthStatus: () => Promise<void>;
 }
@@ -65,7 +65,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   useEffect(() => {
     checkAuthStatus();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: unknown) => {
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
         setIsAuthenticated(false);
@@ -87,7 +87,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === user.email);
+      const customerData = customers.find((c: Customer) => c.email === user.email);
       
       if (customerData) {
         setCustomer(customerData);
@@ -123,7 +123,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         }
 
         const customers = await customerService.getAll();
-        const customerData = customers.find((c: any) => c.email === email);
+        const customerData = customers.find((c: Customer) => c.email === email);
         
         if (customerData) {
           setCustomer(customerData);
@@ -142,15 +142,15 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
       
       return { success: false, message: 'Login failed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login failed:', error);
-      return { success: false, message: error.message || 'Login failed' };
+      return { success: false, message: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (registrationData: any) => {
+  const register = async (registrationData: { email: string; password: string; firstName: string; lastName: string; phone?: string }) => {
     try {
       const authResult = await authService.register(
         registrationData.email,
@@ -185,9 +185,9 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       return { success: false, message: 'Registration failed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed:', error);
-      return { success: false, message: error.message || 'Registration failed' };
+      return { success: false, message: error instanceof Error ? error.message : 'Registration failed' };
     }
   };
 

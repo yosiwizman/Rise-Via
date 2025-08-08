@@ -11,7 +11,7 @@ import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
-import { WishlistItem } from '../../types/wishlist';
+import { WishlistItem } from '../../hooks/useWishlistTypes';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
 export const WishlistPage = () => {
@@ -38,7 +38,7 @@ export const WishlistPage = () => {
     return sortItems().filter(item => 
       item && (filterPriority === 'all' || item.priority === filterPriority)
     );
-  }, [items, sortBy, filterPriority, sortItems]);
+  }, [filterPriority, sortItems]);
 
   const handleShare = async () => {
     try {
@@ -60,7 +60,7 @@ export const WishlistPage = () => {
 
   const handleSavePriceAlert = () => {
     if (priceAlertItem && alertPrice) {
-      setPriceAlert();
+      setPriceAlert(priceAlertItem.id, parseFloat(alertPrice));
       setPriceAlertItem(null);
       setAlertPrice('');
     }
@@ -122,8 +122,8 @@ export const WishlistPage = () => {
             <Label className="text-sm font-medium">Priority:</Label>
             <Select
               value={item.priority}
-              onValueChange={(_value: 'low' | 'medium' | 'high') => 
-                updateItemPriority()
+              onValueChange={(value: 'low' | 'medium' | 'high') => 
+                updateItemPriority(item.id, value)
               }
             >
               <SelectTrigger className="w-24 h-8">
@@ -148,7 +148,7 @@ export const WishlistPage = () => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-risevia-teal">Alert at ${item.priceAlert.targetPrice}</span>
               <Button
-                onClick={() => removePriceAlert()}
+                onClick={() => removePriceAlert(item.id)}
                 size="sm"
                 variant="ghost"
                 className="text-red-500 hover:text-red-700"
@@ -355,7 +355,7 @@ export const WishlistPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item!} />
+              <WishlistItemCard item={item as unknown as WishlistItem} />
             </motion.div>
           ))}
         </motion.div>

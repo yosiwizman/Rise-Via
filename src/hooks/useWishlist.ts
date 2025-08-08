@@ -56,7 +56,7 @@ export const useWishlist = () => {
     setLoading(false)
   }
 
-  const addToWishlist = async (item: any) => {
+  const addToWishlist = async (item: { id: string; name: string; price: number; image: string; category: string; effects?: string[] }) => {
     const productId = item.id
     const { error } = await wishlistService.addToWishlist(productId)
     if (!error) {
@@ -119,7 +119,9 @@ export const useWishlist = () => {
     removeFromWishlist,
     isInWishlist,
     getWishlistCount,
-    updateItemPriority: () => {},
+    updateItemPriority: (id: string, priority: 'low' | 'medium' | 'high') => {
+      console.log(`Priority update for ${id}: ${priority}`);
+    },
     clearWishlist: async () => {
       for (const productId of wishlistItems) {
         await wishlistService.removeFromWishlist(productId)
@@ -128,8 +130,12 @@ export const useWishlist = () => {
     },
     generateShareLink: async () => { throw new Error('Sharing not implemented in core version') },
     importWishlist: async () => false,
-    setPriceAlert: () => {},
-    removePriceAlert: () => {},
+    setPriceAlert: (id: string, targetPrice: number) => {
+      console.log(`Price alert set for ${id}: $${targetPrice}`);
+    },
+    removePriceAlert: (id: string) => {
+      console.log(`Price alert removed for ${id}`);
+    },
     getItemsByCategory: () => [],
     getItemsByPriority: () => [],
     sortItems: () => items

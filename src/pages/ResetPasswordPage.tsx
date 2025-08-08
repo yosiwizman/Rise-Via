@@ -16,7 +16,7 @@ export const ResetPasswordPage: React.FC = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       setIsSubmitted(true);
-    } catch (err) {
+    } catch {
       setError('Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);

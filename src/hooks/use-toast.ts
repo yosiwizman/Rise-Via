@@ -20,7 +20,7 @@ type ToasterToast = ToastProps & {
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST", 
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
@@ -32,23 +32,21 @@ function genId() {
   return count.toString()
 }
 
-type ActionType = typeof actionTypes
-
 type Action =
   | {
-      type: ActionType["ADD_TOAST"]
+      type: typeof actionTypes.ADD_TOAST
       toast: ToasterToast
     }
   | {
-      type: ActionType["UPDATE_TOAST"]
+      type: typeof actionTypes.UPDATE_TOAST
       toast: Partial<ToasterToast>
     }
   | {
-      type: ActionType["DISMISS_TOAST"]
+      type: typeof actionTypes.DISMISS_TOAST
       toastId?: ToasterToast["id"]
     }
   | {
-      type: ActionType["REMOVE_TOAST"]
+      type: typeof actionTypes.REMOVE_TOAST
       toastId?: ToasterToast["id"]
     }
 
@@ -76,25 +74,23 @@ const addToRemoveQueue = (toastId: string) => {
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "ADD_TOAST":
+    case actionTypes.ADD_TOAST:
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [(action as { toast: ToasterToast }).toast, ...state.toasts].slice(0, TOAST_LIMIT),
       }
 
-    case "UPDATE_TOAST":
+    case actionTypes.UPDATE_TOAST:
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
+          t.id === (action as { toast: Partial<ToasterToast> }).toast?.id ? { ...t, ...(action as { toast: Partial<ToasterToast> }).toast } : t
         ),
       }
 
-    case "DISMISS_TOAST": {
-      const { toastId } = action
+    case actionTypes.DISMISS_TOAST: {
+      const { toastId } = action as { toastId?: string }
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -115,8 +111,8 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
     }
-    case "REMOVE_TOAST":
-      if (action.toastId === undefined) {
+    case actionTypes.REMOVE_TOAST:
+      if ((action as { toastId?: string }).toastId === undefined) {
         return {
           ...state,
           toasts: [],
@@ -124,8 +120,10 @@ export const reducer = (state: State, action: Action): State => {
       }
       return {
         ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+        toasts: state.toasts.filter((t) => t.id !== (action as { toastId?: string }).toastId),
       }
+    default:
+      return state
   }
 }
 

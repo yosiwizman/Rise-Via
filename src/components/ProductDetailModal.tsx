@@ -5,11 +5,14 @@ import { Badge } from './ui/badge';
 import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WishlistButton } from './wishlist/WishlistButton';
 import { useCart } from '../hooks/useCart';
+import { ProductReviewsIntegration } from './ProductReviewsIntegration';
+
+import { Product } from '../types/product';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: any;
+  product: Product | null;
 }
 
 export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailModalProps) => {
@@ -107,11 +110,11 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             <div>
               <h4 className="font-semibold text-risevia-black mb-2">Effects</h4>
               <div className="flex flex-wrap gap-2">
-                {product.effects.map((effect: string, index: number) => (
+                {product.effects?.map((effect: string, index: number) => (
                   <Badge key={index} variant="outline" className="border-risevia-purple text-risevia-purple">
                     {effect}
                   </Badge>
-                ))}
+                )) || []}
               </div>
             </div>
 
@@ -130,8 +133,8 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
                   price: product.price,
                   image: product.images[0],
                   category: product.category,
-                  strainType: product.strainType,
-                  thcaPercentage: product.thcaPercentage
+                  strainType: product.strainType || '',
+                  thcaPercentage: product.thcaPercentage || 0
                 });
                 console.log('✅ Added to cart from modal:', product.name);
               }}
@@ -140,6 +143,13 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
               <ShoppingBag className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>
+            
+            <div className="mt-8">
+              <ProductReviewsIntegration 
+                productId={product.id}
+                productName={product.name}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

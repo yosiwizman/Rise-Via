@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -36,16 +36,13 @@ export const AccountPage = () => {
   const { customer, isAuthenticated, loading } = useCustomer();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
-  const [membershipTier, setMembershipTier] = useState<any>(null);
+  const [membershipTier, setMembershipTier] = useState<{
+    name: string;
+    benefits: string[];
+  } | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCustomerData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchCustomerData = async () => {
+  const fetchCustomerData = useCallback(async () => {
     try {
       if (!customer?.id) return;
 
@@ -87,7 +84,13 @@ export const AccountPage = () => {
     } catch (error) {
       console.error('Failed to fetch customer data:', error);
     }
-  };
+  }, [customer?.id, customer?.customer_profiles]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCustomerData();
+    }
+  }, [isAuthenticated, fetchCustomerData]);
 
   const handleRedeemPoints = async () => {
     try {
