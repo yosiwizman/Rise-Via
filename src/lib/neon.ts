@@ -24,8 +24,7 @@ interface DbItemUpdate {
 }
 
 
-const neonConnectionString = process.env.VITE_NEON_DATABASE_URL || 
-                             import.meta.env?.VITE_NEON_DATABASE_URL;
+const neonConnectionString = import.meta.env?.VITE_NEON_DATABASE_URL;
 
 if (!neonConnectionString) {
   console.error('Missing Neon database URL - check VITE_NEON_DATABASE_URL environment variable');
