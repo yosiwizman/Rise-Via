@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-08-08T01:49:18.000Z",
+  "repository": "yosiwizman/Rise-Via",
+  "branch": "devin/1754340188-initial-risevia-setup",
+  "metrics": {
+    "components": 96,
+    "typescript_files": 25,
+    "total_files": 143,
+    "total_lines": 8116,
+    "bundle_size_kb": 822.44,
+    "bundle_size_gzipped_kb": 240.12,
+    "css_size_kb": 84.22,
+    "dependencies_total": 708,
+    "dependencies_prod": 275,
+    "dependencies_dev": 432,
+    "security_vulnerabilities": 4,
+    "vulnerability_severity": "moderate",
+    "test_coverage_percent": 0
+  },
+  "features": {
+    "implemented": 25,
+    "missing_critical": 15,
+    "working_categories": [
+      "Core E-commerce",
+      "User Management", 
+      "Admin Features",
+      "Business Features",
+      "Technical Features"
+    ],
+    "missing_categories": [
+      "Authentication & Security",
+      "E-commerce Essentials",
+      "Customer Experience",
+      "Legal & Compliance",
+      "Marketing & Analytics"
+    ]
+  },
+  "security": {
+    "issues_found": 5,
+    "critical_issues": 0,
+    "moderate_issues": 4,
+    "admin_auth_secure": false,
+    "session_management": false,
+    "rate_limiting": false
+  },
+  "performance": {
+    "build_time_seconds": 4.23,
+    "bundle_warning": true,
+    "code_splitting": false,
+    "optimization_needed": true
+  },
+  "top_priorities": [
+    "Password Reset System",
+    "Secure Admin Authentication", 
+    "Coupon/Discount System",
+    "Legal Pages",
+    "Product Reviews",
+    "Tax Calculation",
+    "Order Tracking",
+    "Code Splitting",
+    "Testing Coverage",
+    "Dependency Updates"
+  ]
+}
