@@ -15,13 +15,13 @@ interface Product {
 
 interface RecommendationSectionProps {
   currentProduct: Product;
-  onProductClick?: (product: Product) => void;
+  onProductClick?: (product: { id: string; name: string; price: number; images: string[]; thcaPercentage: number; [key: string]: unknown }) => void;
 }
 
 export const RecommendationSection = ({ currentProduct, onProductClick }: RecommendationSectionProps) => {
   const recommendations = RecommendationEngine.getRecommendations(currentProduct);
 
-  const ProductCard = ({ product }: { product: Product }) => (
+  const ProductCard = ({ product }: { product: { id: string; name: string; price: number; images: string[]; thcaPercentage: number; [key: string]: unknown } }) => (
     <Card 
       className="cursor-pointer hover:border-risevia-purple transition-colors"
       onClick={() => onProductClick?.(product)}

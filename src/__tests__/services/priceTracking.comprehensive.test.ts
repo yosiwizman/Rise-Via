@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { priceTrackingService } from '../../services/priceTracking'
 
-const PriceTrackingService = (priceTrackingService as { constructor: new () => typeof priceTrackingService }).constructor
+const PriceTrackingService = (priceTrackingService as unknown as { constructor: new () => typeof priceTrackingService }).constructor
 
 const mockLocalStorage = {
   getItem: vi.fn(),
@@ -49,8 +49,8 @@ describe('PriceTrackingService - Comprehensive', () => {
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', () => {
-      const instance1 = PriceTrackingService.getInstance()
-      const instance2 = PriceTrackingService.getInstance()
+      const instance1 = (PriceTrackingService as unknown as { getInstance: () => unknown }).getInstance()
+      const instance2 = (PriceTrackingService as unknown as { getInstance: () => unknown }).getInstance()
       expect(instance1).toBe(instance2)
     })
   })
@@ -222,7 +222,7 @@ describe('PriceTrackingService - Comprehensive', () => {
       
       const prices = []
       for (let i = 0; i < 10; i++) {
-        const simulatedPrice = (service as typeof priceTrackingService & { simulatePriceChange: (orig: number, target: number) => number }).simulatePriceChange(originalPrice, targetPrice)
+        const simulatedPrice = (service as unknown as { simulatePriceChange: (orig: number, target: number) => number }).simulatePriceChange(originalPrice, targetPrice)
         prices.push(simulatedPrice)
         expect(simulatedPrice).toBeGreaterThan(0)
       }
@@ -238,7 +238,7 @@ describe('PriceTrackingService - Comprehensive', () => {
       const originalRandom = Math.random
       Math.random = vi.fn().mockReturnValue(0.01) // Less than 0.05 threshold
       
-      const simulatedPrice = (service as any).simulatePriceChange(originalPrice, targetPrice)
+      const simulatedPrice = (service as unknown as { simulatePriceChange: (orig: number, target: number) => number }).simulatePriceChange(originalPrice, targetPrice)
       expect(simulatedPrice).toBeLessThan(targetPrice)
       expect(simulatedPrice).toBeGreaterThan(targetPrice * 0.95)
       
@@ -255,7 +255,7 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await (service as typeof priceTrackingService & { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
+      await (service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
       
       expect(window.Notification).toHaveBeenCalledWith(
         'RiseViA Price Alert! 🎯',
@@ -281,7 +281,7 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await (service as typeof priceTrackingService & { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
+      await (service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
       
       expect(Notification.requestPermission).toHaveBeenCalled()
     })
@@ -319,7 +319,7 @@ describe('PriceTrackingService - Comprehensive', () => {
 
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingAlerts))
       
-      ;(service as typeof priceTrackingService & { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
+      ;(service as unknown as { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
       
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'risevia-price-alerts',
@@ -336,7 +336,7 @@ describe('PriceTrackingService - Comprehensive', () => {
       const alertData = { itemId: 'test', triggeredAt: Date.now() }
 
       expect(() => {
-        ;(service as typeof priceTrackingService & { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
+        ;(service as unknown as { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
       }).not.toThrow()
 
       expect(consoleSpy).toHaveBeenCalledWith('Error storing triggered alert:', expect.any(Error))
@@ -355,7 +355,7 @@ describe('PriceTrackingService - Comprehensive', () => {
         percentageChange: -3.33
       }
 
-      ;(service as typeof priceTrackingService & { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
+      ;(service as unknown as { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
 
       expect(mockGtag).toHaveBeenCalledWith('event', 'price_alert_triggered', {
         event_category: 'price_alerts',
@@ -382,7 +382,7 @@ describe('PriceTrackingService - Comprehensive', () => {
 
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingAnalytics))
       
-      ;(service as typeof priceTrackingService & { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
+      ;(service as unknown as { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
       
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'price-alert-analytics',
