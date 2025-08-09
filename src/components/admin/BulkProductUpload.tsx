@@ -101,6 +101,10 @@ export const BulkProductUpload: React.FC = () => {
           successCount++;
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          if (errorMessage.includes('Database not configured')) {
+            errors.push(`Database not available - please configure Supabase environment variables`);
+            break;
+          }
           errors.push(`Line ${lineNumber} (${product.name || 'Unknown'}): ${errorMessage}`);
         }
       }
