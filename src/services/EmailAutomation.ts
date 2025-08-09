@@ -326,7 +326,7 @@ class EmailAutomationService {
 
   async triggerReEngagementCampaign(): Promise<void> {
     try {
-      const dormantCustomers: any[] = [];
+      const dormantCustomers: Array<{ email: string; first_name: string }> = [];
 
       for (const customer of dormantCustomers) {
         if (customer.email) {
@@ -341,9 +341,9 @@ class EmailAutomationService {
     }
   }
 
-  async sendNewsletterToSegment(segmentId: string): Promise<void> {
+  async sendNewsletterToSegment(): Promise<void> {
     try {
-      const customers: any[] = [];
+      const customers: Array<{ email: string; first_name: string }> = [];
 
       for (const customer of customers) {
         if (customer.email) {
@@ -364,16 +364,14 @@ class EmailAutomationService {
     return this.templates;
   }
 
-  async createListmonkCampaign(templateId: string, segmentId: string): Promise<void> {
+  async createListmonkCampaign(templateId: string): Promise<void> {
     try {
       const template = this.templates.find(t => t.id === templateId);
-      const segment = null;
-      
-      if (template && segment) {
+      if (template) {
         await listmonkService.createCampaign({
-          name: `${template.name} - ${segment.name}`,
+          name: template.name,
           subject: template.subject,
-          lists: [segment.listmonkListId],
+          lists: [],
           type: 'regular',
           content_type: 'html',
           body: template.body
