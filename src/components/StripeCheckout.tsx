@@ -53,7 +53,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     setProcessing(true);
 
     try {
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
+      const { error } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
         billing_details: {
@@ -75,7 +75,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
         return;
       }
 
-      const orderId = await createOrder(paymentMethod.id, customerInfo);
+      const orderId = await createOrder();
       clearCart();
       onSuccess(orderId);
     } catch (err) {
@@ -85,7 +85,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     }
   };
 
-  const createOrder = async (_paymentMethodId: string, _customerInfo: any): Promise<string> => {
+  const createOrder = async (): Promise<string> => {
     const orderData = {
       customer_id: 'temp-customer-id',
       total: getCartTotal(),
