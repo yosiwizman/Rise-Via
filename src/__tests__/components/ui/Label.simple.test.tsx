@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../../test-utils'
 
-const MockLabel = ({ children, htmlFor }: any) => (
+const MockLabel = ({ children, htmlFor }: {
+  children: React.ReactNode;
+  htmlFor?: string;
+}) => (
   <label htmlFor={htmlFor}>
     {children}
   </label>

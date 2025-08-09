@@ -1,13 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockSelect = ({ children, onValueChange, defaultValue }: any) => (
+const MockSelect = ({ children, onValueChange, defaultValue }: {
+  children: React.ReactNode;
+  onValueChange?: (value: string) => void;
+  defaultValue?: string;
+}) => (
   <select onChange={(e) => onValueChange?.(e.target.value)} defaultValue={defaultValue}>
     {children}
   </select>
 )
 
-const MockSelectItem = ({ value, children }: any) => (
+const MockSelectItem = ({ value, children }: {
+  value: string;
+  children: React.ReactNode;
+}) => (
   <option value={value}>
     {children}
   </option>
