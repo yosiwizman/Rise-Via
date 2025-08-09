@@ -1,4 +1,4 @@
-import { sql } from '../lib/neon'
+import { sql } from '../lib/neon';
 
 interface Customer {
   id?: string;
@@ -44,20 +44,8 @@ export const customerService = {
       LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
       GROUP BY c.id
       ORDER BY c.created_at DESC
-    `
+    `;
     return customers as any[];
-  },
-
-  async getCustomer(email: string): Promise<Customer | null> {
-    try {
-      const customers = await sql`
-        SELECT * FROM customers 
-        WHERE email = ${email}
-      `
-      return customers.length > 0 ? customers[0] as any : null
-    } catch (error) {
-      return null
-    }
   },
 
   async create(customer: Customer) {
@@ -65,36 +53,32 @@ export const customerService = {
       INSERT INTO customers (email, first_name, last_name, phone)
       VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null})
       RETURNING *
-    `
+    `;
     
-    if (customers.length === 0) throw new Error('Failed to create customer')
+    if (customers.length === 0) throw new Error('Failed to create customer');
     
-    const newCustomer = customers[0]
+    const newCustomer = customers[0];
     
     await sql`
       INSERT INTO customer_profiles (customer_id)
       VALUES (${newCustomer.id})
-    `
+    `;
     
     return newCustomer;
   },
 
   async update(id: string, updates: Partial<Customer>) {
-    const setClause = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
-      .join(', ')
-
-    if (!setClause) throw new Error('No valid updates provided')
-
     const customers = await sql`
       UPDATE customers 
-      SET ${setClause}, updated_at = NOW()
+      SET email = COALESCE(${updates.email}, email),
+          first_name = COALESCE(${updates.first_name}, first_name),
+          last_name = COALESCE(${updates.last_name}, last_name),
+          phone = COALESCE(${updates.phone}, phone)
       WHERE id = ${id}
       RETURNING *
-    `
+    `;
     
-    if (customers.length === 0) throw new Error('Customer not found')
+    if (customers.length === 0) throw new Error('Customer not found');
     return customers[0];
   },
 
@@ -167,27 +151,27 @@ export const customerService = {
       `
       return transactions.length > 0 ? transactions[0] as any : null
     } catch (error) {
-      return null
+      return null;
     }
   },
 
   async search(searchTerm: string, filters: SearchFilters = {}) {
-    let whereClause = '1=1'
-    const params = []
+    let whereConditions = ['1=1'];
 
     if (searchTerm) {
-      whereClause += ` AND (c.first_name ILIKE $${params.length + 1} OR c.last_name ILIKE $${params.length + 1} OR c.email ILIKE $${params.length + 1})`
-      params.push(`%${searchTerm}%`)
+      whereConditions.push(`(
+        c.first_name ILIKE '%${searchTerm}%' OR 
+        c.last_name ILIKE '%${searchTerm}%' OR 
+        c.email ILIKE '%${searchTerm}%'
+      )`);
     }
 
     if (filters.segment && filters.segment !== 'all') {
-      whereClause += ` AND cp.segment = $${params.length + 1}`
-      params.push(filters.segment)
+      whereConditions.push(`cp.segment = '${filters.segment}'`);
     }
 
     if (filters.isB2B && filters.isB2B !== 'all') {
-      whereClause += ` AND cp.is_b2b = $${params.length + 1}`
-      params.push(filters.isB2B === 'true')
+      whereConditions.push(`cp.is_b2b = ${filters.isB2B === 'true'}`);
     }
 
     const customers = await sql`
@@ -195,10 +179,10 @@ export const customerService = {
              json_agg(cp.*) as customer_profiles
       FROM customers c
       LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
-      WHERE 1=1
+      WHERE ${whereConditions.join(' AND ')}
       GROUP BY c.id
       ORDER BY c.created_at DESC
-    `
+    `;
     
     return customers as any[];
   }

@@ -13,11 +13,6 @@ interface ComplianceEvent {
   created_at?: string;
 }
 
-interface ComplianceEventData {
-  event_type: string;
-  compliance_result: boolean;
-  risk_score: number;
-}
 
 
 export class ComplianceService {
@@ -79,11 +74,11 @@ export class ComplianceService {
     let currentDaily = purchaseAmount;
     let currentMonthly = purchaseAmount;
 
-    if (existingLimit) {
-      if (existingLimit.last_purchase_date === today) {
-        currentDaily += existingLimit.daily_amount;
+    if (existingLimit[0]) {
+      if (existingLimit[0].last_purchase_date === today) {
+        currentDaily += existingLimit[0].daily_amount;
       }
-      currentMonthly += existingLimit.monthly_amount;
+      currentMonthly += existingLimit[0].monthly_amount;
     }
 
     const withinLimits = currentDaily <= dailyLimit && currentMonthly <= monthlyLimit;
@@ -116,11 +111,11 @@ export class ComplianceService {
 
     const report = {
       totalEvents: events?.length || 0,
-      ageVerifications: events?.filter((e: ComplianceEventData) => e.event_type === 'age_verification').length || 0,
-      stateBlocks: events?.filter((e: ComplianceEventData) => e.event_type === 'state_block' && !e.compliance_result).length || 0,
-      purchaseLimitViolations: events?.filter((e: ComplianceEventData) => e.event_type === 'purchase_limit' && !e.compliance_result).length || 0,
-      averageRiskScore: events?.reduce((sum: number, e: ComplianceEventData) => sum + e.risk_score, 0) / (events?.length || 1),
-      complianceRate: (events?.filter((e: ComplianceEventData) => e.compliance_result).length || 0) / (events?.length || 1) * 100
+      ageVerifications: events?.filter((e: any) => e.event_type === 'age_verification').length || 0,
+      stateBlocks: events?.filter((e: any) => e.event_type === 'state_block' && !e.compliance_result).length || 0,
+      purchaseLimitViolations: events?.filter((e: any) => e.event_type === 'purchase_limit' && !e.compliance_result).length || 0,
+      averageRiskScore: events?.reduce((sum: number, e: any) => sum + (e.risk_score || 0), 0) / (events?.length || 1),
+      complianceRate: (events?.filter((e: any) => e.compliance_result).length || 0) / (events?.length || 1) * 100
     };
 
     return report;
