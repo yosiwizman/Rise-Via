@@ -66,7 +66,13 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
       type: formData.strainType || 'hybrid',
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
       inventory: parseInt(formData.inventory.toString()),
-      active: true
+      active: true,
+      description: formData.description,
+      images: formData.images,
+      hover_image: formData.hoverImage,
+      video_url: formData.videoUrl,
+      strainType: formData.strainType,
+      thcaPercentage: parseFloat(String(formData.thcaPercentage || '0'))
     };
     onSave(productData);
     onClose();
