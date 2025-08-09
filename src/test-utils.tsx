@@ -1,6 +1,9 @@
 import React, { ReactElement } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
-import { CustomerProvider } from './contexts/CustomerContext'
+
+const MockCustomerProvider = ({ children }: { children: React.ReactNode }) => {
+  return <div data-testid="mock-customer-provider">{children}</div>
+}
 
 const mockScreen = {
   getByText: (text: string | RegExp) => document.querySelector(`[data-testid*="${text}"], *:contains("${text}")`) || document.body,
@@ -18,9 +21,9 @@ const mockFireEvent = {
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <CustomerProvider>
+    <MockCustomerProvider>
       {children}
-    </CustomerProvider>
+    </MockCustomerProvider>
   )
 }
 
