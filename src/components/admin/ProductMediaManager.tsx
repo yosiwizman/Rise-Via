@@ -33,7 +33,7 @@ export const ProductMediaManager: React.FC<ProductMediaManagerProps> = ({
     }
   }, []);
 
-  const handleFiles = async (files: File[]) => {
+  const handleFiles = useCallback(async (files: File[]) => {
     setUploading(true);
     
     try {
@@ -67,7 +67,7 @@ export const ProductMediaManager: React.FC<ProductMediaManagerProps> = ({
     } finally {
       setUploading(false);
     }
-  };
+  }, [uploadedImages, videoUrl, onMediaUploaded]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();

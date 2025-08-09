@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Star, ThumbsUp, CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -28,21 +28,21 @@ export const ProductReviews = ({ productId }: ProductReviewsProps) => {
     images: [] as File[]
   });
 
-  useEffect(() => {
-    loadReviews();
-    loadStats();
-  }, [productId, sortBy]);
-
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     const { data } = await reviewService.getProductReviews(productId, sortBy);
     if (data) setReviews(data);
     setLoading(false);
-  };
+  }, [productId, sortBy]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     const { data } = await reviewService.getReviewStats(productId);
     if (data) setStats(data);
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    loadReviews();
+    loadStats();
+  }, [productId, sortBy, loadReviews, loadStats]);
 
   const handleSubmitReview = async () => {
     const { data } = await reviewService.createReview({

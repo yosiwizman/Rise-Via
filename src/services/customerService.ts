@@ -6,6 +6,7 @@ interface Customer {
   first_name: string;
   last_name: string;
   phone?: string;
+  created_at?: string;
 }
 
 interface SearchFilters {
@@ -18,12 +19,17 @@ export interface CustomerProfile {
   customer_id: string
   membership_tier: string
   loyalty_points: number
-  preferences: any
+  preferences: Record<string, unknown>
   created_at: string
   is_b2b?: boolean
   business_name?: string
   business_license?: string
   segment?: string
+  lifetime_value?: number
+  total_orders?: number
+  referral_code?: string
+  total_referrals?: number
+  last_order_date?: string
 }
 
 export interface LoyaltyTransaction {
@@ -45,7 +51,7 @@ export const customerService = {
       GROUP BY c.id
       ORDER BY c.created_at DESC
     `;
-    return customers as any[];
+    return customers as Array<Customer & { customer_profiles: CustomerProfile[] }>;
   },
 
   async create(customer: Customer) {
@@ -88,8 +94,8 @@ export const customerService = {
         SELECT * FROM customer_profiles 
         WHERE customer_id = ${customerId}
       `
-      return profiles.length > 0 ? profiles[0] as any : null
-    } catch (error) {
+      return profiles.length > 0 ? profiles[0] as CustomerProfile : null
+    } catch {
       return null
     }
   },
@@ -115,16 +121,16 @@ export const customerService = {
           WHERE customer_id = ${customerId}
           RETURNING *
         `
-        return profiles.length > 0 ? profiles[0] as any : null
+        return profiles.length > 0 ? profiles[0] as CustomerProfile : null
       } else {
         const profiles = await sql`
           INSERT INTO customer_profiles (customer_id, membership_tier, loyalty_points, preferences)
           VALUES (${customerId}, ${updates.membership_tier || 'bronze'}, ${updates.loyalty_points || 0}, ${JSON.stringify(updates.preferences || {})})
           RETURNING *
         `
-        return profiles.length > 0 ? profiles[0] as any : null
+        return profiles.length > 0 ? profiles[0] as CustomerProfile : null
       }
-    } catch (error) {
+    } catch {
       return null
     }
   },
@@ -136,8 +142,8 @@ export const customerService = {
         WHERE customer_id = ${customerId}
         ORDER BY created_at DESC
       `
-      return (transactions || []) as any[]
-    } catch (error) {
+      return (transactions || []) as LoyaltyTransaction[]
+    } catch {
       return []
     }
   },
@@ -149,8 +155,8 @@ export const customerService = {
         VALUES (${transaction.customer_id}, ${transaction.type}, ${transaction.points}, ${transaction.description})
         RETURNING *
       `
-      return transactions.length > 0 ? transactions[0] as any : null
-    } catch (error) {
+      return transactions.length > 0 ? transactions[0] as LoyaltyTransaction : null
+    } catch {
       return null;
     }
   },
@@ -184,6 +190,6 @@ export const customerService = {
       ORDER BY c.created_at DESC
     `;
     
-    return customers as any[];
+    return customers as Array<Customer & { customer_profiles: CustomerProfile[] }>;
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -27,7 +27,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
   const [availableMethods, setAvailableMethods] = useState<typeof paymentMethods>([]);
   const { clearCart } = useCart();
 
-  const paymentMethods = [
+  const paymentMethods = useMemo(() => [
     {
       id: 'posabit',
       name: 'POSaBIT',
@@ -65,7 +65,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
       cannabisCompliant: false,
       note: 'CBD products only'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     const initializePaymentService = async () => {
