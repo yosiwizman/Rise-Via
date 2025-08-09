@@ -52,7 +52,7 @@ export default defineConfig({
             './src/analytics/wishlistAnalytics.ts',
             './src/dashboard/WishlistMetricsDashboard.tsx'
           ],
-          'vendor': ['react', 'react-dom', 'framer-motion']
+          'vendor': ['framer-motion']
         }
       }
     },
