@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
 import productsData from '../../data/products.json';
+import { productService } from '../../services/productService';
 
 interface Product {
   id: string;
@@ -16,9 +17,16 @@ interface Product {
   category: string;
   thc: string;
   type: string;
-  effects: string[];
+  effects?: string[];
   inventory: number;
   active: boolean;
+  description?: string;
+  featured?: boolean;
+  images?: string[];
+  hover_image?: string;
+  video_url?: string;
+  strainType?: string;
+  thcaPercentage?: number;
 }
 
 export const ProductManager: React.FC = () => {
@@ -30,14 +38,37 @@ export const ProductManager: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    const loadedProducts = productsData.products.map(product => ({
-      ...product,
-      inventory: Math.floor(Math.random() * 100) + 10,
-      active: true,
-      thc: product.thcaPercentage.toString(),
-      type: product.strainType
-    }));
-    setProducts(loadedProducts);
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAll();
+        if (data && data.length > 0) {
+          const formattedProducts = data.map(product => ({
+            ...product,
+            id: product.id || Date.now().toString() + Math.random().toString(),
+            active: true,
+            thc: product.thca_percentage?.toString() || '0',
+            type: product.strain_type || '',
+            strainType: product.strain_type,
+            thcaPercentage: product.thca_percentage,
+            inventory: product.inventory || 0
+          }));
+          setProducts(formattedProducts);
+        } else {
+          throw new Error('No products found in database');
+        }
+      } catch (error) {
+        console.error('Failed to load products from database:', error);
+        const loadedProducts = productsData.products.map(product => ({
+          ...product,
+          inventory: Math.floor(Math.random() * 100) + 10,
+          active: true,
+          thc: product.thcaPercentage.toString(),
+          type: product.strainType
+        }));
+        setProducts(loadedProducts);
+      }
+    };
+    loadProducts();
   }, []);
 
   const filteredProducts = products.filter(product => {
@@ -154,13 +185,13 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
+  const handleSaveProduct = (product: Product) => {
     if (editingProduct) {
       setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
+        p.id === editingProduct.id ? { ...product, id: editingProduct.id } : p
       ));
     } else {
-      setProducts(prev => [...prev, productData]);
+      setProducts(prev => [...prev, { ...product, id: Date.now().toString() }]);
     }
   };
 
@@ -375,7 +406,7 @@ export const ProductManager: React.FC = () => {
         isOpen={isProductEditorOpen}
         onClose={() => setIsProductEditorOpen(false)}
         onSave={handleSaveProduct}
-        product={editingProduct}
+        product={editingProduct || undefined}
       />
     </div>
   );

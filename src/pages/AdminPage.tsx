@@ -9,6 +9,8 @@ import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
 import { DashboardMetrics } from '../components/admin/DashboardMetrics';
 import { ProductManager } from '../components/admin/ProductManager';
+import { ProductMediaManager } from '../components/admin/ProductMediaManager';
+import { BulkProductUpload } from '../components/admin/BulkProductUpload';
 import { OrderManager } from '../components/admin/OrderManager';
 import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
@@ -135,32 +137,10 @@ export const AdminPage = () => {
       
       case 'uploads':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Media Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Upload Product Images</h3>
-                  <p className="text-gray-600 mb-4">Drag and drop images or click to browse</p>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Choose Files
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Cloudinary integration features:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Multi-image upload for product galleries</li>
-                    <li>Automatic image optimization and resizing</li>
-                    <li>Cloud storage with CDN delivery</li>
-                    <li>Image transformation and effects</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <ProductMediaManager />
+            <BulkProductUpload />
+          </div>
         );
       
       case 'coi':
