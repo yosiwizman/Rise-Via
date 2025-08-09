@@ -14,6 +14,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import MobileCartButton from './components/MobileCartButton';
 import { Toaster } from './components/ui/toaster';
 import { ToastEventHandler } from './components/ToastEventHandler';
 
@@ -29,6 +30,7 @@ const SharedWishlistPage = lazy(() => import('./components/wishlist/WishlistShar
 const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then(module => ({ default: module.AccountPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(module => ({ default: module.default })));
 const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
@@ -59,6 +61,8 @@ function App() {
       setCurrentPage('account');
     } else if (path === '/login') {
       setCurrentPage('login');
+    } else if (path === '/register') {
+      setCurrentPage('register');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
     } else if (path === '/checkout') {
@@ -210,6 +214,12 @@ function App() {
             <LoginPage />
           </Suspense>
         );
+      case 'register':
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <RegisterPage onNavigate={setCurrentPage} />
+          </Suspense>
+        );
       case 'b2b':
         return (
           <Suspense fallback={<PageLoader />}>
@@ -262,6 +272,7 @@ function App() {
                   {renderCurrentPage()}
                 </main>
                 <Footer onNavigate={setCurrentPage} />
+                <MobileCartButton />
                 <CookieConsentBanner />
               </>
             )}

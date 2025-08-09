@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
+import { emailService } from '../services/emailService';
+import { wishlistService } from '../services/wishlistService';
 
 interface Customer {
   id: string;
@@ -61,38 +63,45 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    const authStateChange = authService.onAuthStateChange((event: string, session: any) => {
+      if (event === 'SIGNED_OUT') {
+        setCustomer(null);
+        setIsAuthenticated(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        checkAuthStatus();
+      }
+    });
+
+    return () => {
+      if (authStateChange && typeof authStateChange.then === 'function') {
+        authStateChange.then(res => res.data.subscription.unsubscribe());
+      }
+    };
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('customerToken');
-      if (!token) {
+      const user = await authService.getCurrentUser();
+      
+      if (!user) {
         setLoading(false);
         return;
       }
 
-      const mockCustomer = {
-        id: 'demo-customer-1',
-        email: 'demo@risevia.com',
-        firstName: 'Demo',
-        lastName: 'Customer',
-        profile: {
-          membershipTier: 'GOLD',
-          loyaltyPoints: 1250,
-          lifetimeValue: 2500.00,
-          totalOrders: 8,
-          segment: 'VIP',
-          isB2B: false,
-          referralCode: 'DEMO2024',
-          totalReferrals: 3
-        }
-      };
-
-      setCustomer(mockCustomer);
-      setIsAuthenticated(true);
+      const customers = await customerService.getAll();
+      const customerData = customers.find((c: any) => c.email === (user as any).email);
+      
+      if (customerData) {
+        setCustomer(customerData as any);
+        setIsAuthenticated(true);
+      } else {
+        console.warn('User authenticated but no customer record found');
+        setIsAuthenticated(false);
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('customerToken');
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -100,23 +109,42 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const result: any = await authService.login(email, password);
-      if (result.success || result.user) {
-        if (result.user) {
-          const customers = await customerService.getAll();
-          const customerData = customers.find((c: any) => c.email === result.user.email);
-          if (customerData) {
-            setCustomer(customerData);
-            setIsAuthenticated(true);
-            return { success: true, customer: customerData };
-          }
+      setLoading(true);
+      
+      const data = await authService.login(email, password);
+      
+      if (data.user) {
+        try {
+          await wishlistService.migrateSessionWishlist(data.user.id);
+        } catch (migrationError) {
+          console.error('Wishlist migration failed:', migrationError);
         }
-        return result;
+
+        const customers = await customerService.getAll();
+        const customerData = customers.find((c: any) => c.email === email);
+        
+        if (customerData) {
+          setCustomer(customerData as any);
+          setIsAuthenticated(true);
+          return { success: true, customer: customerData };
+        } else {
+          setCustomer({
+            id: data.user.id,
+            email: data.user.email!,
+            firstName: '',
+            lastName: ''
+          });
+          setIsAuthenticated(true);
+          return { success: true };
+        }
       }
-      return { success: false, message: 'Invalid credentials' };
+      
+      return { success: false, message: 'Login failed' };
     } catch (error: any) {
       console.error('Login failed:', error);
       return { success: false, message: error.message || 'Login failed' };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,7 +168,16 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           phone: registrationData.phone
         });
 
-        setCustomer(customerData);
+        try {
+          await emailService.sendWelcomeEmail(
+            registrationData.email,
+            registrationData.firstName
+          );
+        } catch (emailError) {
+          console.error('Welcome email failed:', emailError);
+        }
+
+        setCustomer(customerData as any);
         setIsAuthenticated(true);
         return { success: true, customer: customerData };
       }

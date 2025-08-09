@@ -64,7 +64,6 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
-        }
 
         if (typeof window !== 'undefined' && window.dispatchEvent) {
           window.dispatchEvent(new CustomEvent('cart-item-added', {
@@ -72,7 +71,9 @@ export const useCart = create<CartStore>()(
           }));
         }
 
-        trackCartEvent('add', itemData, { quantity });
+        trackCartEvent('add', newItem, { quantity });
+        cartAnalytics.trackCartEvent('add', newItem, { quantity });
+        }
       },
 
       removeFromCart: (itemId) => {

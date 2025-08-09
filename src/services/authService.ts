@@ -1,4 +1,17 @@
-import { supabase } from '../lib/supabase';
+import { sql } from '../lib/neon'
+
+export interface User {
+  id: string
+  email: string
+  created_at: string
+}
+
+export interface AuthResponse {
+  user: User | null
+  error: string | null
+}
+
+const SESSION_KEY = 'rise_via_user_session'
 
 export const authService = {
   async login(email: string, password: string): Promise<any> {
@@ -7,35 +20,110 @@ export const authService = {
       return { success: true };
     }
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const users = await sql`
+        SELECT id, email, password_hash, created_at 
+        FROM users 
+        WHERE email = ${email}
+      `
+
+      if (users.length === 0) {
+        throw new Error('Invalid email or password')
+      }
+
+      const user = users[0] as any
+
+      const sessionUser = {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+      }
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser))
+      return { user: sessionUser }
+    } catch (error) {
+      throw error
+    }
   },
 
-  async register(email: string, password: string, metadata: any) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata
+  async register(email: string, password: string, _metadata?: any) {
+    try {
+      const existingUsers = await sql`
+        SELECT id FROM users WHERE email = ${email}
+      `
+
+      if (existingUsers.length > 0) {
+        throw new Error('User already exists with this email')
       }
-    });
-    
-    if (error) throw error;
-    return data;
+
+      const passwordHash = password
+
+      const newUsers = await sql`
+        INSERT INTO users (email, password_hash)
+        VALUES (${email}, ${passwordHash})
+        RETURNING id, email, created_at
+      `
+
+      const user = newUsers[0] as any
+      const sessionUser = {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+      }
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser))
+      return { user: sessionUser }
+    } catch (error) {
+      throw error
+    }
   },
 
   async logout() {
-    await supabase.auth.signOut();
-    localStorage.removeItem('adminToken');
+    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem('adminToken')
   },
 
   async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    try {
+      const sessionData = localStorage.getItem(SESSION_KEY)
+      if (!sessionData) return null
+
+      const user = JSON.parse(sessionData)
+      
+      const users = await sql`
+        SELECT id, email, created_at 
+        FROM users 
+        WHERE id = ${user.id}
+      `
+
+      return users.length > 0 ? users[0] : null
+    } catch (error) {
+      return null
+    }
+  },
+
+  async getSession() {
+    const user = await this.getCurrentUser()
+    return user ? { user } : null
+  },
+
+  async onAuthStateChange(callback: (event: string, session: any) => void) {
+    const handleStorageChange = () => {
+      this.getCurrentUser().then(user => {
+        callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user } : null)
+      })
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => {
+            window.removeEventListener('storage', handleStorageChange)
+          }
+        }
+      }
+    }
   }
 };
