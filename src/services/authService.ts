@@ -105,5 +105,55 @@ export const authService = {
         }
       }
     };
+  },
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const users = await sql`
+      SELECT id FROM users WHERE email = ${email}
+    `;
+    
+    if (users.length === 0) {
+      throw new Error('No account found with this email address');
+    }
+    
+    const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    
+    await sql`
+      INSERT INTO password_reset_tokens (user_id, token, expires_at)
+      VALUES (${users[0].id}, ${resetToken}, ${expiresAt})
+      ON CONFLICT (user_id) 
+      DO UPDATE SET token = ${resetToken}, expires_at = ${expiresAt}, created_at = NOW()
+    `;
+    
+    console.log(`Password reset token generated for ${email}: ${resetToken}`);
+    console.log(`Reset URL: ${window.location.origin}/?page=password-reset&token=${resetToken}`);
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const resetTokens = await sql`
+      SELECT user_id FROM password_reset_tokens 
+      WHERE token = ${token} AND expires_at > NOW()
+    `;
+    
+    if (resetTokens.length === 0) {
+      throw new Error('Invalid or expired reset token');
+    }
+    
+    const passwordHash = await hashPassword(newPassword);
+    
+    await sql`
+      UPDATE users 
+      SET password_hash = ${passwordHash}
+      WHERE id = ${resetTokens[0].user_id}
+    `;
+    
+    await sql`
+      DELETE FROM password_reset_tokens 
+      WHERE token = ${token}
+    `;
   }
 };

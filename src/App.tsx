@@ -42,6 +42,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ defau
 const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
+const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -53,7 +54,12 @@ function App() {
 
   useEffect(() => {
     const path = window.location.pathname;
-    if (path === '/admin') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get('page');
+    
+    if (page === 'password-reset') {
+      setCurrentPage('password-reset');
+    } else if (path === '/admin') {
       setCurrentPage('admin');
     } else if (path === '/shop') {
       setCurrentPage('shop');
@@ -244,6 +250,8 @@ function App() {
         return <TermsOfService />;
       case 'reset-password':
         return <ResetPasswordPage />;
+      case 'password-reset':
+        return <PasswordResetPage onNavigate={setCurrentPage} />;
       case 'orders':
         return <OrderTrackingPage />;
       case 'contact':
