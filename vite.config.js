@@ -5,9 +5,32 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react'
+    }),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Rise Via Cannabis',
+        short_name: 'Rise Via',
+        theme_color: '#6B46C1',
+        background_color: '#0F172A',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         runtimeCaching: [
@@ -35,27 +58,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'admin': [
-            './src/pages/AdminPage.tsx',
-            './src/components/admin/DashboardMetrics.tsx',
-            './src/components/admin/CustomerList.tsx',
-            './src/components/admin/ProductManager.tsx',
-            './src/components/admin/OrderManager.tsx',
-            './src/components/admin/InventoryManager.tsx',
-            './src/components/admin/ActivityLogs.tsx'
-          ],
-          'analytics': [
-            './src/analytics/cartAnalytics.ts',
-            './src/analytics/wishlistAnalytics.ts',
-            './src/dashboard/WishlistMetricsDashboard.tsx'
-          ],
-          'vendor': ['framer-motion']
-        }
-      }
-    },
+    sourcemap: false,
     chunkSizeWarningLimit: 500
   },
   server: {
