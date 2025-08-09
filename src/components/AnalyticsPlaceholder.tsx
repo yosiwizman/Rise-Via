@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { PerformanceMonitor } from '../utils/performance';
 
 interface AnalyticsEvent {
   event: string;
@@ -18,9 +19,53 @@ export const useAnalytics = () => {
         custom_parameter_1: 'cannabis_ecommerce',
         privacy_mode: true
       });
-    } else {
-      console.log('Analytics Event:', eventData);
     }
+
+    if (typeof window !== 'undefined' && (window as any).plausible) {
+      (window as any).plausible(eventData.action, {
+        props: {
+          category: eventData.category,
+          label: eventData.label,
+          value: eventData.value
+        }
+      });
+    }
+
+    console.log('Analytics Event:', eventData);
+  };
+
+  const trackPageView = (page: string) => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('config', 'GA_MEASUREMENT_ID', {
+        page_path: page,
+        privacy_mode: true
+      });
+    }
+
+    if (typeof window !== 'undefined' && (window as any).plausible) {
+      (window as any).plausible('pageview', { u: window.location.href });
+    }
+  };
+
+  const trackPerformance = () => {
+    const metrics = PerformanceMonitor.getMetrics();
+    trackEvent({
+      event: 'performance_metrics',
+      category: 'Performance',
+      action: 'core_web_vitals',
+      label: 'performance_report',
+      value: Math.round(metrics.largestContentfulPaint || 0)
+    });
+  };
+
+  const trackCartAction = (action: string, productName?: string, value?: number) => {
+    trackEvent({
+      event: 'ecommerce',
+      category: 'Cart',
+      action: action,
+      label: productName,
+      value: value
+    });
   };
 
   const trackAgeGateAcceptance = () => {
@@ -62,22 +107,27 @@ export const useAnalytics = () => {
 
   return {
     trackEvent,
+    trackPageView,
+    trackPerformance,
     trackAgeGateAcceptance,
     trackStateBlock,
     trackProductView,
-    trackCOAView
+    trackCOAView,
+    trackCartAction
   };
 };
 
 export const AnalyticsProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
-    document.head.appendChild(script);
+    PerformanceMonitor.init();
 
-    const configScript = document.createElement('script');
-    configScript.innerHTML = `
+    const gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
+    document.head.appendChild(gaScript);
+
+    const gaConfigScript = document.createElement('script');
+    gaConfigScript.innerHTML = `
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -85,14 +135,28 @@ export const AnalyticsProvider = ({ children }: { children: React.ReactNode }) =
         privacy_mode: true,
         anonymize_ip: true,
         allow_google_signals: false,
-        allow_ad_personalization_signals: false
+        allow_ad_personalization_signals: false,
+        cookie_flags: 'SameSite=None;Secure'
       });
     `;
-    document.head.appendChild(configScript);
+    document.head.appendChild(gaConfigScript);
+
+    const plausibleScript = document.createElement('script');
+    plausibleScript.defer = true;
+    plausibleScript.setAttribute('data-domain', 'risevia.com');
+    plausibleScript.src = 'https://plausible.io/js/script.js';
+    document.head.appendChild(plausibleScript);
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        PerformanceMonitor.reportMetrics();
+      }, 3000);
+    });
 
     return () => {
-      document.head.removeChild(script);
-      document.head.removeChild(configScript);
+      document.head.removeChild(gaScript);
+      document.head.removeChild(gaConfigScript);
+      document.head.removeChild(plausibleScript);
     };
   }, []);
 
