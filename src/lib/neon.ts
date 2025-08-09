@@ -9,7 +9,7 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-export async function query(text: string, params: any[] = []) {
+export async function query(text: string, params: (string | number | boolean | Date | null | undefined)[] = []) {
   try {
     console.log('🔵 Executing Neon query:', text.substring(0, 60) + '...');
     const startTime = Date.now();
@@ -149,7 +149,7 @@ export const wishlistDb = {
       [session.id]
     );
     
-    const productIds = rows.map((row: any) => row.product_id);
+    const productIds = rows.map((row: Record<string, unknown>) => row.product_id);
     console.log('✅ Found wishlist items:', productIds);
     return productIds;
   },
