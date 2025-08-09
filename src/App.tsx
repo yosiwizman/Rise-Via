@@ -2,6 +2,7 @@ import { useState, useEffect, lazy } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
+import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
