@@ -44,11 +44,13 @@ export const ProductManager: React.FC = () => {
         if (data && data.length > 0) {
           const formattedProducts = data.map(product => ({
             ...product,
+            id: product.id || Date.now().toString() + Math.random().toString(),
             active: true,
             thc: product.thca_percentage?.toString() || '0',
-            type: product.strain_type,
+            type: product.strain_type || '',
             strainType: product.strain_type,
-            thcaPercentage: product.thca_percentage
+            thcaPercentage: product.thca_percentage,
+            inventory: product.inventory || 0
           }));
           setProducts(formattedProducts);
         } else {
