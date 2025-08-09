@@ -1,5 +1,5 @@
 export interface Product {
-  id?: string;
+  id: string;
   sample_id?: string;
   name: string;
   slug?: string;
@@ -8,7 +8,7 @@ export interface Product {
   thca_percentage?: number;
   batch_id?: string;
   volume_available?: number;
-  price?: number;
+  price: number;
   prices?: {
     gram: number;
     eighth: number;

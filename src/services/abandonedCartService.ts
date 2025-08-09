@@ -78,6 +78,48 @@ export const abandonedCartService = {
     }
   },
 
+  trackCartActivity(customerEmail?: string): void {
+    try {
+      const cartData = this.getCurrentCartData();
+      if (cartData.items.length > 0) {
+        this.updateAbandonmentTimer(cartData, customerEmail);
+      }
+    } catch (error) {
+      console.error('Error tracking cart activity:', error);
+    }
+  },
+
+  getCurrentCartData(): { items: Array<{ id: string; name: string; price: number; quantity: number; image: string }> } {
+    try {
+      const cartData = localStorage.getItem('risevia-cart');
+      if (!cartData) return { items: [] };
+      
+      const parsed = JSON.parse(cartData);
+      return {
+        items: parsed.state?.items || []
+      };
+    } catch {
+      return { items: [] };
+    }
+  },
+
+  updateAbandonmentTimer(cartData: any, customerEmail?: string): void {
+    const sessionId = this.getOrCreateSessionId();
+    
+    setTimeout(() => {
+      this.trackAbandonedCart(sessionId, cartData.items, customerEmail);
+    }, 30 * 60 * 1000);
+  },
+
+  getOrCreateSessionId(): string {
+    let sessionId = localStorage.getItem('risevia-session-id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('risevia-session-id', sessionId);
+    }
+    return sessionId;
+  },
+
   async getAbandonedCarts(
     hoursOld: number = 1,
     limit: number = 100

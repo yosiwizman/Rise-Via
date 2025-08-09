@@ -1,4 +1,8 @@
+import { sql } from '../lib/neon'; // Neon DB for coupon persistence (wishlist DB already in project)
 
+/**
+ * Domain model (camelCase) used inside the app.
+ */
 export interface Coupon {
   id: string;
   code: string;
@@ -19,45 +23,131 @@ export interface CouponValidationResult {
   discountAmount?: number;
 }
 
+/**
+ * Maps a raw DB row (snake_case) to the internal camelCase Coupon interface.
+ */
+function mapRowToCoupon(row: any): Coupon {
+  return {
+    id: row.id,
+    code: row.code,
+    discountType: row.discount_type,
+    discountValue: Number(row.discount_value),
+    minOrderAmount: row.min_order_amount != null ? Number(row.min_order_amount) : undefined,
+    maxUses: row.max_uses != null ? Number(row.max_uses) : undefined,
+    currentUses: Number(row.current_uses),
+    expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
+    createdAt: new Date(row.created_at).toISOString(),
+    isActive: row.is_active
+  };
+}
+
+function normalizeCode(code: string): string {
+  return code.trim().toUpperCase();
+}
+
 export const couponService = {
-  async validateCoupon(): Promise<CouponValidationResult> {
+  /**
+   * Validate a coupon code against current order amount.
+   * Falls back to mock coupons if DB query fails.
+   */
+  async validateCoupon(code: string, orderAmount: number): Promise<CouponValidationResult> {
+    const normalized = normalizeCode(code);
+    if (!normalized) {
+      return { isValid: false, error: 'Coupon code is required' };
+    }
+
     try {
+      const result = await sql/* sql */`
+        SELECT *
+        FROM coupons
+        WHERE code = ${normalized}
+          AND is_active = true
+          AND (expires_at IS NULL OR expires_at > NOW())
+          AND (max_uses IS NULL OR current_uses < max_uses)
+          AND (min_order_amount IS NULL OR ${orderAmount} >= min_order_amount)
+        LIMIT 1;
+      `;
+
+      const row = result[0];
+      if (!row) {
+        return { isValid: false, error: 'Invalid or expired coupon code' };
+      }
+
+      const coupon = mapRowToCoupon(row);
+      const discountAmount = this.calculateDiscount(coupon, orderAmount);
+
       return {
-        isValid: false,
-        error: 'Invalid or expired coupon code'
+        isValid: true,
+        coupon,
+        discountAmount
       };
-    } catch {
-      return {
-        isValid: false,
-        error: 'Failed to validate coupon. Please try again.'
-      };
+    } catch (error) {
+      // Graceful fallback: try mock coupons (useful in local dev or if Neon unavailable)
+      try {
+        const mock = this.getMockCoupons().find(c =>
+          c.code === normalized &&
+          c.isActive &&
+          (!c.expiresAt || new Date(c.expiresAt).getTime() > Date.now()) &&
+          (!c.minOrderAmount || orderAmount >= c.minOrderAmount) &&
+          (!c.maxUses || c.currentUses < c.maxUses)
+        );
+
+        if (!mock) {
+          return {
+            isValid: false,
+            error: 'Invalid or expired coupon code'
+          };
+        }
+
+        return {
+          isValid: true,
+            coupon: mock,
+          discountAmount: this.calculateDiscount(mock, orderAmount)
+        };
+      } catch {
+        return {
+          isValid: false,
+          error: 'Failed to validate coupon. Please try again.'
+        };
+      }
     }
   },
 
+  /**
+   * Increment usage count for a coupon (DB only; mock coupons ignored).
+   */
   async applyCoupon(code: string): Promise<void> {
+    const normalized = normalizeCode(code);
     try {
-      console.log('Applying coupon:', code);
-    } catch {
+      await sql/* sql */`
+        UPDATE coupons
+        SET current_uses = current_uses + 1
+        WHERE code = ${normalized}
+          AND is_active = true
+          AND (expires_at IS NULL OR expires_at > NOW());
+      `;
+    } catch (error) {
       throw new Error('Failed to apply coupon');
     }
   },
 
   calculateDiscount(coupon: Coupon, orderAmount: number): number {
+    if (orderAmount <= 0) return 0;
     if (coupon.discountType === 'percentage') {
       return Math.min((orderAmount * coupon.discountValue) / 100, orderAmount);
-    } else {
-      return Math.min(coupon.discountValue, orderAmount);
     }
+    return Math.min(coupon.discountValue, orderAmount);
   },
 
   formatDiscountDisplay(coupon: Coupon): string {
-    if (coupon.discountType === 'percentage') {
-      return `${coupon.discountValue}% off`;
-    } else {
-      return `$${coupon.discountValue.toFixed(2)} off`;
-    }
+    return coupon.discountType === 'percentage'
+      ? `${coupon.discountValue}% off`
+      : `$${coupon.discountValue.toFixed(2)} off`;
   },
 
+  /**
+   * Mock data (for local development or fallback when Neon is unavailable).
+   */
   getMockCoupons(): Coupon[] {
     return [
       {

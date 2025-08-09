@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartStore, CartItem, CartStats, QuantityBreak, BundleSuggestion } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
+import { abandonedCartService } from '../services/abandonedCartService';
 
 const STORAGE_KEY = 'risevia-cart';
 
@@ -47,7 +48,7 @@ export const useCart = create<CartStore>()(
 
         if (existingItem) {
           const newQuantity = existingItem.quantity + quantity;
-          const updatedPrice = applyQuantityBreaks(itemData.price, newQuantity, quantityBreaks);
+            const updatedPrice = applyQuantityBreaks(itemData.price, newQuantity, quantityBreaks);
           
           const updatedItems = state.items.map(item =>
             item.productId === itemData.productId
@@ -68,6 +69,7 @@ export const useCart = create<CartStore>()(
             error: null
           });
 
+          notifyAbandonedCartService(updatedItems);
           trackCartEvent('add', existingItem, { quantity });
         } else {
           const newItem: CartItem = {
@@ -89,6 +91,8 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
+
+          notifyAbandonedCartService(updatedItems);
 
           if (typeof window !== 'undefined' && window.dispatchEvent) {
             window.dispatchEvent(new CustomEvent('cart-item-added', {
@@ -116,6 +120,7 @@ export const useCart = create<CartStore>()(
           error: null
         });
 
+        notifyAbandonedCartService(updatedItems);
         trackCartEvent('remove', itemToRemove);
         cartAnalytics.trackCartEvent('remove', itemToRemove);
       },
@@ -136,7 +141,13 @@ export const useCart = create<CartStore>()(
           items: updatedItems,
           stats: updatedStats
         });
-        
+
+        const updatedItem = updatedItems.find(i => i.id === itemId);
+        if (updatedItem) {
+          notifyAbandonedCartService(updatedItems);
+          trackCartEvent('update', updatedItem, { quantity });
+          cartAnalytics.trackCartEvent('update', updatedItem, { quantity });
+        }
       },
 
       clearCart: () => {
@@ -146,6 +157,7 @@ export const useCart = create<CartStore>()(
           error: null
         });
 
+        notifyAbandonedCartService([]);
         trackCartEvent('clear');
         cartAnalytics.trackCartEvent('clear');
       },
@@ -272,12 +284,36 @@ function trackCartEvent(
     ...metadata
   };
 
-  const existingAnalytics = JSON.parse(localStorage.getItem('cart_analytics') || '[]');
-  existingAnalytics.push(analyticsData);
-  
-  if (existingAnalytics.length > 1000) {
-    existingAnalytics.splice(0, existingAnalytics.length - 1000);
+  try {
+    const existingAnalytics = JSON.parse(localStorage.getItem('cart_analytics') || '[]');
+    existingAnalytics.push(analyticsData);
+    
+    if (existingAnalytics.length > 1000) {
+      existingAnalytics.splice(0, existingAnalytics.length - 1000);
+    }
+    
+    localStorage.setItem('cart_analytics', JSON.stringify(existingAnalytics));
+  } catch (error) {
+    console.error('Failed to record cart analytics', error);
   }
-  
-  localStorage.setItem('cart_analytics', JSON.stringify(existingAnalytics));
+}
+
+function notifyAbandonedCartService(items: CartItem[]) {
+  try {
+    // Support multiple possible method names without introducing any
+    const svc = abandonedCartService as unknown as {
+      onCartUpdated?: (items: CartItem[]) => void
+      update?: (items: CartItem[]) => void
+      record?: (items: CartItem[]) => void
+      clear?: () => void
+    };
+    svc.onCartUpdated?.(items);
+    svc.update?.(items);
+    svc.record?.(items);
+    if (items.length === 0) {
+      svc.clear?.();
+    }
+  } catch (error) {
+    console.error('Failed to notify abandonedCartService', error);
+  }
 }

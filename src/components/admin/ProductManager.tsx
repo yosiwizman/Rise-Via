@@ -424,7 +424,8 @@ export const ProductManager: React.FC = () => {
           description: editingProduct.description || '',
           images: editingProduct.images || [],
           strainType: editingProduct.strain_type || editingProduct.strainType,
-          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage
+          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
+          images: editingProduct.images || []
         } : undefined}
       />
     </div>

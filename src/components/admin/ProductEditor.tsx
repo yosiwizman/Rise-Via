@@ -12,7 +12,18 @@ import type { Product } from '../../types/product';
 interface ProductEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Product) => void;
+  onSave: (product: {
+    name: string;
+    category: string;
+    description?: string;
+    price: number;
+    type: string;
+    thc: string;
+    inventory: number;
+    effects?: string[];
+    active?: boolean;
+    images?: string[];
+  }) => void;
   product?: Product;
 }
 
@@ -39,8 +50,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const productData: Product = {
-      id: product?.id || Date.now().toString(),
+    const productData = {
       name: formData.name,
       price: parseFloat(String(formData.price)),
       category: formData.category,
