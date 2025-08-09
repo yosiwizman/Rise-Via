@@ -98,10 +98,10 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
           <div className="space-y-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-risevia-charcoal text-sm capitalize mb-2">{product.strainType || ''} • {product.category || ''}</p>
+                <p className="text-risevia-charcoal text-sm capitalize mb-2">{product.strainType} • {product.category}</p>
                 <div className="flex items-center space-x-2 mb-4">
-                  <span className="text-3xl font-bold text-risevia-black">${product.price || 0}</span>
-                  <Badge className="bg-risevia-teal text-white">{product.thcaPercentage || 0}% THCA</Badge>
+                  <span className="text-3xl font-bold text-risevia-black">${product.price}</span>
+                  <Badge className="bg-risevia-teal text-white">{product.thcaPercentage}% THCA</Badge>
                 </div>
               </div>
               <WishlistButton
@@ -133,7 +133,7 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             <div className="flex items-center space-x-2">
               <span className="text-sm text-risevia-charcoal">In Stock:</span>
               <Badge variant="outline" className="text-green-600 border-green-600">
-                {product.inventory || 0} units
+                {product.inventory} units
               </Badge>
             </div>
 
@@ -149,7 +149,7 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
                   thcaPercentage: product.thcaPercentage
                 });
                 toast.success(`${product.name} added to cart!`, {
-                  description: `$${product.price || 0} • ${product.thcaPercentage || 0}% THCA`,
+                  description: `$${product.price} • ${product.thcaPercentage}% THCA`,
                   duration: 3000,
                 });
               }}

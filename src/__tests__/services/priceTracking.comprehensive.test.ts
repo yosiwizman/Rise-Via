@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { PriceTrackingService } from '../../services/priceTracking'
+import { priceTrackingService } from '../../services/priceTracking'
 
 const mockLocalStorage = {
   getItem: vi.fn(),
@@ -33,23 +33,22 @@ Object.defineProperty(Notification, 'requestPermission', {
 })
 
 describe('PriceTrackingService - Comprehensive', () => {
-  let service: PriceTrackingService
+  let service: typeof priceTrackingService
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockLocalStorage.getItem.mockReturnValue(null)
-    service = PriceTrackingService.getInstance()
+    service = priceTrackingService
   })
 
   afterEach(() => {
     service.stopPriceTracking()
   })
 
-  describe('Singleton Pattern', () => {
-    it('should return the same instance', () => {
-      const instance1 = PriceTrackingService.getInstance()
-      const instance2 = PriceTrackingService.getInstance()
-      expect(instance1).toBe(instance2)
+  describe('Service Instance', () => {
+    it('should have the service available', () => {
+      expect(service).toBeDefined()
+      expect(typeof service.startPriceTracking).toBe('function')
     })
   })
 
