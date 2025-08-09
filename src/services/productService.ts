@@ -1,134 +1,200 @@
-import { sql } from '../lib/neon'
+import { sql } from '../lib/neon';
 
-export interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  images: string[]
-  category: string
-  in_stock: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface CreateProductData {
-  name: string
-  description: string
-  price: number
-  images?: string[]
-  category: string
-  in_stock?: boolean
+interface Product {
+  id?: string;
+  name: string;
+  slug?: string;
+  category: string;
+  strain_type?: string;
+  thca_percentage?: number;
+  price: number;
+  images: string[];
+  hover_image?: string;
+  video_url?: string;
+  description: string;
+  effects?: string[];
+  featured?: boolean;
+  inventory?: number;
+  coa_document?: string;
+  in_stock?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const productService = {
-  async getAllProducts(): Promise<Product[]> {
+  async getAll() {
     try {
       const products = await sql`
         SELECT * FROM products 
-        WHERE in_stock = true
         ORDER BY created_at DESC
-      `
-      return (products || []) as Product[]
+      `;
+      return (products || []) as Product[];
     } catch (error) {
-      return []
+      console.error('Failed to fetch products:', error);
+      return [];
     }
   },
 
-  async getProduct(productId: string): Promise<Product | null> {
+  async getById(id: string) {
     try {
       const products = await sql`
         SELECT * FROM products 
-        WHERE id = ${productId}
-      `
-      return products.length > 0 ? products[0] as Product : null
+        WHERE id = ${id}
+      `;
+      return products.length > 0 ? products[0] as Product : null;
     } catch (error) {
-      return null
+      console.error('Failed to fetch product:', error);
+      return null;
     }
   },
 
-  async getProductsByCategory(category: string): Promise<Product[]> {
+  async create(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) {
     try {
       const products = await sql`
-        SELECT * FROM products 
-        WHERE category = ${category} AND in_stock = true
-        ORDER BY created_at DESC
-      `
-      return (products || []) as Product[]
-    } catch (error) {
-      return []
-    }
-  },
-
-  async createProduct(productData: CreateProductData): Promise<Product | null> {
-    try {
-      const products = await sql`
-        INSERT INTO products (name, description, price, images, category, in_stock)
+        INSERT INTO products (
+          name, slug, category, strain_type, thca_percentage, price, 
+          images, hover_image, video_url, description, effects, 
+          featured, inventory, coa_document, in_stock
+        )
         VALUES (
-          ${productData.name}, 
-          ${productData.description}, 
-          ${productData.price}, 
-          ${JSON.stringify(productData.images || [])}, 
-          ${productData.category}, 
-          ${productData.in_stock !== false}
+          ${product.name}, 
+          ${product.slug || product.name.toLowerCase().replace(/\s+/g, '-')}, 
+          ${product.category}, 
+          ${product.strain_type || ''}, 
+          ${product.thca_percentage || 0}, 
+          ${product.price}, 
+          ${JSON.stringify(product.images || [])}, 
+          ${product.hover_image || null}, 
+          ${product.video_url || null}, 
+          ${product.description}, 
+          ${JSON.stringify(product.effects || [])}, 
+          ${product.featured || false}, 
+          ${product.inventory || 0}, 
+          ${product.coa_document || null}, 
+          ${product.in_stock !== false}
         )
         RETURNING *
-      `
-      return products.length > 0 ? products[0] as Product : null
+      `;
+      return products.length > 0 ? products[0] as Product : null;
     } catch (error) {
-      return null
+      console.error('Failed to create product:', error);
+      return null;
     }
   },
 
-  async updateProduct(productId: string, updates: Partial<CreateProductData>): Promise<Product | null> {
+  async update(id: string, updates: Partial<Product>) {
     try {
-      const setClause = Object.keys(updates)
-        .map((key, index) => {
-          if (key === 'images') {
-            return `images = $${index + 2}`
-          }
-          return `${key} = $${index + 2}`
-        })
-        .join(', ')
-
-      if (!setClause) return null
+      if (Object.keys(updates).length === 0) return null;
 
       const products = await sql`
         UPDATE products 
-        SET ${setClause}, updated_at = NOW()
-        WHERE id = ${productId}
+        SET 
+          name = COALESCE(${updates.name || null}, name),
+          slug = COALESCE(${updates.slug || null}, slug),
+          category = COALESCE(${updates.category || null}, category),
+          strain_type = COALESCE(${updates.strain_type || null}, strain_type),
+          thca_percentage = COALESCE(${updates.thca_percentage || null}, thca_percentage),
+          price = COALESCE(${updates.price || null}, price),
+          images = COALESCE(${updates.images ? JSON.stringify(updates.images) : null}::jsonb, images),
+          hover_image = COALESCE(${updates.hover_image || null}, hover_image),
+          video_url = COALESCE(${updates.video_url || null}, video_url),
+          description = COALESCE(${updates.description || null}, description),
+          effects = COALESCE(${updates.effects ? JSON.stringify(updates.effects) : null}::jsonb, effects),
+          featured = COALESCE(${updates.featured !== undefined ? updates.featured : null}, featured),
+          inventory = COALESCE(${updates.inventory || null}, inventory),
+          coa_document = COALESCE(${updates.coa_document || null}, coa_document),
+          in_stock = COALESCE(${updates.in_stock !== undefined ? updates.in_stock : null}, in_stock),
+          updated_at = NOW()
+        WHERE id = ${id}
         RETURNING *
-      `
-      return products.length > 0 ? products[0] as Product : null
+      `;
+      return products.length > 0 ? products[0] as Product : null;
     } catch (error) {
-      return null
+      console.error('Failed to update product:', error);
+      return null;
     }
   },
 
-  async deleteProduct(productId: string): Promise<boolean> {
+  async updateMedia(id: string, mediaData: {
+    images?: string[];
+    hover_image?: string;
+    video_url?: string;
+    coa_document?: string;
+  }) {
+    try {
+      const products = await sql`
+        UPDATE products 
+        SET 
+          images = ${JSON.stringify(mediaData.images || [])},
+          hover_image = ${mediaData.hover_image || null},
+          video_url = ${mediaData.video_url || null},
+          coa_document = ${mediaData.coa_document || null},
+          updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `;
+      return products.length > 0 ? products[0] as Product : null;
+    } catch (error) {
+      console.error('Failed to update product media:', error);
+      return null;
+    }
+  },
+
+  async delete(id: string) {
     try {
       await sql`
         UPDATE products 
         SET in_stock = false, updated_at = NOW()
-        WHERE id = ${productId}
-      `
-      return true
+        WHERE id = ${id}
+      `;
+      return true;
     } catch (error) {
-      return false
+      console.error('Failed to delete product:', error);
+      return false;
     }
   },
 
-  async searchProducts(query: string): Promise<Product[]> {
+  async search(searchTerm: string) {
     try {
       const products = await sql`
         SELECT * FROM products 
-        WHERE (name ILIKE ${'%' + query + '%'} OR description ILIKE ${'%' + query + '%'})
-        AND in_stock = true
+        WHERE (name ILIKE ${'%' + searchTerm + '%'} 
+               OR description ILIKE ${'%' + searchTerm + '%'} 
+               OR category ILIKE ${'%' + searchTerm + '%'})
         ORDER BY created_at DESC
-      `
-      return (products || []) as Product[]
+      `;
+      return (products || []) as Product[];
     } catch (error) {
-      return []
+      console.error('Failed to search products:', error);
+      return [];
     }
   },
-}
+
+  async getByCategory(category: string) {
+    try {
+      const products = await sql`
+        SELECT * FROM products 
+        WHERE category = ${category}
+        ORDER BY created_at DESC
+      `;
+      return (products || []) as Product[];
+    } catch (error) {
+      console.error('Failed to fetch products by category:', error);
+      return [];
+    }
+  },
+
+  async getFeatured() {
+    try {
+      const products = await sql`
+        SELECT * FROM products 
+        WHERE featured = true
+        ORDER BY created_at DESC
+      `;
+      return (products || []) as Product[];
+    } catch (error) {
+      console.error('Failed to fetch featured products:', error);
+      return [];
+    }
+  }
+};
