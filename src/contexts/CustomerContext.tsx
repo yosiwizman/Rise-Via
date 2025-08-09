@@ -3,6 +3,9 @@ import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
 import { wishlistService } from '../services/wishlistService';
+import { listmonkService } from '../services/ListmonkService';
+import { customerSegmentationService } from '../services/CustomerSegmentation';
+import { emailAutomationService } from '../services/EmailAutomation';
 
 interface Customer {
   id: string;
@@ -173,6 +176,32 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             registrationData.email,
             registrationData.firstName
           );
+          
+          await emailAutomationService.triggerWelcomeSeries(
+            registrationData.email,
+            registrationData.firstName
+          );
+          
+          try {
+            const subscriberData = {
+              email: registrationData.email,
+              name: `${registrationData.firstName} ${registrationData.lastName}`,
+              status: 'enabled' as const,
+              attributes: {
+                membershipTier: 'GREEN',
+                loyaltyPoints: 0,
+                lifetimeValue: 0,
+                segment: 'new',
+                isB2B: false
+              },
+              lists: []
+            };
+            
+            await listmonkService.addSubscriber(subscriberData);
+            await customerSegmentationService.addCustomerToSegments(customerData);
+          } catch (listmonkError) {
+            console.error('Listmonk integration failed:', listmonkError);
+          }
         } catch (emailError) {
           console.error('Welcome email failed:', emailError);
         }

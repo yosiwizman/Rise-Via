@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartStore, CartItem, CartStats } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
+import { abandonedCartService } from '../services/AbandonedCartService';
 
 const STORAGE_KEY = 'risevia-cart';
 
@@ -73,6 +74,7 @@ export const useCart = create<CartStore>()(
 
         trackCartEvent('add', newItem, { quantity });
         cartAnalytics.trackCartEvent('add', newItem, { quantity });
+        abandonedCartService.trackCartActivity();
         }
       },
 
@@ -93,6 +95,7 @@ export const useCart = create<CartStore>()(
 
         trackCartEvent('remove', itemToRemove);
         cartAnalytics.trackCartEvent('remove', itemToRemove);
+        abandonedCartService.trackCartActivity();
       },
 
       updateQuantity: (itemId, quantity) => {
@@ -111,6 +114,8 @@ export const useCart = create<CartStore>()(
           items: updatedItems,
           stats: updatedStats
         });
+        
+        abandonedCartService.trackCartActivity();
       },
 
       clearCart: () => {
