@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   listmonk-db:
     image: postgres:13
@@ -25,5 +26,23 @@ services:
       - listmonk-db
     restart: unless-stopped
 
+  flowise:
+    image: flowiseai/flowise:latest
+    container_name: flowise
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - FLOWISE_USERNAME=admin
+      - FLOWISE_PASSWORD=admin123
+      - DATABASE_PATH=/root/.flowise
+      - APIKEY_PATH=/root/.flowise
+      - SECRETKEY_PATH=/root/.flowise
+      - LOG_LEVEL=info
+    volumes:
+      - flowise_data:/root/.flowise
+    restart: unless-stopped
+
 volumes:
   listmonk_db_data:
+  flowise_data:

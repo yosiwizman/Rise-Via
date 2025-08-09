@@ -17,6 +17,7 @@ import { priceTrackingService } from './services/priceTracking';
 import MobileCartButton from './components/MobileCartButton';
 import { Toaster } from './components/ui/toaster';
 import { ToastEventHandler } from './components/ToastEventHandler';
+import { ChatBot } from './components/ChatBot';
 
 const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
 const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
@@ -279,6 +280,7 @@ function App() {
           </div>
           <ToastEventHandler />
           <Toaster />
+          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
     </CustomerProvider>
