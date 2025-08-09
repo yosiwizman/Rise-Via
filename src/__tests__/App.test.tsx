@@ -63,9 +63,9 @@ describe('App', () => {
   it('should show age verification modal', () => {
     render(<App />)
     
-    expect(screen.getByText('Age Verification Required')).toBeInTheDocument()
-    expect(screen.getByText('I am 21 or older')).toBeInTheDocument()
-    expect(screen.getByText('I am under 21')).toBeInTheDocument()
+    expect(screen.getAllByText('Age Verification Required')[0]).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /i am 21 or older/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /i am under 21/i })).toBeInTheDocument()
   })
 
   it('should show state selection modal', () => {
