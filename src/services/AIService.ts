@@ -113,7 +113,7 @@ export const aiService = {
   }): Promise<any[]> {
     const products = productsData.products;
     
-    let filtered = products.filter(product => {
+    const filtered = products.filter(product => {
       if (preferences.strainType && product.strainType !== preferences.strainType) {
         return false;
       }

@@ -7,27 +7,9 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
-import productsData from '../../data/products.json';
 import { productService } from '../../services/productService';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  thc: string;
-  type: string;
-  effects?: string[];
-  inventory: number;
-  active: boolean;
-  description?: string;
-  featured?: boolean;
-  images?: string[];
-  hover_image?: string;
-  video_url?: string;
-  strainType?: string;
-  thcaPercentage?: number;
-}
+import { Product } from '../../types/product';
+import productsData from '../../data/products.json';
 
 export const ProductManager: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -38,26 +20,16 @@ export const ProductManager: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const data = await productService.getAll();
-        if (data && data.length > 0) {
-          const formattedProducts = data.map(product => ({
-            ...product,
-            id: product.id || Date.now().toString() + Math.random().toString(),
-            active: true,
-            thc: product.thca_percentage?.toString() || '0',
-            type: product.strain_type || '',
-            strainType: product.strain_type,
-            thcaPercentage: product.thca_percentage,
-            inventory: product.inventory || 0
-          }));
-          setProducts(formattedProducts);
-        } else {
-          throw new Error('No products found in database');
-        }
-      } catch (error) {
-        console.error('Failed to load products from database:', error);
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const dbProducts = await productService.getAll();
+      
+      if (dbProducts.length > 0) {
+        setProducts(dbProducts as Product[]);
+      } else {
         const loadedProducts = productsData.products.map(product => ({
           ...product,
           inventory: Math.floor(Math.random() * 100) + 10,
@@ -65,11 +37,20 @@ export const ProductManager: React.FC = () => {
           thc: product.thcaPercentage.toString(),
           type: product.strainType
         }));
-        setProducts(loadedProducts);
+        setProducts(loadedProducts as Product[]);
       }
-    };
-    loadProducts();
-  }, []);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      const loadedProducts = productsData.products.map(product => ({
+        ...product,
+        inventory: Math.floor(Math.random() * 100) + 10,
+        active: true,
+        thc: product.thcaPercentage.toString(),
+        type: product.strainType
+      }));
+      setProducts(loadedProducts as Product[]);
+    }
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -89,20 +70,20 @@ export const ProductManager: React.FC = () => {
     if (selectedProducts.length === filteredProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredProducts.map(p => p.id));
+      setSelectedProducts(filteredProducts.map(p => p.id!).filter(Boolean));
     }
   };
 
   const handleBulkDelete = () => {
     if (confirm(`Delete ${selectedProducts.length} selected products?`)) {
-      setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
+      setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id!)));
       setSelectedProducts([]);
     }
   };
 
   const handleBulkStatusChange = (active: boolean) => {
     setProducts(prev => prev.map(p => 
-      selectedProducts.includes(p.id) ? { ...p, active } : p
+      selectedProducts.includes(p.id!) ? { ...p, active } : p
     ));
     setSelectedProducts([]);
   };
@@ -120,18 +101,18 @@ export const ProductManager: React.FC = () => {
     }
 
     setProducts(prev => prev.map(p => {
-      if (!selectedProducts.includes(p.id)) return p;
+      if (!selectedProducts.includes(p.id!)) return p;
       
-      let newPrice = p.price;
+      let newPrice = p.price || 0;
       switch (operator) {
         case '+':
-          newPrice = p.price + value;
+          newPrice = newPrice + value;
           break;
         case '-':
-          newPrice = p.price - value;
+          newPrice = newPrice - value;
           break;
         case '*':
-          newPrice = p.price * value;
+          newPrice = newPrice * value;
           break;
         default:
           return p;
@@ -155,12 +136,12 @@ export const ProductManager: React.FC = () => {
       ...products.map(p => [
         p.id,
         `"${p.name}"`,
-        p.price,
+        p.price || 0,
         p.category,
-        p.thc,
-        p.type,
-        p.inventory,
-        p.active
+        p.thcaPercentage || 0,
+        p.strainType || '',
+        p.inventory || 0,
+        true
       ].join(','))
     ].join('\n');
 
@@ -185,13 +166,44 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = (product: Product) => {
-    if (editingProduct) {
-      setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id ? { ...product, id: editingProduct.id } : p
-      ));
-    } else {
-      setProducts(prev => [...prev, { ...product, id: Date.now().toString() }]);
+  const handleSaveProduct = async (productData: {
+    name: string;
+    category: string;
+    description?: string;
+    price: number;
+    type: string;
+    thc: string;
+    inventory: number;
+    effects?: string[];
+    active?: boolean;
+  }) => {
+    try {
+      if (editingProduct && 'sample_id' in editingProduct) {
+        await productService.update(editingProduct.id!, productData);
+      } else {
+        const createData = {
+          name: productData.name,
+          category: productData.category,
+          description: productData.description || '',
+          price: productData.price,
+          strain_type: productData.type,
+          thca_percentage: parseFloat(productData.thc) || 0,
+          effects: productData.effects || [],
+          inventory: productData.inventory,
+          images: []
+        };
+        await productService.create(createData);
+      }
+      await loadProducts();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      if (editingProduct) {
+        setProducts(prev => prev.map(p => 
+          p.id === editingProduct.id ? { ...p, ...productData } : p
+        ));
+      } else {
+        setProducts(prev => [...prev, { ...productData, id: Date.now().toString() } as Product]);
+      }
     }
   };
 
@@ -320,18 +332,18 @@ export const ProductManager: React.FC = () => {
                   <tr key={product.id} className="border-t hover:bg-gray-50">
                     <td className="p-3">
                       <Checkbox
-                        checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={() => handleSelectProduct(product.id)}
+                        checked={selectedProducts.includes(product.id!)}
+                        onCheckedChange={() => handleSelectProduct(product.id!)}
                       />
                     </td>
                     <td className="p-3">
                       <div className="font-medium">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.type}</div>
+                      <div className="text-sm text-gray-500">{product.strainType || ''}</div>
                     </td>
                     <td className="p-3">
                       <Input
                         type="number"
-                        value={product.price}
+                        value={product.price || 0}
                         onChange={(e) => handleQuickEdit(product, 'price', parseFloat(e.target.value))}
                         className="w-20 h-8"
                         step="0.01"
@@ -342,19 +354,19 @@ export const ProductManager: React.FC = () => {
                         {product.category}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-sm">{product.thc}</td>
+                    <td className="p-3 font-mono text-sm">{product.thcaPercentage || 0}%</td>
                     <td className="p-3">
                       <Input
                         type="number"
-                        value={product.inventory}
+                        value={product.inventory || 0}
                         onChange={(e) => handleQuickEdit(product, 'inventory', parseInt(e.target.value))}
                         className="w-20 h-8"
                       />
                     </td>
                     <td className="p-3">
                       <Select
-                        value={product.active ? 'active' : 'inactive'}
-                        onValueChange={(value) => handleQuickEdit(product, 'active', value === 'active')}
+                        value={product.status === 'active' ? 'active' : 'inactive'}
+                        onValueChange={(value) => handleQuickEdit(product, 'status', value === 'active' ? 'active' : 'inactive')}
                       >
                         <SelectTrigger className="w-24 h-8">
                           <SelectValue />
@@ -406,7 +418,20 @@ export const ProductManager: React.FC = () => {
         isOpen={isProductEditorOpen}
         onClose={() => setIsProductEditorOpen(false)}
         onSave={handleSaveProduct}
-        product={editingProduct || undefined}
+        product={editingProduct ? {
+          id: editingProduct.id || '',
+          name: editingProduct.name,
+          price: editingProduct.price || 0,
+          category: editingProduct.category,
+          type: editingProduct.strain_type || editingProduct.type || '',
+          thc: editingProduct.thca_percentage?.toString() || editingProduct.thc || '',
+          inventory: editingProduct.inventory || 0,
+          active: editingProduct.status === 'active',
+          effects: editingProduct.effects || [],
+          description: editingProduct.description || '',
+          strainType: editingProduct.strain_type || editingProduct.strainType,
+          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage
+        } : undefined}
       />
     </div>
   );

@@ -38,7 +38,9 @@
     "ci:full": "npm run security:check && npm run ci && npm run debt:report",
     "prepare": "husky install",
     "generate-sitemap": "node scripts/generate-sitemap.js",
-    "build:production": "npm run generate-sitemap && npm run build"
+    "build:production": "npm run generate-sitemap && npm run build",
+    "import-strains": "node scripts/import-strains.js",
+    "generate-images": "node scripts/generate-images.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

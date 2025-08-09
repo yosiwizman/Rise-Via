@@ -156,7 +156,7 @@ export const customerService = {
   },
 
   async search(searchTerm: string, filters: SearchFilters = {}) {
-    let whereConditions = ['1=1'];
+    const whereConditions = ['1=1'];
 
     if (searchTerm) {
       whereConditions.push(`(
