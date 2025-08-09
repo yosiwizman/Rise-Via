@@ -29,6 +29,7 @@ export interface Product {
   status?: 'active' | 'inactive' | 'out_of_stock';
   created_at?: string;
   updated_at?: string;
+  // Legacy/camelCase fields for compatibility
   strainType?: string;
   thcaPercentage?: number;
   inStock?: boolean;

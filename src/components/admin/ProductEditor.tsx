@@ -7,25 +7,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ProductMediaManager } from './ProductMediaManager';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  type: string;
-  thc: string;
-  description?: string;
-  effects?: string[];
-  inventory: number;
-  active: boolean;
-  featured?: boolean;
-  images?: string[];
-  hover_image?: string;
-  video_url?: string;
-  strainType?: string;
-  thcaPercentage?: number;
-}
+import type { Product } from '../../types/product';
 
 interface ProductEditorProps {
   isOpen: boolean;

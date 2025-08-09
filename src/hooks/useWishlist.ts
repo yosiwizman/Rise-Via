@@ -145,7 +145,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
   sessionToken: getSessionToken(),
   sessionId: null,
 
-  initializeSession: async () => {
+  async initializeSession() {
     const state = get();
     if (state.sessionId) return;
 
@@ -195,7 +195,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  migrateFromLocalStorage: async () => {
+  async migrateFromLocalStorage() {
     const localStorageKey = 'risevia-wishlist';
     const localData = localStorage.getItem(localStorageKey);
 
@@ -246,7 +246,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  addToWishlist: async (itemData) => {
+  async addToWishlist(itemData) {
     const state = get();
 
     if (!SecurityUtils.checkRateLimit('wishlist_add', 20, 60000)) {
@@ -325,7 +325,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  removeFromWishlist: async (itemId) => {
+  async removeFromWishlist(itemId) {
     const state = get();
     const itemToRemove = state.items.find(item => item.id === itemId);
 
@@ -362,7 +362,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  updateItemPriority: async (itemId, priority) => {
+  async updateItemPriority(itemId, priority) {
     const state = get();
     set({ isLoading: true, error: null });
 
@@ -385,7 +385,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  clearWishlist: async () => {
+  async clearWishlist() {
     const state = get();
     if (!state.sessionId) return;
 
@@ -412,16 +412,16 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  isInWishlist: (itemId) => {
+  isInWishlist(itemId) {
     const state = get();
     return state.items.some(item => item.id === itemId || item.name === itemId);
   },
 
-  getWishlistCount: () => {
+  getWishlistCount() {
     return get().items.length;
   },
 
-  generateShareLink: async () => {
+  async generateShareLink() {
     const state = get();
 
     if (state.items.length === 0) {
@@ -448,7 +448,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     return shareUrl;
   },
 
-  importWishlist: async (shareCode) => {
+  async importWishlist(shareCode) {
     try {
       const existingShares = JSON.parse(localStorage.getItem('wishlist_shares') || '[]');
       const shareData = existingShares.find((share: { shareCode: string }) => share.shareCode === shareCode);
@@ -503,7 +503,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  setPriceAlert: async (itemId, targetPrice) => {
+  async setPriceAlert(itemId, targetPrice) {
     const state = get();
     const priceAlert = {
       targetPrice,
@@ -542,7 +542,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  removePriceAlert: async (itemId) => {
+  async removePriceAlert(itemId) {
     const state = get();
     set({ isLoading: true, error: null });
 
@@ -568,15 +568,15 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     }
   },
 
-  getItemsByCategory: (category) => {
+  getItemsByCategory(category) {
     return get().items.filter(item => item.category === category);
   },
 
-  getItemsByPriority: (priority) => {
+  getItemsByPriority(priority) {
     return get().items.filter(item => item.priority === priority);
   },
 
-  sortItems: (sortBy) => {
+  sortItems(sortBy) {
     const items = [...get().items];
 
     switch (sortBy) {

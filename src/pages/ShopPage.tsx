@@ -40,7 +40,7 @@ export const ShopPage = () => {
       setLoading(true);
       const dbProducts = await productService.getAll();
       if (dbProducts.length > 0) {
-        setProducts(dbProducts);
+        setProducts(dbProducts as Product[]);
       } else {
         setProducts(productsData.products as Product[]);
       }

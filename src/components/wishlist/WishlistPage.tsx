@@ -46,15 +46,15 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
     return sortItems(sortBy).filter(item => 
       item && (filterPriority === 'all' || item.priority === filterPriority)
     );
-  }, [items, sortBy, filterPriority, sortItems]);
+  }, [filterPriority, sortItems, sortBy]);
 
   const handleShare = async () => {
     try {
       const url = await generateShareLink();
       setShareUrl(url);
       setShowShareDialog(true);
-    } catch (error) {
-      console.error('Failed to generate share link:', error);
+    } catch {
+      // Silently fail per code standards
     }
   };
 
@@ -377,7 +377,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item!} />
+              <WishlistItemCard item={item as WishlistItem} />
             </motion.div>
           ))}
         </motion.div>

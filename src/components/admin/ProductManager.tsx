@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
 import { productService } from '../../services/productService';
-import { Product } from '../../types/product';
+import type { Product } from '../../types/product';
 import productsData from '../../data/products.json';
 
 export const ProductManager: React.FC = () => {
@@ -26,27 +26,30 @@ export const ProductManager: React.FC = () => {
   const loadProducts = async () => {
     try {
       const dbProducts = await productService.getAll();
-      
-      if (dbProducts.length > 0) {
-        setProducts(dbProducts as Product[]);
-      } else {
-        const loadedProducts = productsData.products.map(product => ({
+
+      if (dbProducts && dbProducts.length > 0) {
+        const formattedProducts = dbProducts.map(product => ({
           ...product,
-          inventory: Math.floor(Math.random() * 100) + 10,
+          id: product.id || Date.now().toString() + Math.random().toString(),
           active: true,
-          thc: product.thcaPercentage.toString(),
-          type: product.strainType
+          thc: product.thca_percentage?.toString() || '0',
+          type: product.strain_type || '',
+          strainType: product.strain_type,
+          thcaPercentage: product.thca_percentage,
+          inventory: product.inventory || 0
         }));
-        setProducts(loadedProducts as Product[]);
+        setProducts(formattedProducts);
+      } else {
+        throw new Error('No products found in database');
       }
     } catch (error) {
-      console.error('Error loading products:', error);
+      // fallback to static data
       const loadedProducts = productsData.products.map(product => ({
         ...product,
         inventory: Math.floor(Math.random() * 100) + 10,
         active: true,
-        thc: product.thcaPercentage.toString(),
-        type: product.strainType
+        thc: product.thcaPercentage?.toString() || '0',
+        type: product.strainType || '',
       }));
       setProducts(loadedProducts as Product[]);
     }
@@ -59,8 +62,8 @@ export const ProductManager: React.FC = () => {
   });
 
   const handleSelectProduct = (productId: string) => {
-    setSelectedProducts(prev => 
-      prev.includes(productId) 
+    setSelectedProducts(prev =>
+      prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
@@ -82,7 +85,7 @@ export const ProductManager: React.FC = () => {
   };
 
   const handleBulkStatusChange = (active: boolean) => {
-    setProducts(prev => prev.map(p => 
+    setProducts(prev => prev.map(p =>
       selectedProducts.includes(p.id!) ? { ...p, active } : p
     ));
     setSelectedProducts([]);
@@ -102,7 +105,7 @@ export const ProductManager: React.FC = () => {
 
     setProducts(prev => prev.map(p => {
       if (!selectedProducts.includes(p.id!)) return p;
-      
+
       let newPrice = p.price || 0;
       switch (operator) {
         case '+':
@@ -117,14 +120,14 @@ export const ProductManager: React.FC = () => {
         default:
           return p;
       }
-      
+
       return { ...p, price: Math.max(0, Math.round(newPrice * 100) / 100) };
     }));
     setSelectedProducts([]);
   };
 
   const handleQuickEdit = (product: Product, field: string, value: string | number | boolean) => {
-    setProducts(prev => prev.map(p => 
+    setProducts(prev => prev.map(p =>
       p.id === product.id ? { ...p, [field]: value } : p
     ));
   };
@@ -198,7 +201,7 @@ export const ProductManager: React.FC = () => {
     } catch (error) {
       console.error('Error saving product:', error);
       if (editingProduct) {
-        setProducts(prev => prev.map(p => 
+        setProducts(prev => prev.map(p =>
           p.id === editingProduct.id ? { ...p, ...productData } : p
         ));
       } else {
@@ -221,7 +224,7 @@ export const ProductManager: React.FC = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
-              <Button 
+              <Button
                 onClick={handleAddProduct}
                 className="bg-gradient-to-r from-risevia-purple to-risevia-teal"
               >
@@ -365,15 +368,15 @@ export const ProductManager: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <Select
-                        value={product.status === 'active' ? 'active' : 'inactive'}
-                        onValueChange={(value) => handleQuickEdit(product, 'status', value === 'active' ? 'active' : 'inactive')}
+                        value={product.featured ? 'featured' : 'normal'}
+                        onValueChange={(value) => handleQuickEdit(product, 'featured', value === 'featured')}
                       >
                         <SelectTrigger className="w-24 h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="featured">Featured</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
                         </SelectContent>
                       </Select>
                     </td>

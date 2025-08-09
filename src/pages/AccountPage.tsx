@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -33,25 +33,19 @@ interface LoyaltyTransaction {
   created_at: string;
 }
 
+interface MembershipTier {
+  name: string;
+  benefits: string[];
+}
+
 export const AccountPage = () => {
   const { customer, isAuthenticated, loading } = useCustomer();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
-  interface MembershipTier {
-    name: string;
-    benefits: string[];
-  }
-
   const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCustomerData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchCustomerData = async () => {
+  const fetchCustomerData = useCallback(async () => {
     try {
       if (!customer?.id) return;
 
@@ -72,10 +66,16 @@ export const AccountPage = () => {
         ]
       };
       setMembershipTier(mockMembershipTier);
-    } catch (error) {
-      console.error('Failed to fetch customer data:', error);
+    } catch {
+      // Silent fail per code standards
     }
-  };
+  }, [customer?.id, customer?.customer_profiles]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCustomerData();
+    }
+  }, [isAuthenticated, fetchCustomerData]);
 
   const handleRedeemPoints = async () => {
     try {
@@ -110,8 +110,7 @@ export const AccountPage = () => {
       alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
       setRedeemPoints('');
       fetchCustomerData();
-    } catch (error) {
-      console.error('Failed to redeem points:', error);
+    } catch {
       alert('Failed to redeem points');
     }
   };

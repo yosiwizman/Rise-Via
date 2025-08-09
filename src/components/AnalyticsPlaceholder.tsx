@@ -30,8 +30,7 @@ export const useAnalytics = () => {
         }
       });
     }
-
-    console.log('Analytics Event:', eventData);
+    // No console.log per code standards
   };
 
   const trackPageView = (page: string) => {

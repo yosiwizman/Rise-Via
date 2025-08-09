@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
@@ -7,7 +7,7 @@ import { listmonkService } from '../services/ListmonkService';
 import { customerSegmentationService } from '../services/CustomerSegmentation';
 import { emailAutomationService } from '../services/EmailAutomation';
 
-interface Customer {
+export interface Customer {
   id: string;
   email: string;
   first_name: string;
@@ -36,26 +36,25 @@ interface Customer {
   }>;
 }
 
-interface LoginResult {
+export interface LoginResult {
   success: boolean;
   customer?: Customer;
   message?: string;
 }
 
-interface RegisterResult {
+export interface RegisterResult {
   success: boolean;
   customer?: Customer;
   message?: string;
 }
 
-interface RegistrationData {
+export interface RegistrationData {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
   phone?: string;
 }
-
 
 interface CustomerContextType {
   customer: Customer | null;
@@ -88,7 +87,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
-    
+
     const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
@@ -103,12 +102,13 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         authStateChange.then(res => res.data.subscription.unsubscribe());
       }
     };
+    // No console.log
   }, []);
 
   const checkAuthStatus = async () => {
     try {
       const user = await authService.getCurrentUser();
-      
+
       if (!user) {
         setLoading(false);
         return;
@@ -116,46 +116,44 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
       const customers = await customerService.getAll();
       const customerData = customers.find((c: Customer) => c.email === (user as { email: string }).email);
-      
+
       if (customerData) {
         setCustomer(customerData as Customer);
         setIsAuthenticated(true);
       } else {
-        console.warn('User authenticated but no customer record found');
         setIsAuthenticated(false);
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
+    } catch {
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
       setLoading(true);
-      
+
       const data = await authService.login(email, password);
-      
+
       if (data.user) {
         try {
-          await wishlistService.migrateSessionWishlist((data.user as any).id);
-        } catch (migrationError) {
-          console.error('Wishlist migration failed:', migrationError);
+          await wishlistService.migrateSessionWishlist((data.user as { id: string }).id);
+        } catch {
+          // Silent fail for migration
         }
 
         const customers = await customerService.getAll();
         const customerData = customers.find((c: Customer) => c.email === email);
-        
+
         if (customerData) {
-          setCustomer(customerData as Customer);
+          setCustomer(customerData);
           setIsAuthenticated(true);
-          return { success: true, customer: customerData as Customer };
+          return { success: true, customer: customerData };
         } else {
           setCustomer({
-            id: (data.user as any).id,
-            email: (data.user as any).email!,
+            id: (data.user as { id: string }).id,
+            email: (data.user as { email: string }).email!,
             first_name: '',
             last_name: '',
             created_at: new Date().toISOString()
@@ -164,17 +162,16 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           return { success: true };
         }
       }
-      
+
       return { success: false, message: 'Login failed' };
     } catch (error: unknown) {
-      console.error('Login failed:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (registrationData: RegistrationData) => {
+  const register = async (registrationData: RegistrationData): Promise<RegisterResult> => {
     try {
       const authResult = await authService.register(
         registrationData.email,
@@ -199,12 +196,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             registrationData.email,
             registrationData.firstName
           );
-          
+
           await emailAutomationService.triggerWelcomeSeries(
             registrationData.email,
             registrationData.firstName
           );
-          
+
           try {
             const subscriberData = {
               email: registrationData.email,
@@ -219,14 +216,14 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
               },
               lists: []
             };
-            
+
             await listmonkService.addSubscriber(subscriberData);
             await customerSegmentationService.addCustomerToSegments(customerData as Customer);
-          } catch (listmonkError) {
-            console.error('Listmonk integration failed:', listmonkError);
+          } catch {
+            // Silent fail for Listmonk
           }
-        } catch (emailError) {
-          console.error('Welcome email failed:', emailError);
+        } catch {
+          // Silent fail for welcome emails
         }
 
         setCustomer(customerData as Customer);
@@ -236,7 +233,6 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
       return { success: false, message: 'Registration failed' };
     } catch (error: unknown) {
-      console.error('Registration failed:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Registration failed' };
     }
   };
@@ -246,20 +242,20 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       await authService.logout();
       setCustomer(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {
+      // Silent fail
     }
   };
 
   return (
-    <CustomerContext.Provider value={{ 
-      customer, 
-      isAuthenticated, 
-      loading, 
-      login, 
-      register, 
-      logout, 
-      checkAuthStatus 
+    <CustomerContext.Provider value={{
+      customer,
+      isAuthenticated,
+      loading,
+      login,
+      register,
+      logout,
+      checkAuthStatus
     }}>
       {children}
     </CustomerContext.Provider>
