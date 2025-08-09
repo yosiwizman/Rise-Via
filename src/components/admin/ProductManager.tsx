@@ -430,7 +430,8 @@ export const ProductManager: React.FC = () => {
           effects: editingProduct.effects || [],
           description: editingProduct.description || '',
           strainType: editingProduct.strain_type || editingProduct.strainType,
-          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage
+          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
+          images: editingProduct.images || []
         } : undefined}
       />
     </div>
