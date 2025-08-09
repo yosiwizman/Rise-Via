@@ -87,8 +87,8 @@ class CustomerSegmentationService {
       name: 'Sativa Enthusiasts',
       description: 'Customers who prefer Sativa strains',
       color: '#84cc16',
-      criteria: (_customer) => {
-        return true;
+      criteria: () => {
+        return false;
       }
     },
     {
@@ -96,8 +96,8 @@ class CustomerSegmentationService {
       name: 'Indica Enthusiasts',
       description: 'Customers who prefer Indica strains',
       color: '#6366f1',
-      criteria: (_customer) => {
-        return true;
+      criteria: () => {
+        return false;
       }
     },
     {
@@ -105,8 +105,8 @@ class CustomerSegmentationService {
       name: 'Hybrid Enthusiasts',
       description: 'Customers who prefer Hybrid strains',
       color: '#ec4899',
-      criteria: (_customer) => {
-        return true;
+      criteria: () => {
+        return false;
       }
     }
   ];
