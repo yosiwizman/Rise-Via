@@ -10,25 +10,25 @@ interface Product {
   effects: string[];
   category: string;
   price: number;
-  images: string[];
+  images?: string[];
 }
 
 interface RecommendationSectionProps {
   currentProduct: Product;
-  onProductClick?: (product: { id: string; name: string; price: number; images: string[]; thcaPercentage: number; [key: string]: unknown }) => void;
+  onProductClick?: (product: Product) => void;
 }
 
 export const RecommendationSection = ({ currentProduct, onProductClick }: RecommendationSectionProps) => {
   const recommendations = RecommendationEngine.getRecommendations(currentProduct);
 
-  const ProductCard = ({ product }: { product: { id: string; name: string; price: number; images: string[]; thcaPercentage: number; [key: string]: unknown } }) => (
+  const ProductCard = ({ product }: { product: Product }) => (
     <Card 
       className="cursor-pointer hover:border-risevia-purple transition-colors"
       onClick={() => onProductClick?.(product)}
     >
       <CardContent className="p-3">
         <img 
-          src={product.images[0]} 
+          src={product.images?.[0] || '/placeholder-product.jpg'} 
           alt={product.name} 
           className="w-full h-32 object-cover rounded mb-2" 
         />

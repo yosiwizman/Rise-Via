@@ -98,9 +98,15 @@ export const abandonedCartService = {
         sessionId: row.session_id as string,
         customerEmail: row.customer_email as string,
         cartData: {
-          items: (row.cart_data as any)?.items || [],
-          total: (row.cart_data as any)?.total || 0,
-          currency: (row.cart_data as any)?.currency || 'USD'
+          items: (row.cart_data as { items?: Array<{
+            id: string;
+            name: string;
+            price: number;
+            quantity: number;
+            image: string;
+          }>; total?: number; currency?: string })?.items || [],
+          total: (row.cart_data as { items?: unknown[]; total?: number; currency?: string })?.total || 0,
+          currency: (row.cart_data as { items?: unknown[]; total?: number; currency?: string })?.currency || 'USD'
         },
         totalAmount: row.total_amount as number,
         createdAt: row.created_at as string,

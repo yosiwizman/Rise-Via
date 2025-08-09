@@ -74,7 +74,7 @@ export const aiService = {
     }
   },
 
-  async getChatResponse(message: string, context: any = {}): Promise<string> {
+  async getChatResponse(message: string, context: Record<string, unknown> = {}): Promise<string> {
     try {
       const cannabisContext = this.buildCannabisContext();
       
@@ -110,7 +110,15 @@ export const aiService = {
     effects?: string[];
     strainType?: string;
     thcaRange?: [number, number];
-  }): Promise<any[]> {
+  }): Promise<Array<{
+    id: string;
+    name: string;
+    strainType: string;
+    thcaPercentage: number;
+    effects: string[];
+    price: number;
+    images: string[];
+  }>> {
     const products = productsData.products;
     
     const filtered = products.filter(product => {
@@ -163,7 +171,7 @@ export const aiService = {
     }
   },
 
-  async callFlowiseAPI(endpoint: string, data: any): Promise<any> {
+  async callFlowiseAPI(endpoint: string, data: Record<string, unknown>): Promise<{ text: string }> {
     const flowiseUrl = import.meta.env.VITE_FLOWISE_URL || 'http://localhost:3000';
     const apiKey = import.meta.env.VITE_FLOWISE_API_KEY;
     
@@ -188,7 +196,7 @@ export const aiService = {
     return await response.json();
   },
 
-  buildCannabisContext(): any {
+  buildCannabisContext(): Record<string, unknown> {
     const cannabisKnowledge = {
       strainTypes: ['sativa', 'indica', 'hybrid'],
       commonEffects: ['relaxed', 'euphoric', 'creative', 'energetic', 'focused', 'happy', 'sleepy'],

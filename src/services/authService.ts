@@ -20,55 +20,47 @@ export const authService = {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };
     }
-    try {
-      const users = await sql`
-        SELECT id, email, password_hash, created_at 
-        FROM users 
-        WHERE email = ${email}
-      `;
-      if (users.length === 0) {
-        throw new Error('Invalid email or password');
-      }
-      const user = users[0] as User;
-      // NOTE: Passwords should be hashed and verified securely in production
-      const sessionUser: User = {
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-      };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-      return { success: true, user: sessionUser };
-    } catch (error) {
-      throw error;
+    const users = await sql`
+      SELECT id, email, password_hash, created_at 
+      FROM users 
+      WHERE email = ${email}
+    `;
+    if (users.length === 0) {
+      throw new Error('Invalid email or password');
     }
+    const user = users[0] as User;
+    // NOTE: Passwords should be hashed and verified securely in production
+    const sessionUser: User = {
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+    return { success: true, user: sessionUser };
   },
 
-  async register(email: string, password: string, _metadata?: Record<string, unknown>) {
-    try {
-      const existingUsers = await sql`
-        SELECT id FROM users WHERE email = ${email}
-      `;
-      if (existingUsers.length > 0) {
-        throw new Error('User already exists with this email');
-      }
-      // WARNING: Password should be hashed before storing in production
-      const passwordHash = password;
-      const newUsers = await sql`
-        INSERT INTO users (email, password_hash)
-        VALUES (${email}, ${passwordHash})
-        RETURNING id, email, created_at
-      `;
-      const user = newUsers[0] as User;
-      const sessionUser: User = {
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-      };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-      return { success: true, user: sessionUser };
-    } catch (error) {
-      throw error;
+  async register(email: string, password: string) {
+    const existingUsers = await sql`
+      SELECT id FROM users WHERE email = ${email}
+    `;
+    if (existingUsers.length > 0) {
+      throw new Error('User already exists with this email');
     }
+    // WARNING: Password should be hashed before storing in production
+    const passwordHash = password;
+    const newUsers = await sql`
+      INSERT INTO users (email, password_hash)
+      VALUES (${email}, ${passwordHash})
+      RETURNING id, email, created_at
+    `;
+    const user = newUsers[0] as User;
+    const sessionUser: User = {
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+    return { success: true, user: sessionUser };
   },
 
   async logout() {
@@ -97,7 +89,7 @@ export const authService = {
     return user ? { user } : null;
   },
 
-  async onAuthStateChange(callback: (event: string, session: any) => void) {
+  async onAuthStateChange(callback: (event: string, session: { user: User } | null) => void) {
     const handleStorageChange = () => {
       this.getCurrentUser().then(user => {
         callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user } : null);

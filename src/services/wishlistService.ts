@@ -65,7 +65,7 @@ export const wishlistService = {
         SELECT product_id FROM wishlist_items 
         WHERE session_id = ${session.id}
       `
-      return { data: items?.map((item: any) => item.product_id) || [], error: null }
+      return { data: items?.map((item: Record<string, unknown>) => (item.product_id as string)) || [], error: null }
     } catch (error) {
       return { data: [], error }
     }

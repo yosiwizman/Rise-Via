@@ -7,8 +7,8 @@ interface CloudinaryUploadResponse {
 
 export const cloudinaryService = {
   async uploadImage(file: File, folder: string = 'risevia/products'): Promise<CloudinaryUploadResponse> {
-    const cloudName = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME;
-    const apiKey = (import.meta as any).env.VITE_CLOUDINARY_API_KEY;
+    const cloudName = (import.meta as { env: Record<string, string> }).env.VITE_CLOUDINARY_CLOUD_NAME;
+    const apiKey = (import.meta as { env: Record<string, string> }).env.VITE_CLOUDINARY_API_KEY;
     
     if (!cloudName || !apiKey) {
       throw new Error('Cloudinary configuration missing');
@@ -32,7 +32,7 @@ export const cloudinaryService = {
   },
 
   async generatePlaceholderImage(strainName: string, variant: number = 1): Promise<string> {
-    const cloudName = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME;
+    const cloudName = (import.meta as { env: Record<string, string> }).env.VITE_CLOUDINARY_CLOUD_NAME;
     
     if (!cloudName) {
       throw new Error('Cloudinary cloud name not configured');

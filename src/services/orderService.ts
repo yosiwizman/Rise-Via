@@ -49,7 +49,7 @@ export const orderService = {
       }
 
       return order as Order;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -61,7 +61,7 @@ export const orderService = {
         WHERE id = ${orderId}
       `;
       return orders.length > 0 ? orders[0] as Order : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -74,7 +74,7 @@ export const orderService = {
         ORDER BY created_at DESC
       `;
       return (orders as Order[]) || [];
-    } catch (error) {
+    } catch {
       return [];
     }
   },
@@ -87,7 +87,7 @@ export const orderService = {
         ORDER BY created_at DESC
       `;
       return (orders || []) as Order[];
-    } catch (error) {
+    } catch {
       return [];
     }
   },
@@ -99,8 +99,8 @@ export const orderService = {
         WHERE order_id = ${orderId}
         ORDER BY created_at ASC
       `;
-      return (items || []) as any[];
-    } catch (error) {
+      return (items || []) as OrderItem[];
+    } catch {
       return [];
     }
   },
@@ -114,7 +114,7 @@ export const orderService = {
         RETURNING *
       `;
       return orders.length > 0 ? orders[0] as Order : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -126,7 +126,7 @@ export const orderService = {
 
       const items = await this.getOrderItems(orderId);
       return { ...order, items };
-    } catch (error) {
+    } catch {
       return null;
     }
   },

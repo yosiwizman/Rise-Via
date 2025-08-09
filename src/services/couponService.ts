@@ -20,14 +20,13 @@ export interface CouponValidationResult {
 }
 
 export const couponService = {
-  async validateCoupon(_code: string, _orderAmount: number): Promise<CouponValidationResult> {
+  async validateCoupon(): Promise<CouponValidationResult> {
     try {
       return {
         isValid: false,
         error: 'Invalid or expired coupon code'
       };
-    } catch (error) {
-      console.error('Error validating coupon:', error);
+    } catch {
       return {
         isValid: false,
         error: 'Failed to validate coupon. Please try again.'
@@ -38,8 +37,7 @@ export const couponService = {
   async applyCoupon(code: string): Promise<void> {
     try {
       console.log('Applying coupon:', code);
-    } catch (error) {
-      console.error('Error applying coupon:', error);
+    } catch {
       throw new Error('Failed to apply coupon');
     }
   },

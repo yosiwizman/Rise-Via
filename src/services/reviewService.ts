@@ -15,8 +15,9 @@ interface Review {
 }
 
 export const reviewService = {
-  async getProductReviews(_productId: string, _sortBy: 'recent' | 'helpful' | 'rating' = 'recent') {
+  async getProductReviews(productId: string, sortBy: 'recent' | 'helpful' | 'rating' = 'recent') {
     try {
+      console.log(`Loading reviews for product ${productId}, sorted by ${sortBy}`);
       const reviews: Review[] = [];
       
       return { data: reviews, error: null };
@@ -49,8 +50,9 @@ export const reviewService = {
     }
   },
 
-  async getReviewStats(_productId: string): Promise<{ data: ReviewStats | null; error: any }> {
+  async getReviewStats(productId: string): Promise<{ data: ReviewStats | null; error: unknown }> {
     try {
+      console.log(`Loading review stats for product ${productId}`);
       const result = {
         average_rating: '4.5',
         total_reviews: '12',
