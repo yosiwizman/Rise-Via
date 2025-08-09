@@ -5,6 +5,7 @@ import { emailService } from '../services/emailService';
 import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
 import { emailAutomationService } from '../services/EmailAutomation';
+import { membershipService } from '../services/membershipService';
 
 export interface Customer {
   id?: string;
@@ -205,6 +206,24 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           last_name: registrationData.lastName,
           phone: registrationData.phone
         });
+
+        if (customerData?.id) {
+          const referralCode = membershipService.generateReferralCode(
+            registrationData.firstName,
+            registrationData.lastName,
+            customerData.id
+          );
+
+          await customerService.updateCustomerProfile(customerData.id, {
+            membership_tier: 'GREEN',
+            loyalty_points: 0,
+            referral_code: referralCode,
+            total_referrals: 0,
+            lifetime_value: 0,
+            total_orders: 0,
+            segment: 'new'
+          });
+        }
 
         try {
           await emailService.sendWelcomeEmail(

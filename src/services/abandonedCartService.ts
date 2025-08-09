@@ -103,7 +103,7 @@ export const abandonedCartService = {
     }
   },
 
-  updateAbandonmentTimer(cartData: any, customerEmail?: string): void {
+  updateAbandonmentTimer(cartData: { items: Array<{ id: string; name: string; price: number; quantity: number; image: string }> }, customerEmail?: string): void {
     const sessionId = this.getOrCreateSessionId();
     
     setTimeout(() => {

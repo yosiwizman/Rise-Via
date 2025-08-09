@@ -26,18 +26,18 @@ export interface CouponValidationResult {
 /**
  * Maps a raw DB row (snake_case) to the internal camelCase Coupon interface.
  */
-function mapRowToCoupon(row: any): Coupon {
+function mapRowToCoupon(row: Record<string, unknown>): Coupon {
   return {
-    id: row.id,
-    code: row.code,
-    discountType: row.discount_type,
+    id: row.id as string,
+    code: row.code as string,
+    discountType: row.discount_type as 'percentage' | 'fixed',
     discountValue: Number(row.discount_value),
     minOrderAmount: row.min_order_amount != null ? Number(row.min_order_amount) : undefined,
     maxUses: row.max_uses != null ? Number(row.max_uses) : undefined,
     currentUses: Number(row.current_uses),
-    expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
-    createdAt: new Date(row.created_at).toISOString(),
-    isActive: row.is_active
+    expiresAt: row.expires_at ? new Date(row.expires_at as string).toISOString() : undefined,
+    createdAt: new Date(row.created_at as string).toISOString(),
+    isActive: row.is_active as boolean
   };
 }
 
@@ -81,7 +81,7 @@ export const couponService = {
         coupon,
         discountAmount
       };
-    } catch (error) {
+    } catch {
       // Graceful fallback: try mock coupons (useful in local dev or if Neon unavailable)
       try {
         const mock = this.getMockCoupons().find(c =>
@@ -126,7 +126,7 @@ export const couponService = {
           AND is_active = true
           AND (expires_at IS NULL OR expires_at > NOW());
       `;
-    } catch (error) {
+    } catch {
       throw new Error('Failed to apply coupon');
     }
   },
