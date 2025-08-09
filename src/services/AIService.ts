@@ -3,13 +3,8 @@
  * Provides intelligent product recommendations and customer support
  */
 
-import OpenAI from 'openai';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
-  dangerouslyAllowBrowser: true // Note: In production, use a backend API
-});
+// AI Service now uses secure server-side API endpoints
+// OpenAI API key is kept on the server, never exposed to browser
 
 export interface UserPreferences {
   desiredEffects?: string[];
@@ -37,30 +32,12 @@ export interface ChatMessage {
 
 export class AIService {
   private static conversationHistory: ChatMessage[] = [];
-  private static systemPrompt = `You are a knowledgeable cannabis consultant for Rise-Via, a premium THCA cannabis e-commerce platform. 
-Your role is to:
-1. Provide accurate, helpful information about cannabis products
-2. Make personalized strain recommendations based on user preferences
-3. Educate users about effects, terpenes, and responsible use
-4. Maintain compliance with all cannabis regulations
-5. Never provide medical advice - recommend consulting healthcare providers for medical questions
-6. Always verify users are 21+ before providing recommendations
-7. Be friendly, professional, and educational
-
-Important compliance notes:
-- Only discuss legal THCA products (less than 0.3% Delta-9 THC)
-- Remind users to check their local laws
-- Do not make unsubstantiated health claims
-- Focus on effects and experiences, not medical benefits`;
 
   /**
    * Get personalized strain recommendations
    */
   static async getStrainRecommendation(userPreferences: UserPreferences): Promise<string> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return 'AI recommendations are currently unavailable. Please browse our catalog or contact support for assistance.';
-      }
 
       const prompt = `Based on the following cannabis preferences, recommend suitable THCA strains:
       
@@ -73,17 +50,19 @@ Medical Conditions: ${userPreferences.medicalConditions?.join(', ') || 'None spe
 
 Please recommend 3 specific strains and explain why each would be suitable. Focus on effects, terpene profiles, and user experience. Keep recommendations compliant and educational.`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 500,
-        temperature: 0.7
+      // Call secure server endpoint
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          type: 'recommendation'
+        })
       });
 
-      return response.choices[0]?.message?.content || 'Unable to generate recommendations at this time.';
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      return data.response || 'Unable to generate recommendations at this time.';
     } catch (error) {
       console.error('AI recommendation error:', error);
       return 'Recommendation service temporarily unavailable. Please try again later.';
@@ -102,9 +81,6 @@ Please recommend 3 specific strains and explain why each would be suitable. Focu
     effects: string[];
   }): Promise<string> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return '';
-      }
 
       const prompt = `Create a compelling, SEO-friendly product description for:
       
@@ -117,17 +93,18 @@ Effects: ${productData.effects.join(', ')}
 
 Create a 150-word description that highlights the unique characteristics, effects, and experience. Make it engaging and informative while maintaining compliance.`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 250,
-        temperature: 0.8
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          type: 'description'
+        })
       });
 
-      return response.choices[0]?.message?.content || '';
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      return data.response || '';
     } catch (error) {
       console.error('Product description generation error:', error);
       return '';
@@ -139,10 +116,6 @@ Create a 150-word description that highlights the unique characteristics, effect
    */
   static async chat(message: string): Promise<string> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return 'Chat service is currently unavailable. Please contact our support team for assistance.';
-      }
-
       // Add user message to history
       this.conversationHistory.push({
         role: 'user',
@@ -155,23 +128,24 @@ Create a 150-word description that highlights the unique characteristics, effect
         this.conversationHistory = this.conversationHistory.slice(-10);
       }
 
-      // Prepare messages for API
-      const messages = [
-        { role: 'system' as const, content: this.systemPrompt },
-        ...this.conversationHistory.map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content
-        }))
-      ];
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages,
-        max_tokens: 300,
-        temperature: 0.7
+      // Call the secure server-side API endpoint
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          type: 'chat'
+        })
       });
 
-      const assistantResponse = response.choices[0]?.message?.content || 'I apologize, but I couldn\'t process your request. Please try again.';
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+
+      const data = await response.json();
+      const assistantResponse = data.response || 'I apologize, but I couldn\'t process your request. Please try again.';
 
       // Add assistant response to history
       this.conversationHistory.push({
@@ -192,27 +166,24 @@ Create a 150-word description that highlights the unique characteristics, effect
    */
   static async answerFAQ(question: string): Promise<string> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return 'Please refer to our FAQ page or contact support for assistance.';
-      }
-
       const prompt = `Answer this cannabis-related question concisely and accurately:
       
 Question: ${question}
 
 Provide a helpful, educational response that maintains compliance with cannabis regulations. If it's a medical question, remind them to consult a healthcare provider.`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 200,
-        temperature: 0.6
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          type: 'faq'
+        })
       });
 
-      return response.choices[0]?.message?.content || 'Unable to answer at this time.';
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      return data.response || 'Unable to answer at this time.';
     } catch (error) {
       console.error('FAQ answer error:', error);
       return 'Unable to process your question. Please contact our support team.';
@@ -228,10 +199,6 @@ Provide a helpful, educational response that maintains compliance with cannabis 
     keywords: string[];
   }> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return { sentiment: 'neutral', score: 0.5, keywords: [] };
-      }
-
       const prompt = `Analyze the sentiment of this cannabis product review:
       
 "${reviewText}"
@@ -241,20 +208,21 @@ Return a JSON object with:
 - score: 0-1 (0 = very negative, 1 = very positive)
 - keywords: array of key phrases that indicate the sentiment`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'You are a sentiment analysis expert. Always return valid JSON.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 150,
-        temperature: 0.3
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          type: 'sentiment'
+        })
       });
 
-      const result = response.choices[0]?.message?.content;
-      if (result) {
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      
+      if (data.response) {
         try {
-          return JSON.parse(result);
+          return JSON.parse(data.response);
         } catch {
           // Fallback if JSON parsing fails
           return { sentiment: 'neutral', score: 0.5, keywords: [] };
@@ -273,10 +241,6 @@ Return a JSON object with:
    */
   static async generateMarketingCopy(productName: string, targetAudience: string): Promise<string> {
     try {
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        return '';
-      }
-
       const prompt = `Create a short, engaging marketing tagline for:
       
 Product: ${productName}
@@ -288,17 +252,18 @@ Requirements:
 - Focus on experience and quality
 - Engaging and memorable`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 50,
-        temperature: 0.9
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          type: 'marketing'
+        })
       });
 
-      return response.choices[0]?.message?.content || '';
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      return data.response || '';
     } catch (error) {
       console.error('Marketing copy generation error:', error);
       return '';

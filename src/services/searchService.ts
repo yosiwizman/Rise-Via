@@ -5,8 +5,6 @@
 
 import productsData from '../data/products.json';
 
-const products = productsData.products as any[];
-
 export interface SearchFilters {
   query?: string;
   category?: string;
@@ -35,6 +33,8 @@ export interface Product {
   rating?: number;
   reviewCount?: number;
 }
+
+const products = productsData.products as Product[];
 
 export class SearchService {
   private static instance: SearchService;
