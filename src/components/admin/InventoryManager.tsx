@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Edit, History } from 'lucide-react';
+import { AlertTriangle, Edit, History, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { productService } from '../../services/productService';
 import productsData from '../../data/products.json';
 
 interface InventoryItem {
@@ -40,47 +41,89 @@ export const InventoryManager: React.FC = () => {
   const [adjustmentType, setAdjustmentType] = useState<'increase' | 'decrease'>('increase');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    const mockInventory: InventoryItem[] = productsData.products.map(product => ({
-      id: product.id,
-      name: product.name,
-      sku: `SKU-${product.id}`,
-      currentStock: Math.floor(Math.random() * 100) + 5,
-      lowStockThreshold: 10,
-      reorderPoint: 20,
-      lastRestocked: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      category: product.category,
-      price: product.price
-    }));
-
-    setInventory(mockInventory);
-
-    const mockAdjustments: InventoryAdjustment[] = [
-      {
-        id: '1',
-        productId: '1',
-        productName: 'Blue Dream',
-        type: 'restock',
-        quantity: 50,
-        reason: 'Weekly restock',
-        adjustedBy: 'Admin User',
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: '2',
-        productId: '2',
-        productName: 'OG Kush',
-        type: 'decrease',
-        quantity: 5,
-        reason: 'Damaged product',
-        adjustedBy: 'Admin User',
-        timestamp: new Date(Date.now() - 86400000).toISOString()
-      }
-    ];
-
-    setAdjustments(mockAdjustments);
+    loadInventoryData();
   }, []);
+
+  const loadInventoryData = async () => {
+    try {
+      const [dbProducts, logs] = await Promise.all([
+        productService.getAll(),
+        productService.getInventoryLogs()
+      ]);
+      
+      if (dbProducts.length > 0) {
+        setProducts(dbProducts);
+        const inventoryItems: InventoryItem[] = dbProducts.map(product => ({
+          id: product.id!,
+          name: product.name,
+          sku: product.sample_id,
+          currentStock: product.volume_available,
+          lowStockThreshold: 10,
+          reorderPoint: 20,
+          lastRestocked: product.updated_at || product.created_at || new Date().toISOString(),
+          category: product.category,
+          price: typeof product.prices === 'object' ? product.prices.gram : 0
+        }));
+        setInventory(inventoryItems);
+        
+        const adjustmentItems: InventoryAdjustment[] = logs.map(log => ({
+          id: log.id!,
+          productId: log.product_id,
+          productName: dbProducts.find(p => p.id === log.product_id)?.name || 'Unknown Product',
+          type: log.change_amount > 0 ? 'increase' : 'decrease',
+          quantity: Math.abs(log.change_amount),
+          reason: log.reason || 'No reason provided',
+          adjustedBy: log.user_id || 'System',
+          timestamp: log.created_at || new Date().toISOString()
+        }));
+        setAdjustments(adjustmentItems);
+      } else {
+        const mockInventory: InventoryItem[] = productsData.products.map(product => ({
+          id: product.id,
+          name: product.name,
+          sku: `SKU-${product.id}`,
+          currentStock: Math.floor(Math.random() * 100) + 5,
+          lowStockThreshold: 10,
+          reorderPoint: 20,
+          lastRestocked: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          category: product.category,
+          price: product.price
+        }));
+        setInventory(mockInventory);
+
+        const mockAdjustments: InventoryAdjustment[] = [
+          {
+            id: '1',
+            productId: '1',
+            productName: 'Blue Dream',
+            type: 'restock',
+            quantity: 50,
+            reason: 'Weekly restock',
+            adjustedBy: 'Admin User',
+            timestamp: new Date().toISOString()
+          }
+        ];
+        setAdjustments(mockAdjustments);
+      }
+    } catch (error) {
+      console.error('Error loading inventory data:', error);
+      const mockInventory: InventoryItem[] = productsData.products.map(product => ({
+        id: product.id,
+        name: product.name,
+        sku: `SKU-${product.id}`,
+        currentStock: Math.floor(Math.random() * 100) + 5,
+        lowStockThreshold: 10,
+        reorderPoint: 20,
+        lastRestocked: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        category: product.category,
+        price: product.price
+      }));
+      setInventory(mockInventory);
+    }
+  };
 
   const getLowStockItems = () => {
     return inventory.filter(item => item.currentStock <= item.lowStockThreshold);
@@ -90,37 +133,52 @@ export const InventoryManager: React.FC = () => {
     return inventory.filter(item => item.currentStock <= item.reorderPoint);
   };
 
-  const handleAdjustment = () => {
+  const handleAdjustment = async () => {
     if (!selectedItem || !adjustmentQuantity || !adjustmentReason) return;
 
-    const quantity = parseInt(adjustmentQuantity);
-    const newStock = adjustmentType === 'increase' 
-      ? selectedItem.currentStock + quantity
-      : Math.max(0, selectedItem.currentStock - quantity);
+    try {
+      const quantity = parseInt(adjustmentQuantity);
+      const newStock = adjustmentType === 'increase' 
+        ? selectedItem.currentStock + quantity
+        : Math.max(0, selectedItem.currentStock - quantity);
 
-    setInventory(prev => prev.map(item => 
-      item.id === selectedItem.id 
-        ? { ...item, currentStock: newStock }
-        : item
-    ));
+      const product = products.find(p => p.id === selectedItem.id);
+      if (product) {
+        await productService.updateInventory(
+          selectedItem.id,
+          newStock,
+          adjustmentReason,
+          'admin-user'
+        );
+        await loadInventoryData();
+      } else {
+        setInventory(prev => prev.map(item => 
+          item.id === selectedItem.id 
+            ? { ...item, currentStock: newStock }
+            : item
+        ));
 
-    const newAdjustment: InventoryAdjustment = {
-      id: Date.now().toString(),
-      productId: selectedItem.id,
-      productName: selectedItem.name,
-      type: adjustmentType,
-      quantity,
-      reason: adjustmentReason,
-      adjustedBy: 'Admin User',
-      timestamp: new Date().toISOString()
-    };
+        const newAdjustment: InventoryAdjustment = {
+          id: Date.now().toString(),
+          productId: selectedItem.id,
+          productName: selectedItem.name,
+          type: adjustmentType,
+          quantity,
+          reason: adjustmentReason,
+          adjustedBy: 'Admin User',
+          timestamp: new Date().toISOString()
+        };
 
-    setAdjustments(prev => [newAdjustment, ...prev]);
+        setAdjustments(prev => [newAdjustment, ...prev]);
+      }
 
-    setShowAdjustmentModal(false);
-    setSelectedItem(null);
-    setAdjustmentQuantity('');
-    setAdjustmentReason('');
+      setShowAdjustmentModal(false);
+      setSelectedItem(null);
+      setAdjustmentQuantity('');
+      setAdjustmentReason('');
+    } catch (error) {
+      console.error('Error updating inventory:', error);
+    }
   };
 
   const getStockStatus = (item: InventoryItem) => {
@@ -147,6 +205,13 @@ export const InventoryManager: React.FC = () => {
           >
             <History className="w-4 h-4 mr-2" />
             View History
+          </Button>
+          <Button
+            onClick={loadInventoryData}
+            variant="outline"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Data
           </Button>
         </div>
       </div>

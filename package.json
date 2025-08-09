@@ -10,7 +10,9 @@
     "validate": "node scripts/build-validation.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "import-strains": "node scripts/import-strains.js",
+    "generate-images": "node scripts/generate-images.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

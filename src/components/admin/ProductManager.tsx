@@ -7,6 +7,33 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
+import { productService } from '../../services/productService';
+interface DBProduct {
+  id?: string;
+  sample_id: string;
+  name: string;
+  slug: string;
+  category: string;
+  strain_type: 'indica' | 'sativa' | 'hybrid';
+  thca_percentage: number;
+  batch_id: string;
+  volume_available: number;
+  description: string;
+  effects: string[];
+  flavors: string[];
+  prices: {
+    gram: number;
+    eighth: number;
+    quarter: number;
+    half: number;
+    ounce: number;
+  };
+  images: string[];
+  featured: boolean;
+  status: 'active' | 'inactive' | 'out_of_stock';
+  created_at?: string;
+  updated_at?: string;
+}
 import productsData from '../../data/products.json';
 
 interface Product {
@@ -22,7 +49,7 @@ interface Product {
 }
 
 export const ProductManager: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<(Product | DBProduct)[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -30,15 +57,37 @@ export const ProductManager: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    const loadedProducts = productsData.products.map(product => ({
-      ...product,
-      inventory: Math.floor(Math.random() * 100) + 10,
-      active: true,
-      thc: product.thcaPercentage.toString(),
-      type: product.strainType
-    }));
-    setProducts(loadedProducts);
+    loadProducts();
   }, []);
+
+  const loadProducts = async () => {
+    try {
+      const dbProducts = await productService.getAll();
+      
+      if (dbProducts.length > 0) {
+        setProducts(dbProducts as (Product | DBProduct)[]);
+      } else {
+        const loadedProducts = productsData.products.map(product => ({
+          ...product,
+          inventory: Math.floor(Math.random() * 100) + 10,
+          active: true,
+          thc: product.thcaPercentage.toString(),
+          type: product.strainType
+        }));
+        setProducts(loadedProducts as any);
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+      const loadedProducts = productsData.products.map(product => ({
+        ...product,
+        inventory: Math.floor(Math.random() * 100) + 10,
+        active: true,
+        thc: product.thcaPercentage.toString(),
+        type: product.strainType
+      }));
+      setProducts(loadedProducts as any);
+    }
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -58,20 +107,20 @@ export const ProductManager: React.FC = () => {
     if (selectedProducts.length === filteredProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredProducts.map(p => p.id));
+      setSelectedProducts(filteredProducts.map(p => p.id!).filter(Boolean));
     }
   };
 
   const handleBulkDelete = () => {
     if (confirm(`Delete ${selectedProducts.length} selected products?`)) {
-      setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
+      setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id!)));
       setSelectedProducts([]);
     }
   };
 
   const handleBulkStatusChange = (active: boolean) => {
     setProducts(prev => prev.map(p => 
-      selectedProducts.includes(p.id) ? { ...p, active } : p
+      selectedProducts.includes(p.id!) ? { ...p, active } : p
     ));
     setSelectedProducts([]);
   };
@@ -89,29 +138,33 @@ export const ProductManager: React.FC = () => {
     }
 
     setProducts(prev => prev.map(p => {
-      if (!selectedProducts.includes(p.id)) return p;
+      if (!selectedProducts.includes(p.id!)) return p;
       
-      let newPrice = p.price;
+      let newPrice = 'price' in p ? p.price : (typeof p.prices === 'object' ? p.prices.gram : 0);
       switch (operator) {
         case '+':
-          newPrice = p.price + value;
+          newPrice = newPrice + value;
           break;
         case '-':
-          newPrice = p.price - value;
+          newPrice = newPrice - value;
           break;
         case '*':
-          newPrice = p.price * value;
+          newPrice = newPrice * value;
           break;
         default:
           return p;
       }
       
-      return { ...p, price: Math.max(0, Math.round(newPrice * 100) / 100) };
+      if ('price' in p) {
+        return { ...p, price: Math.max(0, Math.round(newPrice * 100) / 100) };
+      } else {
+        return { ...p, prices: { ...p.prices, gram: Math.max(0, Math.round(newPrice * 100) / 100) } };
+      }
     }));
     setSelectedProducts([]);
   };
 
-  const handleQuickEdit = (product: Product, field: string, value: string | number | boolean) => {
+  const handleQuickEdit = (product: Product | DBProduct, field: string, value: string | number | boolean) => {
     setProducts(prev => prev.map(p => 
       p.id === product.id ? { ...p, [field]: value } : p
     ));
@@ -124,12 +177,12 @@ export const ProductManager: React.FC = () => {
       ...products.map(p => [
         p.id,
         `"${p.name}"`,
-        p.price,
+        'price' in p ? p.price : (typeof p.prices === 'object' ? p.prices.gram : 0),
         p.category,
-        p.thc,
-        p.type,
-        p.inventory,
-        p.active
+        'thc' in p ? p.thc : p.thca_percentage,
+        'type' in p ? p.type : p.strain_type,
+        'inventory' in p ? p.inventory : p.volume_available,
+        'active' in p ? p.active : (p.status === 'active')
       ].join(','))
     ].join('\n');
 
@@ -149,18 +202,28 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
+  const handleEditProduct = (product: Product | DBProduct) => {
+    setEditingProduct(product as Product);
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
-    if (editingProduct) {
-      setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
-      ));
-    } else {
-      setProducts(prev => [...prev, productData]);
+  const handleSaveProduct = async (productData: any) => {
+    try {
+      if (editingProduct && 'sample_id' in editingProduct) {
+        await productService.update(editingProduct.id!, productData);
+      } else if (productData.sample_id) {
+        await productService.create(productData);
+      }
+      await loadProducts();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      if (editingProduct) {
+        setProducts(prev => prev.map(p => 
+          p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
+        ));
+      } else {
+        setProducts(prev => [...prev, productData]);
+      }
     }
   };
 
@@ -289,18 +352,18 @@ export const ProductManager: React.FC = () => {
                   <tr key={product.id} className="border-t hover:bg-gray-50">
                     <td className="p-3">
                       <Checkbox
-                        checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={() => handleSelectProduct(product.id)}
+                        checked={selectedProducts.includes(product.id!)}
+                        onCheckedChange={() => handleSelectProduct(product.id!)}
                       />
                     </td>
                     <td className="p-3">
                       <div className="font-medium">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.type}</div>
+                      <div className="text-sm text-gray-500">{'type' in product ? product.type : product.strain_type}</div>
                     </td>
                     <td className="p-3">
                       <Input
                         type="number"
-                        value={product.price}
+                        value={'price' in product ? product.price : (typeof product.prices === 'object' ? product.prices.gram : 0)}
                         onChange={(e) => handleQuickEdit(product, 'price', parseFloat(e.target.value))}
                         className="w-20 h-8"
                         step="0.01"
@@ -311,18 +374,18 @@ export const ProductManager: React.FC = () => {
                         {product.category}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-sm">{product.thc}</td>
+                    <td className="p-3 font-mono text-sm">{'thc' in product ? product.thc : product.thca_percentage}%</td>
                     <td className="p-3">
                       <Input
                         type="number"
-                        value={product.inventory}
+                        value={'inventory' in product ? product.inventory : product.volume_available}
                         onChange={(e) => handleQuickEdit(product, 'inventory', parseInt(e.target.value))}
                         className="w-20 h-8"
                       />
                     </td>
                     <td className="p-3">
                       <Select
-                        value={product.active ? 'active' : 'inactive'}
+                        value={('active' in product ? product.active : (product.status === 'active')) ? 'active' : 'inactive'}
                         onValueChange={(value) => handleQuickEdit(product, 'active', value === 'active')}
                       >
                         <SelectTrigger className="w-24 h-8">
