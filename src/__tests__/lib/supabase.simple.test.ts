@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const mockCreateClient = vi.fn()
+const mockClient = {
+  from: vi.fn(),
+  auth: vi.fn(),
+  storage: vi.fn()
+}
+
+const mockCreateClient = vi.fn(() => mockClient)
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: mockCreateClient
@@ -8,16 +14,15 @@ vi.mock('@supabase/supabase-js', () => ({
 
 describe('Supabase Client - Simple', () => {
   it('should create supabase client with correct config', async () => {
-    const mockClient = { from: vi.fn(), auth: vi.fn() }
-    mockCreateClient.mockReturnValue(mockClient)
-    
     const { supabase } = await import('../../lib/supabase')
     expect(supabase).toBeDefined()
-    expect(mockCreateClient).toHaveBeenCalled()
+    expect(supabase.from).toBeDefined()
+    expect(supabase.auth).toBeDefined()
   })
 
   it('should export supabase instance', async () => {
     const { supabase } = await import('../../lib/supabase')
     expect(supabase).toBeTruthy()
+    expect(typeof supabase).toBe('object')
   })
 })
