@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { SEOHead } from '../components/SEOHead';
 import { ProductCard } from '../components/ProductCard';
-import { ProductDetailModal } from '../components/ProductDetailModal';
 import { SearchFilters } from '../components/SearchFilters';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
@@ -22,14 +21,12 @@ interface FilterOptions {
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const { addToCart } = useCart();
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   useEffect(() => {
     loadProducts();
@@ -90,21 +87,21 @@ export const ShopPage = () => {
     });
   }, [products, filter, searchTerm, sortBy]);
 
-  const handleProductClick = (product: Product) => {
-    const modalProduct = {
-      id: product.id || '',
-      name: product.name,
-      price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-      images: product.images,
-      strainType: product.strain_type || product.strainType || '',
-      category: product.category,
-      thcaPercentage: product.thca_percentage || product.thcaPercentage || 0,
-      description: product.description || '',
-      effects: product.effects || [],
-      inventory: product.inventory || product.volume_available || 0
-    };
-    setSelectedProduct(modalProduct as Product);
-    setShowModal(true);
+  const handleToggleWishlist = (productId: string) => {
+    if (isInWishlist(productId)) {
+      removeFromWishlist(productId);
+    } else {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        addToWishlist({
+          name: product.name,
+          price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+          image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
+          category: product.category || '',
+          effects: product.effects || []
+        });
+      }
+    }
   };
 
   const handleAddToCart = (product: Product) => {
@@ -236,11 +233,11 @@ export const ShopPage = () => {
                     images: product.images || [],
                     strain_type: product.strain_type || product.strainType,
                     thc_percentage: product.thca_percentage || product.thcaPercentage,
-                    cbd_percentage: product.cbd_percentage,
+                    cbd_percentage: undefined,
                     description: product.description
                   }}
                   onAddToCart={handleAddToCart}
-                  onToggleWishlist={toggleWishlist}
+                  onToggleWishlist={handleToggleWishlist}
                   isInWishlist={isInWishlist(product.id || '')}
                 />
               </motion.div>
@@ -265,22 +262,6 @@ export const ShopPage = () => {
         )}
       </div>
 
-      <ProductDetailModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        product={selectedProduct ? {
-          id: selectedProduct.id || '',
-          name: selectedProduct.name,
-          price: selectedProduct.price || 0,
-          images: selectedProduct.images,
-          strainType: selectedProduct.strainType || selectedProduct.strain_type || '',
-          category: selectedProduct.category,
-          thcaPercentage: selectedProduct.thcaPercentage || selectedProduct.thca_percentage || 0,
-          description: selectedProduct.description,
-          effects: selectedProduct.effects || [],
-          inventory: selectedProduct.inventory || selectedProduct.volume_available || 0
-        } : null}
-      />
     </div>
   );
 };
