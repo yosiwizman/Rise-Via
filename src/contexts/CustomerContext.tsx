@@ -1,16 +1,19 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
-import { supabase } from '../lib/supabase';
 import { wishlistService } from '../services/wishlistService';
+import { listmonkService } from '../services/ListmonkService';
+import { customerSegmentationService } from '../services/CustomerSegmentation';
+import { emailAutomationService } from '../services/EmailAutomation';
 
-interface Customer {
+export interface Customer {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone?: string;
+  created_at: string;
   profile?: {
     membershipTier: string;
     loyaltyPoints: number;
@@ -33,12 +36,32 @@ interface Customer {
   }>;
 }
 
+export interface LoginResult {
+  success: boolean;
+  customer?: Customer;
+  message?: string;
+}
+
+export interface RegisterResult {
+  success: boolean;
+  customer?: Customer;
+  message?: string;
+}
+
+export interface RegistrationData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
+
 interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (data: any) => Promise<any>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  register: (data: RegistrationData) => Promise<RegisterResult>;
   logout: () => void;
   checkAuthStatus: () => Promise<void>;
 }
@@ -64,8 +87,8 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+
+    const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
         setIsAuthenticated(false);
@@ -74,83 +97,81 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (authStateChange && typeof authStateChange.then === 'function') {
+        authStateChange.then(res => res.data.subscription.unsubscribe());
+      }
+    };
+    // No console.log
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
+      const user = await authService.getCurrentUser();
+
+      if (!user) {
         setLoading(false);
         return;
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === user.email);
-      
+      const customerData = customers.find((c: Customer) => c.email === (user as { email: string }).email);
+
       if (customerData) {
-        setCustomer(customerData);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
       } else {
-        console.warn('User authenticated but no customer record found');
         setIsAuthenticated(false);
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
+    } catch {
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) throw error;
-      
+
+      const data = await authService.login(email, password);
+
       if (data.user) {
         try {
-          await wishlistService.migrateSessionWishlist(data.user.id);
-        } catch (migrationError) {
-          console.error('Wishlist migration failed:', migrationError);
+          await wishlistService.migrateSessionWishlist((data.user as { id: string }).id);
+        } catch {
+          // Silent fail for migration
         }
 
         const customers = await customerService.getAll();
-        const customerData = customers.find((c: any) => c.email === email);
-        
+        const customerData = customers.find((c: Customer) => c.email === email);
+
         if (customerData) {
           setCustomer(customerData);
           setIsAuthenticated(true);
           return { success: true, customer: customerData };
         } else {
           setCustomer({
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: data.user.user_metadata.first_name || '',
-            lastName: data.user.user_metadata.last_name || ''
+            id: (data.user as { id: string }).id,
+            email: (data.user as { email: string }).email!,
+            first_name: '',
+            last_name: '',
+            created_at: new Date().toISOString()
           });
           setIsAuthenticated(true);
           return { success: true };
         }
       }
-      
+
       return { success: false, message: 'Login failed' };
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      return { success: false, message: error.message || 'Login failed' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (registrationData: any) => {
+  const register = async (registrationData: RegistrationData): Promise<RegisterResult> => {
     try {
       const authResult = await authService.register(
         registrationData.email,
@@ -175,41 +196,66 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             registrationData.email,
             registrationData.firstName
           );
-        } catch (emailError) {
-          console.error('Welcome email failed:', emailError);
+
+          await emailAutomationService.triggerWelcomeSeries(
+            registrationData.email,
+            registrationData.firstName
+          );
+
+          try {
+            const subscriberData = {
+              email: registrationData.email,
+              name: `${registrationData.firstName} ${registrationData.lastName}`,
+              status: 'enabled' as const,
+              attributes: {
+                membershipTier: 'GREEN',
+                loyaltyPoints: 0,
+                lifetimeValue: 0,
+                segment: 'new',
+                isB2B: false
+              },
+              lists: []
+            };
+
+            await listmonkService.addSubscriber(subscriberData);
+            await customerSegmentationService.addCustomerToSegments(customerData as Customer);
+          } catch {
+            // Silent fail for Listmonk
+          }
+        } catch {
+          // Silent fail for welcome emails
         }
 
-        setCustomer(customerData);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData };
+        return { success: true, customer: customerData as Customer };
       }
 
       return { success: false, message: 'Registration failed' };
-    } catch (error: any) {
-      console.error('Registration failed:', error);
-      return { success: false, message: error.message || 'Registration failed' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Registration failed' };
     }
   };
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      await authService.logout();
       setCustomer(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {
+      // Silent fail
     }
   };
 
   return (
-    <CustomerContext.Provider value={{ 
-      customer, 
-      isAuthenticated, 
-      loading, 
-      login, 
-      register, 
-      logout, 
-      checkAuthStatus 
+    <CustomerContext.Provider value={{
+      customer,
+      isAuthenticated,
+      loading,
+      login,
+      register,
+      logout,
+      checkAuthStatus
     }}>
       {children}
     </CustomerContext.Provider>

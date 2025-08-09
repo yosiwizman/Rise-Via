@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
-import { ImageOptimizer } from '../../utils/imageOptimization';
 
 interface OptimizedImageProps {
   src: string;
@@ -23,38 +22,38 @@ export const OptimizedImage = ({
   height,
   priority = false,
   placeholder = 'blur',
-  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   onLoad,
   onError
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [hasError, setHasError] = useState(false);
-  const [supportsWebP, setSupportsWebP] = useState(false);
+  const [, setSupportsWebP] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    ImageOptimizer.supportsWebP().then(setSupportsWebP);
+    setSupportsWebP(true);
   }, []);
 
   useEffect(() => {
     if (priority || !containerRef.current) return;
 
-    const observer = ImageOptimizer.createLazyLoadObserver((entry) => {
-      if (entry.isIntersecting) {
-        setIsInView(true);
-        observer.unobserve(entry.target);
-      }
-    });
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '50px', threshold: 0.1 });
 
     observer.observe(containerRef.current);
 
     return () => observer.disconnect();
   }, [priority]);
 
-  const sources = src ? ImageOptimizer.getOptimizedImageSources(src) : { webp: [], fallback: [] };
-  const blurPlaceholder = placeholder === 'blur' ? ImageOptimizer.generateBlurPlaceholder() : undefined;
+  const blurPlaceholder = undefined;
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -92,37 +91,19 @@ export const OptimizedImage = ({
 
       {/* Main image */}
       {(isInView || priority) && !hasError && (
-        <picture>
-          {/* WebP sources */}
-          {supportsWebP && (
-            <source
-              srcSet={sources.webp.map(s => `${s.src} ${s.width}w`).join(', ')}
-              sizes={sizes}
-              type="image/webp"
-            />
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          className={cn(
+            'absolute inset-0 w-full h-full object-cover transition-opacity duration-500',
+            isLoaded ? 'opacity-100' : 'opacity-0'
           )}
-          
-          {/* Fallback sources */}
-          <source
-            srcSet={sources.fallback.map(s => `${s.src} ${s.width}w`).join(', ')}
-            sizes={sizes}
-            type="image/jpeg"
-          />
-          
-          <img
-            ref={imgRef}
-            src={src}
-            alt={alt}
-            className={cn(
-              'absolute inset-0 w-full h-full object-cover transition-opacity duration-500',
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            )}
-            onLoad={handleLoad}
-            onError={handleError}
-            loading={priority ? 'eager' : 'lazy'}
-            decoding="async"
-          />
-        </picture>
+          onLoad={handleLoad}
+          onError={handleError}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+        />
       )}
 
       {/* Error fallback */}

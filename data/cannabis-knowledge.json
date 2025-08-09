@@ -1,0 +1,174 @@
+{
+  "strains": {
+    "sativa": {
+      "description": "Sativa strains are known for energizing and uplifting effects",
+      "commonEffects": ["energetic", "creative", "focused", "uplifted", "euphoric"],
+      "bestTimeOfUse": "daytime",
+      "characteristics": "Tall plants with narrow leaves, longer flowering time"
+    },
+    "indica": {
+      "description": "Indica strains typically provide relaxing and calming effects",
+      "commonEffects": ["relaxed", "sleepy", "calm", "euphoric", "happy"],
+      "bestTimeOfUse": "evening/night",
+      "characteristics": "Short, bushy plants with wide leaves, shorter flowering time"
+    },
+    "hybrid": {
+      "description": "Hybrid strains combine characteristics of both sativa and indica",
+      "commonEffects": ["balanced", "versatile", "euphoric", "relaxed", "creative"],
+      "bestTimeOfUse": "any time",
+      "characteristics": "Varied characteristics depending on parent strains"
+    }
+  },
+  "terpenes": {
+    "myrcene": {
+      "effects": ["sedating", "muscle relaxant"],
+      "aroma": "earthy, musky, herbal",
+      "commonIn": ["indica strains", "mangoes", "hops"]
+    },
+    "limonene": {
+      "effects": ["mood elevation", "stress relief"],
+      "aroma": "citrus, lemon",
+      "commonIn": ["sativa strains", "citrus fruits", "juniper"]
+    },
+    "pinene": {
+      "effects": ["alertness", "memory retention"],
+      "aroma": "pine, fresh",
+      "commonIn": ["pine trees", "rosemary", "basil"]
+    },
+    "linalool": {
+      "effects": ["calming", "anti-anxiety"],
+      "aroma": "floral, lavender",
+      "commonIn": ["lavender", "coriander", "mint"]
+    },
+    "caryophyllene": {
+      "effects": ["anti-inflammatory", "pain relief"],
+      "aroma": "spicy, peppery",
+      "commonIn": ["black pepper", "cloves", "cinnamon"]
+    }
+  },
+  "consumptionMethods": {
+    "smoking": {
+      "onsetTime": "immediate",
+      "duration": "1-3 hours",
+      "bioavailability": "high",
+      "considerations": "Fastest onset, may irritate lungs"
+    },
+    "vaporizing": {
+      "onsetTime": "immediate",
+      "duration": "1-3 hours", 
+      "bioavailability": "high",
+      "considerations": "Cleaner than smoking, preserves terpenes"
+    },
+    "edibles": {
+      "onsetTime": "30 minutes - 2 hours",
+      "duration": "4-8 hours",
+      "bioavailability": "lower",
+      "considerations": "Longer lasting, easy to overconsume"
+    },
+    "tinctures": {
+      "onsetTime": "15-45 minutes",
+      "duration": "2-4 hours",
+      "bioavailability": "medium",
+      "considerations": "Precise dosing, discreet"
+    }
+  },
+  "dosingGuidelines": {
+    "general": {
+      "newUsers": "Start with 2.5-5mg THC equivalent",
+      "experienced": "5-10mg THC equivalent",
+      "highTolerance": "10mg+ THC equivalent",
+      "rule": "Start low, go slow"
+    },
+    "thcaConversion": {
+      "note": "THCA converts to THC when heated (decarboxylation)",
+      "conversionRate": "approximately 87.7%",
+      "temperature": "220-245°F (104-118°C)"
+    },
+    "factors": [
+      "Body weight and metabolism",
+      "Tolerance level",
+      "Empty vs full stomach",
+      "Individual sensitivity",
+      "Product potency and quality"
+    ]
+  },
+  "legalInformation": {
+    "federalStatus": "Hemp-derived products with <0.3% Delta-9 THC are federally legal",
+    "stateVariations": "State laws vary significantly",
+    "ageRequirement": "21+ in most legal states",
+    "purchaseLocations": "Licensed dispensaries only",
+    "possession": "Follow local possession limits",
+    "transport": "Cannot cross state lines, even between legal states"
+  },
+  "safetyGuidelines": {
+    "storage": [
+      "Keep in original packaging",
+      "Store in cool, dry place",
+      "Away from direct sunlight",
+      "Child-resistant containers",
+      "Separate from food items"
+    ],
+    "usage": [
+      "Do not drive or operate machinery",
+      "Avoid mixing with alcohol",
+      "Stay hydrated",
+      "Have snacks available",
+      "Use in safe environment"
+    ],
+    "contraindications": [
+      "Pregnancy and breastfeeding",
+      "Under 21 years of age",
+      "Certain medications (consult doctor)",
+      "History of psychosis or severe mental illness",
+      "Respiratory conditions (for smoking)"
+    ]
+  },
+  "qualityIndicators": {
+    "appearance": [
+      "Dense, well-trimmed buds",
+      "Visible trichomes",
+      "Vibrant colors",
+      "No mold or pests",
+      "Proper cure"
+    ],
+    "aroma": [
+      "Strong, pleasant smell",
+      "Strain-specific terpenes",
+      "No musty or off odors",
+      "Fresh, not stale"
+    ],
+    "labTesting": [
+      "Cannabinoid profile",
+      "Terpene analysis",
+      "Pesticide screening",
+      "Heavy metals testing",
+      "Microbial testing"
+    ]
+  },
+  "faqs": [
+    {
+      "question": "What is THCA?",
+      "answer": "THCA (tetrahydrocannabinolic acid) is the non-psychoactive precursor to THC found in raw cannabis. It converts to THC when heated through smoking, vaping, or cooking."
+    },
+    {
+      "question": "How long do effects last?",
+      "answer": "Effects duration varies by consumption method: smoking/vaping (1-3 hours), edibles (4-8 hours), tinctures (2-4 hours). Individual factors also influence duration."
+    },
+    {
+      "question": "What's the difference between hemp and marijuana?",
+      "answer": "Both are cannabis plants. Hemp contains less than 0.3% Delta-9 THC and is federally legal. Marijuana contains higher THC levels and has varying legal status."
+    },
+    {
+      "question": "Can I travel with cannabis products?",
+      "answer": "Generally no. Cannabis products cannot cross state lines, even between legal states. Check local laws and transportation regulations."
+    },
+    {
+      "question": "How should I store cannabis products?",
+      "answer": "Store in original packaging, in a cool, dry place away from sunlight. Use child-resistant containers and keep separate from food items."
+    },
+    {
+      "question": "What if I consume too much?",
+      "answer": "Stay calm, hydrate, rest in a safe place. Effects will pass with time. Consider CBD products which may help counteract THC effects. Seek medical attention if severely uncomfortable."
+    }
+  ]
+}

@@ -8,8 +8,9 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { SEOHead } from '../components/SEOHead';
 import { ProductWarnings } from '../components/ProductWarnings';
-import { PaymentPlaceholder } from '../components/PaymentPlaceholder';
+import { PaymentMethodSelector } from '../components/PaymentMethodSelector';
 import { ShippingInfo } from '../components/ShippingInfo';
+import { useCart } from '../hooks/useCart';
 
 interface CheckoutPageProps {
   onNavigate: (page: string) => void;
@@ -17,6 +18,7 @@ interface CheckoutPageProps {
 }
 
 export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) => {
+  const { getCartTotal } = useCart();
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -33,6 +35,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
     termsAccepted: false
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [orderSuccess] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -289,8 +292,42 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                   )}
                 </CardContent>
               </Card>
+            ) : orderSuccess ? (
+              <Card className="bg-risevia-charcoal border-green-500/50">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                  <h3 className="text-2xl font-bold text-white mb-4">Order Confirmed!</h3>
+                  <p className="text-gray-300 mb-4">
+                    Your order has been successfully placed. Order ID: {orderSuccess}
+                  </p>
+                  <Button
+                    onClick={() => onNavigate('home')}
+                    className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
+                  >
+                    Continue Shopping
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
-              <PaymentPlaceholder onContactForPayment={() => onNavigate('contact')} />
+              <PaymentMethodSelector 
+                onPaymentComplete={(result) => {
+                  if (result.success) {
+                    localStorage.setItem('lastOrder', JSON.stringify({
+                      orderNumber: result.orderNumber,
+                      total: getCartTotal(),
+                      paymentMethod: result.paymentMethod,
+                      transactionId: result.transactionId,
+                      timestamp: new Date().toISOString()
+                    }));
+                    onNavigate('order-confirmation');
+                  } else {
+                    alert('Payment failed: ' + result.error);
+                    setShowPaymentOptions(false);
+                  }
+                }}
+                customerData={formData}
+                totalAmount={getCartTotal()}
+              />
             )}
           </motion.div>
         </div>

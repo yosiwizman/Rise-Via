@@ -1,0 +1,41 @@
+{
+  "name": "RiseViA - Premium THCA Cannabis",
+  "short_name": "RiseViA",
+  "description": "Premium THCA cannabis products with lab-tested quality",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/risevia-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/risevia-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/risevia-logo.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop Products",
+      "short_name": "Shop",
+      "description": "Browse our premium THCA products",
+      "url": "/shop",
+      "icons": [{ "src": "/risevia-logo.png", "sizes": "96x96" }]
+    }
+  ]
+}

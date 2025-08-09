@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
 import { priceTrackingService } from '../services/priceTracking';
-import { WishlistAnalytics } from '../types/wishlist';
+import type { WishlistAnalytics } from '../types/wishlist';
 
 interface MetricCardProps {
   title: string;
@@ -54,10 +54,26 @@ const MetricCard = ({ title, value, change, icon, trend = 'neutral', description
   );
 };
 
+interface PriceAlertStats {
+  activeAlerts: number;
+  triggeredToday: number;
+  averageResponseTime: number;
+}
+
+interface DailyReport {
+  date: string;
+  totalEvents: number;
+  addEvents: number;
+  removeEvents: number;
+  shareEvents: number;
+  conversionRate: number;
+  topCategories: Array<{ category: string; count: number }>;
+}
+
 export const WishlistMetricsDashboard = () => {
   const [metrics, setMetrics] = useState<WishlistAnalytics | null>(null);
-  const [priceAlertStats, setPriceAlertStats] = useState<any>(null);
-  const [dailyReport, setDailyReport] = useState<any>(null);
+  const [priceAlertStats, setPriceAlertStats] = useState<PriceAlertStats | null>(null);
+  const [dailyReport, setDailyReport] = useState<DailyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
@@ -65,13 +81,13 @@ export const WishlistMetricsDashboard = () => {
     setLoading(true);
     try {
       const analyticsMetrics = wishlistAnalytics.getMetrics();
-      
+
       const returnVisitorRate = wishlistAnalytics.calculateReturnVisitorRate();
       const averageItems = wishlistAnalytics.calculateAverageItemsPerWishlist();
-      
+
       analyticsMetrics.returnVisitorRate = returnVisitorRate;
       analyticsMetrics.averageItemsPerWishlist = averageItems;
-      
+
       setMetrics(analyticsMetrics);
 
       const alertStats = priceTrackingService.getAlertStats();
@@ -81,8 +97,8 @@ export const WishlistMetricsDashboard = () => {
       setDailyReport(report);
 
       setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error loading metrics:', error);
+    } catch {
+      // Silent fail per code standards
     } finally {
       setLoading(false);
     }
@@ -90,9 +106,9 @@ export const WishlistMetricsDashboard = () => {
 
   useEffect(() => {
     loadMetrics();
-    
+
     const interval = setInterval(loadMetrics, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -108,7 +124,7 @@ export const WishlistMetricsDashboard = () => {
     );
   }
 
-  const conversionRate = metrics.addToWishlistEvents > 0 
+  const conversionRate = metrics.addToWishlistEvents > 0
     ? ((metrics.conversionEvents / metrics.addToWishlistEvents) * 100).toFixed(1)
     : '0';
 
@@ -162,7 +178,7 @@ export const WishlistMetricsDashboard = () => {
             icon={<Users className="w-4 h-4" />}
             description="Users who return after first visit"
           />
-          
+
           <MetricCard
             title="Wishlist Conversion"
             value={`${conversionRate}%`}
@@ -171,7 +187,7 @@ export const WishlistMetricsDashboard = () => {
             icon={<Target className="w-4 h-4" />}
             description="Wishlist items converted to purchases"
           />
-          
+
           <MetricCard
             title="Average Items"
             value={metrics.averageItemsPerWishlist.toFixed(1)}
@@ -180,7 +196,7 @@ export const WishlistMetricsDashboard = () => {
             icon={<Heart className="w-4 h-4" />}
             description="Average items per wishlist"
           />
-          
+
           <MetricCard
             title="Share Events"
             value={metrics.shareEvents}
@@ -374,7 +390,10 @@ export const WishlistMetricsDashboard = () => {
                   </div>
                   <div>
                     <div className="text-xl font-bold text-purple-500">
-                      {dailyReport.conversionRate.toFixed(1)}%
+                      {typeof dailyReport.conversionRate === 'number'
+                        ? dailyReport.conversionRate.toFixed(1)
+                        : dailyReport.conversionRate
+                      }%
                     </div>
                     <div className="text-sm text-risevia-charcoal">Conversion</div>
                   </div>

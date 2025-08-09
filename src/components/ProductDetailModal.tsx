@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WishlistButton } from './wishlist/WishlistButton';
 import { useCart } from '../hooks/useCart';
+import { toast } from 'sonner';
 import { ProductReviews } from './ProductReviews';
+import type { Product } from '../types/product';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: any;
+  product: Product | null;
   mode?: 'full' | 'quick';
 }
 
@@ -35,6 +37,9 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
       <DialogContent className="max-w-4xl bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl gradient-text">{product.name}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Product details for {product.name} - {product.strainType} strain with {product.thcaPercentage}% THCA
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -95,12 +100,12 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
               </div>
               <WishlistButton
                 item={{
-                  id: product.id,
+                  id: product.id || '',
                   name: product.name,
-                  price: product.price,
-                  image: product.images[0],
+                  price: product.price || 0,
+                  image: product.images?.[0] || '',
                   category: product.category,
-                  effects: product.effects
+                  effects: product.effects || []
                 }}
                 size="lg"
               />
@@ -111,11 +116,11 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
             <div>
               <h4 className="font-semibold text-risevia-black mb-2">Effects</h4>
               <div className="flex flex-wrap gap-2">
-                {product.effects.map((effect: string, index: number) => (
+                {product.effects?.map((effect: string, index: number) => (
                   <Badge key={index} variant="outline" className="border-risevia-purple text-risevia-purple">
                     {effect}
                   </Badge>
-                ))}
+                )) || []}
               </div>
             </div>
 
@@ -129,14 +134,18 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
             <Button 
               onClick={() => {
                 addToCart({
-                  productId: product.id,
+                  productId: product.id || '',
                   name: product.name,
-                  price: product.price,
-                  originalPrice: product.price,
-                  image: product.images[0],
+                  price: product.price || 0,
+                  originalPrice: product.price || 0,
+                  image: product.images?.[0] || '',
                   category: product.category,
-                  strainType: product.strainType,
-                  thcaPercentage: product.thcaPercentage
+                  strainType: product.strainType || '',
+                  thcaPercentage: product.thcaPercentage || 0
+                });
+                toast.success(`${product.name} added to cart!`, {
+                  description: `$${product.price} • ${product.thcaPercentage}% THCA`,
+                  duration: 3000,
                 });
                 console.log('✅ Added to cart from modal:', product.name);
                 if (mode === 'quick') {
@@ -148,6 +157,7 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
               <ShoppingBag className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>
+            
           </div>
         </div>
 
@@ -210,7 +220,7 @@ export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: 
               )}
 
               {activeTab === 'reviews' && (
-                <ProductReviews productId={product.id} />
+                <ProductReviews productId={product.id || ''} />
               )}
 
               {activeTab === 'recommendations' && (

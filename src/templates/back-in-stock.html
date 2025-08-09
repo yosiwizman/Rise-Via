@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back in Stock!</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #10b981; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .product-info { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .button { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{product_name}} is Back in Stock! 🌿</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{customer_name}},</p>
+            <p>Great news! The product you were waiting for is back in stock and ready to ship.</p>
+            
+            <div class="product-info">
+                <h3>{{product_name}}</h3>
+                <p><strong>Type:</strong> {{strain_type}}</p>
+                <p><strong>THCA:</strong> {{thca_percentage}}%</p>
+                <p><strong>Price:</strong> ${{product_price}}</p>
+                <p>{{product_description}}</p>
+            </div>
+            
+            <h3>Don't Wait - Limited Quantity Available!</h3>
+            <p>This popular strain tends to sell out quickly. Secure yours today before it's gone again.</p>
+            
+            <p style="text-align: center;">
+                <a href="{{product_url}}" class="button">Shop Now</a>
+            </p>
+        </div>
+        <div class="footer">
+            <p>Want to be notified about other restocks? Update your preferences in your account.</p>
+            <p>The Rise Via Team</p>
+        </div>
+    </div>
+</body>
+</html>

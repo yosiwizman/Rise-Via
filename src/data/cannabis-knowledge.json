@@ -1,0 +1,104 @@
+{
+  "strainInfo": {
+    "sativa": {
+      "description": "Sativa strains are known for energizing and uplifting effects",
+      "commonEffects": ["Energetic", "Creative", "Focused", "Uplifted"],
+      "bestTimeToUse": "Daytime",
+      "commonTerpenes": ["Limonene", "Pinene", "Terpinolene"]
+    },
+    "indica": {
+      "description": "Indica strains typically provide relaxing and sedating effects",
+      "commonEffects": ["Relaxed", "Sleepy", "Euphoric", "Happy"],
+      "bestTimeToUse": "Evening/Night",
+      "commonTerpenes": ["Myrcene", "Linalool", "Caryophyllene"]
+    },
+    "hybrid": {
+      "description": "Hybrid strains combine characteristics of both sativa and indica",
+      "commonEffects": ["Balanced", "Versatile", "Mood-dependent"],
+      "bestTimeToUse": "Anytime",
+      "commonTerpenes": ["Varies by genetics"]
+    }
+  },
+  "terpenes": {
+    "myrcene": {
+      "effects": "Sedating, muscle relaxant",
+      "aroma": "Earthy, musky, herbal",
+      "foundIn": ["Mangoes", "Hops", "Thyme"]
+    },
+    "limonene": {
+      "effects": "Mood elevation, stress relief",
+      "aroma": "Citrus, lemon",
+      "foundIn": ["Citrus fruits", "Juniper", "Peppermint"]
+    },
+    "pinene": {
+      "effects": "Alertness, memory retention",
+      "aroma": "Pine, rosemary",
+      "foundIn": ["Pine needles", "Rosemary", "Basil"]
+    },
+    "linalool": {
+      "effects": "Calming, anti-anxiety",
+      "aroma": "Floral, lavender",
+      "foundIn": ["Lavender", "Coriander", "Cinnamon"]
+    },
+    "caryophyllene": {
+      "effects": "Anti-inflammatory, pain relief",
+      "aroma": "Spicy, peppery",
+      "foundIn": ["Black pepper", "Cloves", "Cinnamon"]
+    }
+  },
+  "consumptionMethods": {
+    "smoking": {
+      "onset": "Immediate (1-3 minutes)",
+      "duration": "1-3 hours",
+      "bioavailability": "10-35%",
+      "notes": "Traditional method, immediate effects"
+    },
+    "vaporizing": {
+      "onset": "Immediate (1-5 minutes)",
+      "duration": "1-3 hours",
+      "bioavailability": "20-40%",
+      "notes": "Healthier alternative to smoking"
+    },
+    "edibles": {
+      "onset": "30 minutes - 2 hours",
+      "duration": "4-8 hours",
+      "bioavailability": "4-20%",
+      "notes": "Longer lasting, delayed onset"
+    }
+  },
+  "dosingGuidelines": {
+    "beginners": {
+      "recommendation": "Start low, go slow",
+      "smokingVaping": "1-2 small puffs, wait 15 minutes",
+      "edibles": "2.5-5mg THC, wait 2 hours before more"
+    },
+    "experienced": {
+      "smokingVaping": "Adjust based on tolerance",
+      "edibles": "5-10mg THC as starting point"
+    }
+  },
+  "legalInformation": {
+    "federalStatus": "Hemp-derived THCA is federally legal under the 2018 Farm Bill",
+    "ageRequirement": "Must be 21+ years old",
+    "stateRestrictions": "Some states have additional restrictions",
+    "disclaimer": "This product has not been evaluated by the FDA"
+  },
+  "faqs": [
+    {
+      "question": "What is THCA?",
+      "answer": "THCA (Tetrahydrocannabinolic Acid) is the non-psychoactive precursor to THC found in raw cannabis plants."
+    },
+    {
+      "question": "How does THCA become THC?",
+      "answer": "THCA converts to THC through decarboxylation, which occurs when heated (smoking, vaping, or cooking)."
+    },
+    {
+      "question": "Is THCA legal?",
+      "answer": "Hemp-derived THCA products containing less than 0.3% Delta-9 THC are federally legal under the 2018 Farm Bill."
+    },
+    {
+      "question": "What's the difference between THCA and THC?",
+      "answer": "THCA is non-psychoactive in its raw form, while THC is the psychoactive compound that produces the 'high' effect."
+    }
+  ]
+}
