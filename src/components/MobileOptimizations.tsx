@@ -1,5 +1,10 @@
 import { useEffect } from 'react';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => void;
+  userChoice: Promise<{ outcome: string }>;
+}
+
 export const MobileOptimizations = () => {
   useEffect(() => {
     const addTouchOptimizations = () => {
@@ -67,11 +72,11 @@ export const MobileOptimizations = () => {
     };
 
     const addPWAPrompt = () => {
-      let deferredPrompt: any;
+      let deferredPrompt: BeforeInstallPromptEvent | null = null;
       
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
-        deferredPrompt = e;
+        deferredPrompt = e as BeforeInstallPromptEvent;
         
         const installBanner = document.createElement('div');
         installBanner.className = 'fixed bottom-4 left-4 right-4 bg-gradient-to-r from-risevia-purple to-risevia-teal text-white p-4 rounded-lg shadow-lg z-50';
@@ -91,11 +96,13 @@ export const MobileOptimizations = () => {
         document.body.appendChild(installBanner);
         
         document.getElementById('install-app')?.addEventListener('click', () => {
-          deferredPrompt.prompt();
-          deferredPrompt.userChoice.then(() => {
-            deferredPrompt = null;
-            installBanner.remove();
-          });
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+              deferredPrompt = null;
+              installBanner.remove();
+            });
+          }
         });
         
         document.getElementById('install-dismiss')?.addEventListener('click', () => {

@@ -137,7 +137,7 @@ export const OnboardingWizard = ({ isOpen, onClose, onComplete }: OnboardingWiza
                     ? 'border-risevia-purple bg-risevia-purple/10'
                     : 'border-gray-200 hover:border-risevia-purple/50'
                 }`}
-                onClick={() => setPreferences(prev => ({ ...prev, experienceLevel: option.level as any }))}
+                onClick={() => setPreferences(prev => ({ ...prev, experienceLevel: option.level as UserPreferences['experienceLevel'] }))}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -170,7 +170,7 @@ export const OnboardingWizard = ({ isOpen, onClose, onComplete }: OnboardingWiza
                     ? 'border-risevia-teal bg-risevia-teal/10'
                     : 'border-gray-200 hover:border-risevia-teal/50'
                 }`}
-                onClick={() => setPreferences(prev => ({ ...prev, preferredTime: option.time as any }))}
+                onClick={() => setPreferences(prev => ({ ...prev, preferredTime: option.time as UserPreferences['preferredTime'] }))}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -202,7 +202,7 @@ export const OnboardingWizard = ({ isOpen, onClose, onComplete }: OnboardingWiza
                     ? 'border-risevia-purple bg-risevia-purple/10'
                     : 'border-gray-200 hover:border-risevia-purple/50'
                 }`}
-                onClick={() => setPreferences(prev => ({ ...prev, medicalVsRecreational: option.purpose as any }))}
+                onClick={() => setPreferences(prev => ({ ...prev, medicalVsRecreational: option.purpose as UserPreferences['medicalVsRecreational'] }))}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
