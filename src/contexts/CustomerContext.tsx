@@ -56,6 +56,7 @@ interface RegistrationData {
   phone?: string;
 }
 
+
 interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;
@@ -139,7 +140,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       
       if (data.user) {
         try {
-          await wishlistService.migrateSessionWishlist(data.user.id);
+          await wishlistService.migrateSessionWishlist((data.user as any).id);
         } catch (migrationError) {
           console.error('Wishlist migration failed:', migrationError);
         }
@@ -153,8 +154,8 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           return { success: true, customer: customerData as Customer };
         } else {
           setCustomer({
-            id: data.user.id,
-            email: data.user.email!,
+            id: (data.user as any).id,
+            email: (data.user as any).email!,
             first_name: '',
             last_name: '',
             created_at: new Date().toISOString()
