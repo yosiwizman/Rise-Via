@@ -42,7 +42,7 @@ export const ProductManager: React.FC = () => {
       } else {
         throw new Error('No products found in database');
       }
-    } catch (error) {
+    } catch {
       // fallback to static data
       const loadedProducts = productsData.products.map(product => ({
         ...product,
@@ -433,7 +433,8 @@ export const ProductManager: React.FC = () => {
           effects: editingProduct.effects || [],
           description: editingProduct.description || '',
           strainType: editingProduct.strain_type || editingProduct.strainType,
-          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage
+          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
+          images: editingProduct.images || []
         } : undefined}
       />
     </div>

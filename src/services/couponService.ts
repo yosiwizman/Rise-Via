@@ -1,4 +1,4 @@
-import neonService from '../lib/neon';
+import { sql } from '../lib/neon';
 
 export interface Coupon {
   id: string;
@@ -23,7 +23,16 @@ export interface CouponValidationResult {
 export const couponService = {
   async validateCoupon(code: string, orderAmount: number): Promise<CouponValidationResult> {
     try {
-      const coupon = await neonService.validateCoupon(code, orderAmount);
+      const result = await sql`
+        SELECT * FROM coupons 
+        WHERE code = ${code} 
+        AND is_active = true 
+        AND (expires_at IS NULL OR expires_at > NOW())
+        AND (max_uses IS NULL OR current_uses < max_uses)
+        AND (min_order_amount IS NULL OR ${orderAmount} >= min_order_amount)
+      `;
+      
+      const coupon = result[0];
       
       if (!coupon) {
         return {
@@ -65,7 +74,7 @@ export const couponService = {
 
   async applyCoupon(code: string): Promise<void> {
     try {
-      await neonService.applyCoupon(code);
+      await sql`UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ${code}`;
     } catch (error) {
       console.error('Error applying coupon:', error);
       throw new Error('Failed to apply coupon');
