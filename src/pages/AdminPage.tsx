@@ -16,6 +16,8 @@ import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
 import { PaymentSettings } from '../components/admin/PaymentSettings';
 import { AIContentGenerator } from '../components/admin/AIContentGenerator';
+import { LabResultsManager } from '../components/admin/LabResultsManager';
+import { ComplianceReports } from './admin/ComplianceReports';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -110,7 +112,8 @@ export const AdminPage = () => {
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'ai-content', label: 'AI Content', icon: Bot },
     { id: 'uploads', label: 'Media', icon: Upload },
-    { id: 'coi', label: 'COI Documents', icon: FileText },
+    { id: 'lab-results', label: 'Lab Results', icon: FileText },
+    { id: 'compliance', label: 'Compliance', icon: Shield },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
     { id: 'payments', label: 'Payment Settings', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -149,34 +152,11 @@ export const AdminPage = () => {
           </div>
         );
       
-      case 'coi':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Certificate of Analysis (COI) Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Lab Certificates</h3>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Upload COI Document
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  COI document management features:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>PDF upload and storage for lab results</li>
-                    <li>Link COI documents to specific product batches</li>
-                    <li>QR code generation for easy COI access</li>
-                    <li>Compliance tracking and expiration alerts</li>
-                    <li>Public COI viewer for customer transparency</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+      case 'lab-results':
+        return <LabResultsManager />;
+
+      case 'compliance':
+        return <ComplianceReports />;
       
       default:
         return (
