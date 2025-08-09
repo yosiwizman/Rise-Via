@@ -6,6 +6,7 @@ import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { useCart } from '../hooks/useCart';
+import { toast } from 'sonner';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
@@ -96,7 +97,10 @@ export const ShopPage = () => {
                 strainType: product.strainType,
                 thcaPercentage: parseFloat(String(product.thcaPercentage))
               });
-              console.log('✅ Added to cart:', product.name);
+              toast.success(`${product.name} added to cart!`, {
+                description: `$${product.price} • ${product.thcaPercentage}% THCA`,
+                duration: 3000,
+              });
             }}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
           >
