@@ -48,7 +48,7 @@ describe('Wishlist Components - Enhanced', () => {
   })
 
   describe('Mock WishlistButton', () => {
-    const MockWishlistButton = ({ item }: { item: any }) => {
+    const MockWishlistButton = ({ item }: { item: { id: string; name: string; price: number; image: string; category: string } }) => {
       const { addToWishlist, removeFromWishlist, isInWishlist } = mockUseWishlist
       const inWishlist = isInWishlist(item.id)
       

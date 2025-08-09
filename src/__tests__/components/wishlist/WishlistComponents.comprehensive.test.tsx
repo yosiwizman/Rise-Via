@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 import { useState } from 'react'
 
-const MockWishlistButton = ({ productId, isInWishlist = false, onToggle = vi.fn() }: { productId: string, isInWishlist?: boolean, onToggle?: any }) => {
+const MockWishlistButton = ({ productId, isInWishlist = false, onToggle = vi.fn() }: { productId: string, isInWishlist?: boolean, onToggle?: (productId: string) => void }) => {
   return (
     <button
       data-testid="wishlist-button"
@@ -67,7 +67,7 @@ const MockWishlistPage = () => {
   )
 }
 
-const MockWishlistShare = ({ isOpen = false, onClose = vi.fn() }: { isOpen?: boolean, onClose?: any }) => {
+const MockWishlistShare = ({ isOpen = false, onClose = vi.fn() }: { isOpen?: boolean, onClose?: () => void }) => {
   if (!isOpen) return null
 
   return (

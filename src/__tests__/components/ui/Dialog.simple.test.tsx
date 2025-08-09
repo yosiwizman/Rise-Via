@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockDialog = ({ open, onOpenChange, children }: any) => {
+const MockDialog = ({ open, onOpenChange, children }: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: React.ReactNode;
+}) => {
   if (!open) return null
   
   return (
@@ -14,7 +18,10 @@ const MockDialog = ({ open, onOpenChange, children }: any) => {
   )
 }
 
-const MockDialogTrigger = ({ children, onClick }: any) => (
+const MockDialogTrigger = ({ children, onClick }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+}) => (
   <button onClick={onClick}>
     {children}
   </button>

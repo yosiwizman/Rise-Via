@@ -4,16 +4,15 @@ import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
 import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
-import { customerSegmentationService } from '../services/CustomerSegmentation';
 import { emailAutomationService } from '../services/EmailAutomation';
 
 export interface Customer {
-  id: string;
+  id?: string;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
-  created_at: string;
+  created_at?: string;
   profile?: {
     membershipTier: string;
     loyaltyPoints: number;
@@ -27,12 +26,16 @@ export interface Customer {
   customer_profiles?: Array<{
     membership_tier: string;
     loyalty_points: number;
-    lifetime_value: number;
-    total_orders: number;
-    segment: string;
-    is_b2b: boolean;
-    referral_code: string;
-    total_referrals: number;
+    preferences: Record<string, unknown>;
+    is_b2b?: boolean;
+    business_name?: string;
+    business_license?: string;
+    segment?: string;
+    lifetime_value?: number;
+    total_orders?: number;
+    referral_code?: string;
+    total_referrals?: number;
+    last_order_date?: string;
   }>;
 }
 
@@ -115,10 +118,10 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: Customer) => c.email === (user as { email: string }).email);
+      const customerData = customers.find((c) => c.email === (user as { email: string }).email);
 
       if (customerData) {
-        setCustomer(customerData as Customer);
+        setCustomer(customerData as unknown as Customer);
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
@@ -144,12 +147,29 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         }
 
         const customers = await customerService.getAll();
-        const customerData = customers.find((c: Customer) => c.email === email);
+        const customerData = customers.find((c) => c.email === email);
 
         if (customerData) {
-          setCustomer(customerData);
+          setCustomer({
+            id: customerData.id,
+            email: customerData.email,
+            first_name: customerData.first_name,
+            last_name: customerData.last_name,
+            phone: customerData.phone,
+            created_at: new Date().toISOString()
+          } as Customer);
           setIsAuthenticated(true);
-          return { success: true, customer: customerData };
+          return { 
+            success: true, 
+            customer: {
+              id: customerData.id,
+              email: customerData.email,
+              first_name: customerData.first_name,
+              last_name: customerData.last_name,
+              phone: customerData.phone,
+              created_at: new Date().toISOString()
+            } as Customer
+          };
         } else {
           setCustomer({
             id: (data.user as { id: string }).id,
@@ -175,12 +195,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
     try {
       const authResult = await authService.register(
         registrationData.email,
-        registrationData.password,
-        {
-          first_name: registrationData.firstName,
-          last_name: registrationData.lastName,
-          phone: registrationData.phone
-        }
+        registrationData.password
       );
 
       if (authResult.user) {
@@ -218,7 +233,6 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             };
 
             await listmonkService.addSubscriber(subscriberData);
-            await customerSegmentationService.addCustomerToSegments(customerData as Customer);
           } catch {
             // Silent fail for Listmonk
           }

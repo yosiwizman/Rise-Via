@@ -32,7 +32,7 @@ describe('API Services', () => {
   })
 
   it('should format API responses', () => {
-    const formatResponse = (data: any) => ({
+    const formatResponse = (data: unknown) => ({
       success: true,
       data,
       timestamp: new Date().toISOString()

@@ -91,7 +91,7 @@ export const AccountPage = () => {
         return;
       }
 
-      const updatedProfile = await customerService.updateCustomerProfile(customer?.id!, { 
+      const updatedProfile = await customerService.updateCustomerProfile(customer!.id!, { 
         loyalty_points: currentPoints - points 
       });
 
@@ -101,7 +101,7 @@ export const AccountPage = () => {
       }
 
       await customerService.addLoyaltyTransaction({
-        customer_id: customer?.id!,
+        customer_id: customer!.id!,
         type: 'REDEEMED',
         points: -points,
         description: `Redeemed ${points} points for $${points / 20} discount`

@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockCheckbox = ({ checked, onChange, disabled }: any) => (
+const MockCheckbox = ({ checked, onChange, disabled }: {
+  checked?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+}) => (
   <input 
     type="checkbox"
     checked={checked}

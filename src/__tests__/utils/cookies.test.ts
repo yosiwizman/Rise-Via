@@ -38,7 +38,7 @@ describe('cookie utilities', () => {
 
     it('should get age verification', async () => {
       const Cookies = (await import('js-cookie')).default
-      vi.mocked(Cookies.get).mockReturnValue('true' as any)
+      vi.mocked(Cookies.get).mockImplementation(() => ({ 'age-verified': 'true' }))
       
       const result = getAgeVerified()
       
@@ -48,7 +48,7 @@ describe('cookie utilities', () => {
 
     it('should handle missing age verification', async () => {
       const Cookies = (await import('js-cookie')).default
-      vi.mocked(Cookies.get).mockReturnValue(undefined as any)
+      vi.mocked(Cookies.get).mockImplementation(() => ({}))
       
       const result = getAgeVerified()
       
@@ -71,7 +71,7 @@ describe('cookie utilities', () => {
 
     it('should get user state', async () => {
       const Cookies = (await import('js-cookie')).default
-      vi.mocked(Cookies.get).mockReturnValue('CA' as any)
+      vi.mocked(Cookies.get).mockImplementation(() => ({ 'user-state': 'CA' }))
       
       const result = getUserState()
       
@@ -81,7 +81,7 @@ describe('cookie utilities', () => {
 
     it('should handle missing user state', async () => {
       const Cookies = (await import('js-cookie')).default
-      vi.mocked(Cookies.get).mockReturnValue(undefined as any)
+      vi.mocked(Cookies.get).mockImplementation(() => ({}))
       
       const result = getUserState()
       
@@ -104,7 +104,7 @@ describe('cookie utilities', () => {
 
     it('should get cookie consent', async () => {
       const Cookies = (await import('js-cookie')).default
-      vi.mocked(Cookies.get).mockReturnValue('true' as any)
+      vi.mocked(Cookies.get).mockImplementation(() => ({ 'age-verified': 'true' }))
       
       const result = getCookieConsent()
       

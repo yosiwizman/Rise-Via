@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../../test-utils'
 
-const MockCartSidebar = ({ isOpen = false, onClose = () => {}, items = [] }: any) => (
+const MockCartSidebar = ({ isOpen = false, onClose = () => {}, items = [] }: {
+  isOpen?: boolean;
+  onClose?: () => void;
+  items?: Array<{ id: string; name: string; price: number; quantity: number }>;
+}) => (
   <div data-testid="cart-sidebar" className={isOpen ? 'open' : 'closed'}>
     <div className="cart-header">
       <h2>Shopping Cart</h2>
@@ -13,7 +17,7 @@ const MockCartSidebar = ({ isOpen = false, onClose = () => {}, items = [] }: any
         <p>Your cart is empty</p>
       ) : (
         <div className="cart-items">
-          {items.map((item: any) => (
+          {items.map((item) => (
             <div key={item.id} className="cart-item">
               <span>{item.name}</span>
               <span>${item.price}</span>
@@ -25,7 +29,7 @@ const MockCartSidebar = ({ isOpen = false, onClose = () => {}, items = [] }: any
     </div>
     
     <div className="cart-footer">
-      <div className="total">Total: ${items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0).toFixed(2)}</div>
+      <div className="total">Total: ${items.reduce((sum: number, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</div>
       <button disabled={items.length === 0}>Proceed to Checkout</button>
     </div>
   </div>

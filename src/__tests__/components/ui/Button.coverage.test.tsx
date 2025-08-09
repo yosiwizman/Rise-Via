@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../../test-utils'
 
-const MockButton = ({ children, variant = 'default', size = 'default', ...props }: any) => (
+const MockButton = ({ children, variant = 'default', size = 'default', ...props }: {
+  children: React.ReactNode;
+  variant?: string;
+  size?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  [key: string]: unknown;
+}) => (
   <button 
     className={`btn btn-${variant} btn-${size}`}
     {...props}

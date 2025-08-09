@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockContactForm = ({ onSubmit }: any) => (
+const MockContactForm = ({ onSubmit }: { onSubmit?: (e: React.FormEvent) => void }) => (
   <form onSubmit={onSubmit}>
     <input name="name" placeholder="Your Name" />
     <input name="email" placeholder="Your Email" type="email" />

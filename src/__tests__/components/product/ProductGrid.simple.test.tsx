@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../../test-utils'
 
-const MockProductGrid = ({ products }: any) => (
+const MockProductGrid = ({ products }: { 
+  products: Array<{ id: string; name: string; price: number; category: string }> 
+}) => (
   <div data-testid="product-grid">
-    {products.map((product: any) => (
+    {products.map((product) => (
       <div key={product.id} data-testid="product-item">
         <h3>{product.name}</h3>
         <p>${product.price}</p>

@@ -161,7 +161,8 @@ export const ShopPage = () => {
               productId: product.id || '',
               name: product.name,
               price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-              image: product.images[0],
+              originalPrice: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+              image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
               category: product.category,
               strainType: product.strain_type || product.strainType || '',
               thcaPercentage: product.thca_percentage || product.thcaPercentage || 0

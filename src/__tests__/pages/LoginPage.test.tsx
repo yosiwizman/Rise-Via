@@ -42,9 +42,14 @@ describe('LoginPage', () => {
     const { useCustomer } = await import('../../contexts/CustomerContext')
     const mockLogin = vi.fn().mockResolvedValue({ success: true })
     vi.mocked(useCustomer).mockReturnValue({
+      customer: null,
+      isAuthenticated: false,
+      loading: false,
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+      logout: vi.fn(),
+      checkAuthStatus: vi.fn(),
+    })
 
     render(<LoginPageWrapper />)
     
@@ -65,9 +70,14 @@ describe('LoginPage', () => {
     const { useCustomer } = await import('../../contexts/CustomerContext')
     const mockLogin = vi.fn().mockResolvedValue({ success: false, message: 'Invalid credentials' })
     vi.mocked(useCustomer).mockReturnValue({
+      customer: null,
+      isAuthenticated: false,
+      loading: false,
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+      logout: vi.fn(),
+      checkAuthStatus: vi.fn(),
+    })
 
     render(<LoginPageWrapper />)
     
@@ -123,12 +133,19 @@ describe('LoginPage', () => {
     const { useCustomer } = await import('../../contexts/CustomerContext')
     const mockLogin = vi.fn().mockResolvedValue({ success: true })
     vi.mocked(useCustomer).mockReturnValue({
+      customer: null,
+      isAuthenticated: false,
+      loading: false,
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+      logout: vi.fn(),
+      checkAuthStatus: vi.fn(),
+    })
 
-    delete (window as any).location
-    window.location = { href: '' } as any
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true
+    })
 
     render(<LoginPageWrapper />)
     

@@ -144,7 +144,7 @@ const emailService = {
         VALUES (${to}, ${subject}, ${body}, 'sent', NOW())
       `
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   },
@@ -156,8 +156,8 @@ const emailService = {
         ORDER BY created_at DESC 
         LIMIT ${limit}
       `
-      return (logs || []) as any[]
-    } catch (error) {
+      return (logs || []) as EmailLog[]
+    } catch {
       return []
     }
   },
@@ -168,8 +168,8 @@ const emailService = {
         SELECT * FROM email_templates 
         WHERE name = ${name}
       `
-      return templates.length > 0 ? templates[0] as any : null
-    } catch (error) {
+      return templates.length > 0 ? templates[0] as EmailTemplate : null
+    } catch {
       return null
     }
   }

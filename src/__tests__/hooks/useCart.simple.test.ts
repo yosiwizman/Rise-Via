@@ -31,7 +31,7 @@ describe('useCart Hook', () => {
   })
 
   it('should calculate totals', () => {
-    const calculateTotal = (items: any[]) => {
+    const calculateTotal = (items: { price: number; quantity: number }[]) => {
       return items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     }
     

@@ -169,17 +169,7 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = async (productData: {
-    name: string;
-    category: string;
-    description?: string;
-    price: number;
-    type: string;
-    thc: string;
-    inventory: number;
-    effects?: string[];
-    active?: boolean;
-  }) => {
+  const handleSaveProduct = async (productData: Product) => {
     try {
       if (editingProduct && 'sample_id' in editingProduct) {
         await productService.update(editingProduct.id!, productData);
@@ -188,18 +178,18 @@ export const ProductManager: React.FC = () => {
           name: productData.name,
           category: productData.category,
           description: productData.description || '',
-          price: productData.price,
-          strain_type: productData.type,
-          thca_percentage: parseFloat(productData.thc) || 0,
+          price: productData.price || 0,
+          strain_type: productData.type || productData.strainType || 'hybrid',
+          thca_percentage: parseFloat(productData.thc || '0') || 0,
           effects: productData.effects || [],
-          inventory: productData.inventory,
-          images: []
+          inventory: productData.inventory || 0,
+          images: productData.images || []
         };
         await productService.create(createData);
       }
       await loadProducts();
-    } catch (error) {
-      console.error('Error saving product:', error);
+    } catch (err) {
+      console.error('Error saving product:', err);
       if (editingProduct) {
         setProducts(prev => prev.map(p =>
           p.id === editingProduct.id ? { ...p, ...productData } : p
@@ -432,6 +422,7 @@ export const ProductManager: React.FC = () => {
           active: editingProduct.status === 'active',
           effects: editingProduct.effects || [],
           description: editingProduct.description || '',
+          images: editingProduct.images || [],
           strainType: editingProduct.strain_type || editingProduct.strainType,
           thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
           images: editingProduct.images || []

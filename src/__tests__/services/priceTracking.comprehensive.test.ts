@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { priceTrackingService } from '../../services/priceTracking'
 
+// Attempt to access the constructor to verify singleton pattern if implemented.
+// If the underlying service class exposes a static getInstance, we will test it;
+// otherwise we fall back to basic instance availability tests.
+type MaybeSingleton = {
+  getInstance?: () => unknown
+  startPriceTracking: () => void
+  stopPriceTracking: () => void
+}
+const PriceTrackingService = (priceTrackingService as unknown as { constructor: MaybeSingleton }).constructor
+
 const mockLocalStorage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
@@ -12,7 +22,6 @@ Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
   writable: true,
 })
-
 
 Object.defineProperty(window, 'Notification', {
   value: vi.fn().mockImplementation((title, options) => ({
@@ -45,12 +54,24 @@ describe('PriceTrackingService - Comprehensive', () => {
     service.stopPriceTracking()
   })
 
-  describe('Service Instance', () => {
-    it('should have the service available', () => {
-      expect(service).toBeDefined()
-      expect(typeof service.startPriceTracking).toBe('function')
+  // Merge of both conflict branches: prefer singleton validation if available,
+  // else retain the simpler availability test from main.
+  if (typeof (PriceTrackingService as MaybeSingleton).getInstance === 'function') {
+    describe('Singleton Pattern', () => {
+      it('should return the same instance', () => {
+        const instance1 = (PriceTrackingService as MaybeSingleton).getInstance?.()
+        const instance2 = (PriceTrackingService as MaybeSingleton).getInstance?.()
+        expect(instance1).toBe(instance2)
+      })
     })
-  })
+  } else {
+    describe('Service Instance', () => {
+      it('should have the service available', () => {
+        expect(service).toBeDefined()
+        expect(typeof service.startPriceTracking).toBe('function')
+      })
+    })
+  }
 
   describe('Price Tracking Control', () => {
     it('should start price tracking', () => {
@@ -67,9 +88,11 @@ describe('PriceTrackingService - Comprehensive', () => {
     })
 
     it('should clear existing interval when starting new tracking', () => {
+      const consoleSpy = vi.spyOn(console, 'log')
       service.startPriceTracking()
       service.startPriceTracking() // Should clear previous interval
-      expect(console.log).toHaveBeenCalledWith('🔔 Price tracking service started')
+      // We only assert that start log appears (indirectly ensures restart logic ran)
+      expect(consoleSpy).toHaveBeenCalledWith('🔔 Price tracking service started')
     })
   })
 
@@ -78,21 +101,21 @@ describe('PriceTrackingService - Comprehensive', () => {
       const mockAlerts = [
         {
           itemId: 'test-product',
-          currentPrice: 24.99,
-          targetPrice: 25.99,
-          triggeredAt: Date.now()
+            currentPrice: 24.99,
+            targetPrice: 25.99,
+            triggeredAt: Date.now()
         }
       ]
-      
+
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockAlerts))
-      
+
       const alerts = service.getTriggeredAlerts()
       expect(alerts).toEqual(mockAlerts)
     })
 
     it('should return empty array when no triggered alerts exist', () => {
       mockLocalStorage.getItem.mockReturnValue(null)
-      
+
       const alerts = service.getTriggeredAlerts()
       expect(alerts).toEqual([])
     })
@@ -100,7 +123,7 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should handle corrupted triggered alerts data', () => {
       mockLocalStorage.getItem.mockReturnValue('invalid-json')
       const consoleSpy = vi.spyOn(console, 'error')
-      
+
       const alerts = service.getTriggeredAlerts()
       expect(alerts).toEqual([])
       expect(consoleSpy).toHaveBeenCalledWith('Error getting triggered alerts:', expect.any(Error))
@@ -109,7 +132,7 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should clear triggered alerts', () => {
       const consoleSpy = vi.spyOn(console, 'log')
       service.clearTriggeredAlerts()
-      
+
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('risevia-price-alerts')
       expect(consoleSpy).toHaveBeenCalledWith('🗑️ Cleared all triggered price alerts')
     })
@@ -125,16 +148,16 @@ describe('PriceTrackingService - Comprehensive', () => {
           averagePriceChange: -5.2
         }
       ]
-      
+
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockActivity))
-      
+
       const activity = service.getPriceCheckActivity()
       expect(activity).toEqual(mockActivity)
     })
 
     it('should return empty array when no activity exists', () => {
       mockLocalStorage.getItem.mockReturnValue(null)
-      
+
       const activity = service.getPriceCheckActivity()
       expect(activity).toEqual([])
     })
@@ -142,7 +165,7 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should handle corrupted activity data', () => {
       mockLocalStorage.getItem.mockReturnValue('invalid-json')
       const consoleSpy = vi.spyOn(console, 'error')
-      
+
       const activity = service.getPriceCheckActivity()
       expect(activity).toEqual([])
       expect(consoleSpy).toHaveBeenCalledWith('Error getting price check activity:', expect.any(Error))
@@ -180,7 +203,7 @@ describe('PriceTrackingService - Comprehensive', () => {
         .mockReturnValueOnce(JSON.stringify(mockTriggeredAlerts)) // For triggered alerts
 
       const stats = service.getAlertStats()
-      
+
       expect(stats.totalAlerts).toBe(2)
       expect(stats.activeAlerts).toBe(2)
       expect(stats.triggeredToday).toBe(1)
@@ -189,7 +212,7 @@ describe('PriceTrackingService - Comprehensive', () => {
 
     it('should handle empty wishlist data for statistics', () => {
       mockLocalStorage.getItem.mockReturnValue(null)
-      
+
       const stats = service.getAlertStats()
       expect(stats.totalAlerts).toBe(0)
       expect(stats.activeAlerts).toBe(0)
@@ -200,7 +223,7 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should handle corrupted data gracefully', () => {
       mockLocalStorage.getItem.mockReturnValue('invalid-json')
       const consoleSpy = vi.spyOn(console, 'error')
-      
+
       const stats = service.getAlertStats()
       expect(stats).toEqual({
         totalAlerts: 0,
@@ -216,14 +239,14 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should simulate price changes with volatility', () => {
       const originalPrice = 30.00
       const targetPrice = 25.00
-      
-      const prices = []
+
+      const prices: number[] = []
       for (let i = 0; i < 10; i++) {
-        const simulatedPrice = (service as any).simulatePriceChange(originalPrice, targetPrice)
+        const simulatedPrice = (service as unknown as { simulatePriceChange: (orig: number, target: number) => number }).simulatePriceChange(originalPrice, targetPrice)
         prices.push(simulatedPrice)
         expect(simulatedPrice).toBeGreaterThan(0)
       }
-      
+
       const uniquePrices = new Set(prices)
       expect(uniquePrices.size).toBeGreaterThan(1)
     })
@@ -231,14 +254,14 @@ describe('PriceTrackingService - Comprehensive', () => {
     it('should occasionally return prices near target', () => {
       const originalPrice = 30.00
       const targetPrice = 25.00
-      
+
       const originalRandom = Math.random
       Math.random = vi.fn().mockReturnValue(0.01) // Less than 0.05 threshold
-      
-      const simulatedPrice = (service as any).simulatePriceChange(originalPrice, targetPrice)
+
+      const simulatedPrice = (service as unknown as { simulatePriceChange: (orig: number, target: number) => number }).simulatePriceChange(originalPrice, targetPrice)
       expect(simulatedPrice).toBeLessThan(targetPrice)
       expect(simulatedPrice).toBeGreaterThan(targetPrice * 0.95)
-      
+
       Math.random = originalRandom
     })
   })
@@ -252,15 +275,15 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await (service as any).showBrowserNotification(alertData)
-      
+      await (service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
+
       expect(window.Notification).toHaveBeenCalledWith(
         'RiseViA Price Alert! 🎯',
         expect.objectContaining({
           body: 'Your target price has been reached! Current price: $24.99',
           icon: '/risevia-logo.png',
           tag: 'price-alert-test-product',
-          requireInteraction: true
+            requireInteraction: true
         })
       )
     })
@@ -278,14 +301,15 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await (service as any).showBrowserNotification(alertData)
-      
+      await (service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)
+
       expect(Notification.requestPermission).toHaveBeenCalled()
     })
 
     it('should handle notification not supported', async () => {
       const originalNotification = window.Notification
-      delete (window as any).Notification
+      // @ts-expect-error intentional removal for test
+      delete window.Notification
 
       const alertData = {
         itemId: 'test-product',
@@ -294,9 +318,9 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await expect((service as any).showBrowserNotification(alertData)).resolves.toBeUndefined()
-      
-      ;(window as any).Notification = originalNotification
+      await expect((service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)).resolves.toBeUndefined()
+
+      window.Notification = originalNotification
     })
   })
 
@@ -315,9 +339,9 @@ describe('PriceTrackingService - Comprehensive', () => {
       }))
 
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingAlerts))
-      
-      ;(service as any).storeTriggeredAlert(alertData)
-      
+
+      ;(service as unknown as { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
+
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'risevia-price-alerts',
         expect.stringContaining('test-product')
@@ -333,7 +357,7 @@ describe('PriceTrackingService - Comprehensive', () => {
       const alertData = { itemId: 'test', triggeredAt: Date.now() }
 
       expect(() => {
-        ;(service as any).storeTriggeredAlert(alertData)
+        ;(service as unknown as { storeTriggeredAlert: (data: unknown) => void }).storeTriggeredAlert(alertData)
       }).not.toThrow()
 
       expect(consoleSpy).toHaveBeenCalledWith('Error storing triggered alert:', expect.any(Error))
@@ -343,7 +367,7 @@ describe('PriceTrackingService - Comprehensive', () => {
   describe('Analytics Integration', () => {
     it('should track price alert events with gtag', () => {
       const mockGtag = vi.fn()
-      ;(window as any).gtag = mockGtag
+      ;(window as { gtag?: unknown }).gtag = mockGtag
 
       const alertData = {
         itemId: 'test-product',
@@ -352,7 +376,7 @@ describe('PriceTrackingService - Comprehensive', () => {
         percentageChange: -3.33
       }
 
-      ;(service as any).trackPriceAlertEvent('triggered', alertData)
+      ;(service as unknown as { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
 
       expect(mockGtag).toHaveBeenCalledWith('event', 'price_alert_triggered', {
         event_category: 'price_alerts',
@@ -378,9 +402,9 @@ describe('PriceTrackingService - Comprehensive', () => {
       }))
 
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingAnalytics))
-      
-      ;(service as any).trackPriceAlertEvent('triggered', alertData)
-      
+
+      ;(service as unknown as { trackPriceAlertEvent: (action: string, data: unknown) => void }).trackPriceAlertEvent('triggered', alertData)
+
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'price-alert-analytics',
         expect.stringContaining('triggered')

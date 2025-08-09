@@ -184,6 +184,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
                   productId: item.id,
                   name: item.name,
                   price: item.price,
+                  originalPrice: item.price,
                   image: item.image,
                   category: item.category,
                   strainType: item.category || 'Unknown',

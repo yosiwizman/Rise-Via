@@ -6,20 +6,23 @@ import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WishlistButton } from './wishlist/WishlistButton';
 import { useCart } from '../hooks/useCart';
 import { toast } from 'sonner';
-import { ProductReviewsIntegration } from './ProductReviewsIntegration';
+import { ProductReviews } from './ProductReviews';
 import type { Product } from '../types/product';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
+  mode?: 'full' | 'quick';
 }
 
-export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailModalProps) => {
+export const ProductDetailModal = ({ isOpen, onClose, product, mode = 'full' }: ProductDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'details' | 'reviews' | 'recommendations'>('details');
   const { addToCart } = useCart();
 
   if (!product) return null;
+
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -97,12 +100,12 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
               </div>
               <WishlistButton
                 item={{
-                  id: product.id,
+                  id: product.id || '',
                   name: product.name,
-                  price: product.price,
-                  image: product.images[0],
+                  price: product.price || 0,
+                  image: product.images?.[0] || '',
                   category: product.category,
-                  effects: product.effects
+                  effects: product.effects || []
                 }}
                 size="lg"
               />
@@ -131,10 +134,11 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             <Button 
               onClick={() => {
                 addToCart({
-                  productId: product.id,
+                  productId: product.id || '',
                   name: product.name,
-                  price: product.price,
-                  image: product.images[0],
+                  price: product.price || 0,
+                  originalPrice: product.price || 0,
+                  image: product.images?.[0] || '',
                   category: product.category,
                   strainType: product.strainType || '',
                   thcaPercentage: product.thcaPercentage || 0
@@ -143,6 +147,10 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
                   description: `$${product.price} • ${product.thcaPercentage}% THCA`,
                   duration: 3000,
                 });
+                console.log('✅ Added to cart from modal:', product.name);
+                if (mode === 'quick') {
+                  onClose();
+                }
               }}
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg hover:opacity-90 transition-opacity"
             >
@@ -150,14 +158,82 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
               Add to Cart
             </Button>
             
-            <div className="mt-8">
-              <ProductReviewsIntegration 
-                productId={product.id}
-                productName={product.name}
-              />
-            </div>
           </div>
         </div>
+
+        {mode === 'full' && (
+          <div className="mt-6">
+            <div className="flex border-b">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'details'
+                    ? 'border-b-2 border-risevia-purple text-risevia-purple'
+                    : 'text-risevia-charcoal hover:text-risevia-purple'
+                }`}
+              >
+                Details
+              </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'reviews'
+                    ? 'border-b-2 border-risevia-purple text-risevia-purple'
+                    : 'text-risevia-charcoal hover:text-risevia-purple'
+                }`}
+              >
+                Reviews
+              </button>
+              <button
+                onClick={() => setActiveTab('recommendations')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'recommendations'
+                    ? 'border-b-2 border-risevia-purple text-risevia-purple'
+                    : 'text-risevia-charcoal hover:text-risevia-purple'
+                }`}
+              >
+                Similar Products
+              </button>
+            </div>
+
+            <div className="mt-4">
+              {activeTab === 'details' && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-risevia-black mb-2">Product Details</h4>
+                    <p className="text-risevia-charcoal">{product.description}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-risevia-black mb-2">Lab Results</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-risevia-charcoal">THCA:</span>
+                        <span className="ml-2 font-medium">{product.thcaPercentage}%</span>
+                      </div>
+                      <div>
+                        <span className="text-risevia-charcoal">Type:</span>
+                        <span className="ml-2 font-medium capitalize">{product.strainType}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <ProductReviews productId={product.id || ''} />
+              )}
+
+              {activeTab === 'recommendations' && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-risevia-black mb-3">Similar Products</h4>
+                    <p className="text-risevia-charcoal">Recommendations will be available soon.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

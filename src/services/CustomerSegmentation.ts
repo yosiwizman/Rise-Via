@@ -2,11 +2,11 @@ import { customerService } from './customerService';
 import { listmonkService } from './ListmonkService';
 
 interface Customer {
-  id: string;
+  id?: string;
   email: string;
   first_name: string;
   last_name: string;
-  created_at: string;
+  created_at?: string;
   customer_profiles?: Array<{
     membership_tier?: string;
     loyalty_points?: number;
@@ -14,6 +14,12 @@ interface Customer {
     total_orders?: number;
     last_order_date?: string;
     is_b2b?: boolean;
+    preferences?: Record<string, unknown>;
+    business_name?: string;
+    business_license?: string;
+    segment?: string;
+    referral_code?: string;
+    total_referrals?: number;
   }>;
 }
 
@@ -54,7 +60,7 @@ class CustomerSegmentationService {
       description: 'Customers with less than 30 days since registration',
       color: '#3b82f6',
       criteria: (customer) => {
-        const createdAt = new Date(customer.created_at).getTime();
+        const createdAt = new Date(customer.created_at || new Date()).getTime();
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
         return createdAt > thirtyDaysAgo;
       }
@@ -117,7 +123,7 @@ class CustomerSegmentationService {
       const segmentedCustomers = new Map<string, Customer[]>();
 
       for (const segment of this.segments) {
-        const matchingCustomers = customers.filter(segment.criteria);
+        const matchingCustomers = customers.filter(segment.criteria) as Customer[];
         segmentedCustomers.set(segment.id, matchingCustomers);
       }
 
@@ -136,7 +142,7 @@ class CustomerSegmentationService {
       if (!customer) return [];
 
       return this.segments
-        .filter(segment => segment.criteria(customer))
+        .filter(segment => segment.criteria(customer as Customer))
         .map(segment => segment.id);
     } catch (error) {
       console.error('Failed to get customer segments:', error);

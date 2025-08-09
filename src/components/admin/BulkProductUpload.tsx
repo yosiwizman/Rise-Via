@@ -3,6 +3,7 @@ import { Upload, Download, FileText, AlertCircle, CheckCircle } from 'lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { productService } from '../../services/productService';
+import { Product } from '../../types/product';
 
 interface UploadResult {
   success: number;
@@ -97,7 +98,7 @@ export const BulkProductUpload: React.FC = () => {
             throw new Error('Missing required fields: name, category, or strain_type');
           }
           
-          await productService.create(product as any);
+          await productService.create(product as Omit<Product, 'id' | 'created_at' | 'updated_at'>);
           successCount++;
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

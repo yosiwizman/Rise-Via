@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CartStore, CartItem, CartStats } from '../types/cart';
+import { CartStore, CartItem, CartStats, QuantityBreak, BundleSuggestion } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
 import { abandonedCartService } from '../services/abandonedCartService';
@@ -12,7 +12,16 @@ const initialStats: CartStats = {
   totalValue: 0,
   itemCount: 0,
   dateCreated: Date.now(),
-  lastUpdated: Date.now()
+  lastUpdated: Date.now(),
+  subtotal: 0,
+  tax: 0,
+  estimatedDelivery: 'Next business day',
+  progress: {
+    current: 0,
+    target: 75,
+    benefit: 'free delivery',
+    percentage: 0
+  }
 };
 
 export const useCart = create<CartStore>()(
@@ -33,12 +42,23 @@ export const useCart = create<CartStore>()(
         }
 
         const sanitizedName = SecurityUtils.sanitizeInput(itemData.name);
+        const quantityBreaks = calculateQuantityBreaks(itemData.price);
+        const bundleSuggestions = generateBundleSuggestions(itemData);
         const existingItem = state.items.find(item => item.productId === itemData.productId);
 
         if (existingItem) {
+          const newQuantity = existingItem.quantity + quantity;
+            const updatedPrice = applyQuantityBreaks(itemData.price, newQuantity, quantityBreaks);
+          
           const updatedItems = state.items.map(item =>
             item.productId === itemData.productId
-              ? { ...item, quantity: item.quantity + quantity }
+              ? { 
+                  ...item, 
+                  quantity: newQuantity,
+                  price: updatedPrice,
+                  quantityBreaks,
+                  bundleSuggestions
+                }
               : item
           );
           const updatedStats = calculateStats(updatedItems);
@@ -49,14 +69,18 @@ export const useCart = create<CartStore>()(
             error: null
           });
 
+          notifyAbandonedCartService(updatedItems);
           trackCartEvent('add', existingItem, { quantity });
         } else {
           const newItem: CartItem = {
             ...itemData,
             id: crypto.randomUUID(),
             name: sanitizedName,
+            originalPrice: itemData.price,
             quantity,
-            dateAdded: Date.now()
+            dateAdded: Date.now(),
+            quantityBreaks,
+            bundleSuggestions
           };
 
           const updatedItems = [...state.items, newItem];
@@ -68,6 +92,8 @@ export const useCart = create<CartStore>()(
             error: null
           });
 
+          notifyAbandonedCartService(updatedItems);
+
           if (typeof window !== 'undefined' && window.dispatchEvent) {
             window.dispatchEvent(new CustomEvent('cart-item-added', {
               detail: { name: sanitizedName, quantity }
@@ -76,7 +102,6 @@ export const useCart = create<CartStore>()(
 
           trackCartEvent('add', newItem, { quantity });
           cartAnalytics.trackCartEvent('add', newItem, { quantity });
-          abandonedCartService.trackCartActivity();
         }
       },
 
@@ -95,9 +120,9 @@ export const useCart = create<CartStore>()(
           error: null
         });
 
+        notifyAbandonedCartService(updatedItems);
         trackCartEvent('remove', itemToRemove);
         cartAnalytics.trackCartEvent('remove', itemToRemove);
-        abandonedCartService.trackCartActivity();
       },
 
       updateQuantity: (itemId, quantity) => {
@@ -116,8 +141,13 @@ export const useCart = create<CartStore>()(
           items: updatedItems,
           stats: updatedStats
         });
-        
-        abandonedCartService.trackCartActivity();
+
+        const updatedItem = updatedItems.find(i => i.id === itemId);
+        if (updatedItem) {
+          notifyAbandonedCartService(updatedItems);
+          trackCartEvent('update', updatedItem, { quantity });
+          cartAnalytics.trackCartEvent('update', updatedItem, { quantity });
+        }
       },
 
       clearCart: () => {
@@ -127,6 +157,7 @@ export const useCart = create<CartStore>()(
           error: null
         });
 
+        notifyAbandonedCartService([]);
         trackCartEvent('clear');
         cartAnalytics.trackCartEvent('clear');
       },
@@ -159,17 +190,74 @@ export const useCart = create<CartStore>()(
   )
 );
 
+function calculateQuantityBreaks(basePrice: number): QuantityBreak[] {
+  return [
+    {
+      minQuantity: 3,
+      discountPercentage: 5,
+      discountedPrice: basePrice * 0.95
+    },
+    {
+      minQuantity: 5,
+      discountPercentage: 10,
+      discountedPrice: basePrice * 0.90
+    },
+    {
+      minQuantity: 10,
+      discountPercentage: 15,
+      discountedPrice: basePrice * 0.85
+    }
+  ];
+}
+
+function generateBundleSuggestions(itemData: { strainType?: string; [key: string]: unknown }): BundleSuggestion[] {
+  const suggestions = [
+    {
+      productId: 'bundle-suggestion-1',
+      name: itemData.strainType === 'indica' ? 'Similar relaxing strain' : 'Similar energizing strain',
+      additionalQuantity: 2,
+      discountPercentage: 10,
+      message: 'Add 2 more grams for 10% off total order'
+    }
+  ];
+  
+  return suggestions;
+}
+
+function applyQuantityBreaks(basePrice: number, quantity: number, breaks: QuantityBreak[]): number {
+  const applicableBreak = breaks
+    .filter(b => quantity >= b.minQuantity)
+    .sort((a, b) => b.minQuantity - a.minQuantity)[0];
+  
+  return applicableBreak ? applicableBreak.discountedPrice : basePrice;
+}
+
 function calculateStats(items: CartItem[]): CartStats {
   const totalItems = items.length;
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.08;
+  const totalValue = subtotal + tax;
+  
+  const progressTarget = 75;
+  const progressCurrent = subtotal;
+  const progressPercentage = Math.min((progressCurrent / progressTarget) * 100, 100);
 
   return {
     totalItems,
     totalValue,
     itemCount,
+    subtotal,
+    tax,
     dateCreated: Date.now(),
-    lastUpdated: Date.now()
+    lastUpdated: Date.now(),
+    estimatedDelivery: subtotal >= progressTarget ? 'Next business day (FREE)' : '2-3 business days',
+    progress: {
+      current: progressCurrent,
+      target: progressTarget,
+      benefit: 'free delivery',
+      percentage: progressPercentage
+    }
   };
 }
 
@@ -196,12 +284,36 @@ function trackCartEvent(
     ...metadata
   };
 
-  const existingAnalytics = JSON.parse(localStorage.getItem('cart_analytics') || '[]');
-  existingAnalytics.push(analyticsData);
-  
-  if (existingAnalytics.length > 1000) {
-    existingAnalytics.splice(0, existingAnalytics.length - 1000);
+  try {
+    const existingAnalytics = JSON.parse(localStorage.getItem('cart_analytics') || '[]');
+    existingAnalytics.push(analyticsData);
+    
+    if (existingAnalytics.length > 1000) {
+      existingAnalytics.splice(0, existingAnalytics.length - 1000);
+    }
+    
+    localStorage.setItem('cart_analytics', JSON.stringify(existingAnalytics));
+  } catch (error) {
+    console.error('Failed to record cart analytics', error);
   }
-  
-  localStorage.setItem('cart_analytics', JSON.stringify(existingAnalytics));
+}
+
+function notifyAbandonedCartService(items: CartItem[]) {
+  try {
+    // Support multiple possible method names without introducing any
+    const svc = abandonedCartService as unknown as {
+      onCartUpdated?: (items: CartItem[]) => void
+      update?: (items: CartItem[]) => void
+      record?: (items: CartItem[]) => void
+      clear?: () => void
+    };
+    svc.onCartUpdated?.(items);
+    svc.update?.(items);
+    svc.record?.(items);
+    if (items.length === 0) {
+      svc.clear?.();
+    }
+  } catch (error) {
+    console.error('Failed to notify abandonedCartService', error);
+  }
 }

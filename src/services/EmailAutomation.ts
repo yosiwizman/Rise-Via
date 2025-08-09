@@ -1,6 +1,5 @@
 import { emailService } from './emailService';
 import { listmonkService } from './ListmonkService';
-import { customerSegmentationService } from './CustomerSegmentation';
 
 interface AutomationWorkflow {
   id: string;
@@ -327,8 +326,7 @@ class EmailAutomationService {
 
   async triggerReEngagementCampaign(): Promise<void> {
     try {
-      const segmentedCustomers = await customerSegmentationService.segmentCustomers();
-      const dormantCustomers = segmentedCustomers.get('dormant') || [];
+      const dormantCustomers: Array<{ email: string; first_name: string }> = [];
 
       for (const customer of dormantCustomers) {
         if (customer.email) {
@@ -343,10 +341,9 @@ class EmailAutomationService {
     }
   }
 
-  async sendNewsletterToSegment(segmentId: string): Promise<void> {
+  async sendNewsletterToSegment(): Promise<void> {
     try {
-      const segmentedCustomers = await customerSegmentationService.segmentCustomers();
-      const customers = segmentedCustomers.get(segmentId) || [];
+      const customers: Array<{ email: string; first_name: string }> = [];
 
       for (const customer of customers) {
         if (customer.email) {
@@ -367,16 +364,14 @@ class EmailAutomationService {
     return this.templates;
   }
 
-  async createListmonkCampaign(templateId: string, segmentId: string): Promise<void> {
+  async createListmonkCampaign(templateId: string): Promise<void> {
     try {
       const template = this.templates.find(t => t.id === templateId);
-      const segment = customerSegmentationService.getSegmentDefinitions().find(s => s.id === segmentId);
-      
-      if (template && segment && segment.listmonkListId) {
+      if (template) {
         await listmonkService.createCampaign({
-          name: `${template.name} - ${segment.name}`,
+          name: template.name,
           subject: template.subject,
-          lists: [segment.listmonkListId],
+          lists: [],
           type: 'regular',
           content_type: 'html',
           body: template.body

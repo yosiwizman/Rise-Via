@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockTextarea = ({ placeholder, value, onChange, disabled, rows }: any) => (
+const MockTextarea = ({ placeholder, value, onChange, disabled, rows }: {
+  placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  disabled?: boolean;
+  rows?: number;
+}) => (
   <textarea
     placeholder={placeholder}
     value={value}

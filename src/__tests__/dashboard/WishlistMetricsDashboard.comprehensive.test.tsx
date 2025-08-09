@@ -316,7 +316,7 @@ describe('WishlistMetricsDashboard Comprehensive Tests', () => {
         removeEventListener: vi.fn(),
       }
 
-      global.WebSocket = vi.fn(() => mockWebSocket) as any
+      global.WebSocket = vi.fn(() => mockWebSocket) as unknown as typeof WebSocket
 
       render(<MockWishlistMetricsDashboard />)
 
@@ -335,7 +335,7 @@ describe('WishlistMetricsDashboard Comprehensive Tests', () => {
         removeEventListener: vi.fn(),
       }
 
-      global.WebSocket = vi.fn(() => mockWebSocket) as any
+      global.WebSocket = vi.fn(() => mockWebSocket) as unknown as typeof WebSocket
 
       render(<MockWishlistMetricsDashboard />)
 

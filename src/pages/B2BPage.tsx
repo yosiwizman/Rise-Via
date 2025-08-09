@@ -40,7 +40,13 @@ export const B2BPage = () => {
           business_license: formData.businessLicense,
           membership_tier: 'SILVER',
           segment: 'B2B'
-        } as any);
+        } as {
+          is_b2b: boolean;
+          business_name: string;
+          business_license: string;
+          membership_tier: string;
+          segment: string;
+        });
       }
 
       if (customerData) {
