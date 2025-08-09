@@ -79,7 +79,7 @@ export class RecommendationEngine {
       evening: (p: Product) => p.strainType === 'indica' || p.effects.includes('Relaxed')
     };
 
-    let filtered = products
+    const filtered = products
       .filter(potencyFilter[userPreferences.experienceLevel])
       .filter(timeFilter[userPreferences.preferredTime])
       .filter(p => p.effects.some(e => userPreferences.preferredEffects.includes(e)));

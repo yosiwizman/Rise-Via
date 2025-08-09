@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 
 interface FlowiseResponse {
   text: string;
-  sourceDocuments?: any[];
-  chatHistory?: any[];
+  sourceDocuments?: Record<string, unknown>[];
+  chatHistory?: Record<string, unknown>[];
 }
 
 interface FlowiseError {
@@ -17,7 +17,7 @@ export const useFlowise = () => {
 
   const callFlowise = useCallback(async (
     endpoint: string,
-    data: any
+    data: Record<string, unknown>
   ): Promise<FlowiseResponse> => {
     setIsLoading(true);
     setError(null);

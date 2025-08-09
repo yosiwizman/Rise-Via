@@ -154,7 +154,7 @@ export const AIContentGenerator = () => {
                 
                 <div>
                   <Label htmlFor="strainType">Strain Type</Label>
-                  <Select value={productForm.strainType} onValueChange={(value: any) => setProductForm(prev => ({ ...prev, strainType: value }))}>
+                  <Select value={productForm.strainType} onValueChange={(value: 'sativa' | 'indica' | 'hybrid') => setProductForm(prev => ({ ...prev, strainType: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -252,7 +252,7 @@ export const AIContentGenerator = () => {
 
                 <div>
                   <Label htmlFor="tone">Tone</Label>
-                  <Select value={blogForm.tone} onValueChange={(value: any) => setBlogForm(prev => ({ ...prev, tone: value }))}>
+                  <Select value={blogForm.tone} onValueChange={(value: 'educational' | 'promotional' | 'informative') => setBlogForm(prev => ({ ...prev, tone: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

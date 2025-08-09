@@ -288,7 +288,7 @@ describe('PriceTrackingService - Comprehensive', () => {
 
     it('should handle notification not supported', async () => {
       const originalNotification = window.Notification
-      delete (window as any).Notification
+      delete (window as { Notification?: unknown }).Notification
 
       const alertData = {
         itemId: 'test-product',
@@ -297,9 +297,9 @@ describe('PriceTrackingService - Comprehensive', () => {
         triggeredAt: Date.now()
       }
 
-      await expect((service as any).showBrowserNotification(alertData)).resolves.toBeUndefined()
+      await expect((service as unknown as { showBrowserNotification: (data: unknown) => Promise<void> }).showBrowserNotification(alertData)).resolves.toBeUndefined()
       
-      ;(window as any).Notification = originalNotification
+      ;(window as { Notification?: unknown }).Notification = originalNotification
     })
   })
 
@@ -346,7 +346,7 @@ describe('PriceTrackingService - Comprehensive', () => {
   describe('Analytics Integration', () => {
     it('should track price alert events with gtag', () => {
       const mockGtag = vi.fn()
-      ;(window as any).gtag = mockGtag
+      ;(window as { gtag?: unknown }).gtag = mockGtag
 
       const alertData = {
         itemId: 'test-product',

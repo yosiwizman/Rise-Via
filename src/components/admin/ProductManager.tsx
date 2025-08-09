@@ -42,7 +42,7 @@ export const ProductManager: React.FC = () => {
       } else {
         throw new Error('No products found in database');
       }
-    } catch (error) {
+    } catch {
       // fallback to static data
       const loadedProducts = productsData.products.map(product => ({
         ...product,
@@ -188,8 +188,8 @@ export const ProductManager: React.FC = () => {
         await productService.create(createData);
       }
       await loadProducts();
-    } catch (error) {
-      console.error('Error saving product:', error);
+    } catch (err) {
+      console.error('Error saving product:', err);
       if (editingProduct) {
         setProducts(prev => prev.map(p =>
           p.id === editingProduct.id ? { ...p, ...productData } : p
