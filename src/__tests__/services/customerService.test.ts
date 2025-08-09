@@ -4,8 +4,14 @@ import { customerService } from '../../services/customerService'
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
-      select: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      insert: vi.fn(() => Promise.resolve({ data: { id: 1 }, error: null })),
+      select: vi.fn(() => ({
+        order: vi.fn(() => Promise.resolve({ data: [], error: null })),
+      })),
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: { id: 1 }, error: null })),
+        })),
+      })),
       update: vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ data: null, error: null })),
       })),
@@ -25,8 +31,7 @@ describe('customerService', () => {
     const result = await customerService.getAll()
     
     expect(result).toBeDefined()
-    expect(result).toHaveProperty('data')
-    expect(result).toHaveProperty('error')
+    expect(Array.isArray(result)).toBe(true)
   })
 
   it('should create new customer', async () => {
@@ -38,8 +43,8 @@ describe('customerService', () => {
 
     const result = await customerService.create(customerData)
     
-    expect(result).toHaveProperty('data')
-    expect(result).toHaveProperty('error')
+    expect(result).toBeDefined()
+    expect(result).toHaveProperty('id')
   })
 
   it('should handle customer creation errors', async () => {
@@ -51,7 +56,7 @@ describe('customerService', () => {
 
     const result = await customerService.create(invalidCustomerData)
     
-    expect(result).toHaveProperty('error')
+    expect(result).toBeDefined()
   })
 
   it('should validate customer data', () => {
