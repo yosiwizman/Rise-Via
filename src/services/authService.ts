@@ -14,7 +14,7 @@ export interface AuthResponse {
 const SESSION_KEY = 'rise_via_user_session';
 
 export const authService = {
-  async login(email: string, password: string): Promise<any> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: Record<string, unknown> }> {
     if (email === 'admin' && password === 'admin123') {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };

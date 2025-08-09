@@ -109,13 +109,15 @@ export class ComplianceService {
       ORDER BY created_at DESC
     `;
 
+    const typedEvents = (events as ComplianceEvent[]) || [];
+    
     const report = {
-      totalEvents: events?.length || 0,
-      ageVerifications: events?.filter((e: any) => e.event_type === 'age_verification').length || 0,
-      stateBlocks: events?.filter((e: any) => e.event_type === 'state_block' && !e.compliance_result).length || 0,
-      purchaseLimitViolations: events?.filter((e: any) => e.event_type === 'purchase_limit' && !e.compliance_result).length || 0,
-      averageRiskScore: events?.reduce((sum: number, e: any) => sum + (e.risk_score || 0), 0) / (events?.length || 1),
-      complianceRate: (events?.filter((e: any) => e.compliance_result).length || 0) / (events?.length || 1) * 100
+      totalEvents: typedEvents.length,
+      ageVerifications: typedEvents.filter((e) => e.event_type === 'age_verification').length,
+      stateBlocks: typedEvents.filter((e) => e.event_type === 'state_block' && !e.compliance_result).length,
+      purchaseLimitViolations: typedEvents.filter((e) => e.event_type === 'purchase_limit' && !e.compliance_result).length,
+      averageRiskScore: typedEvents.length > 0 ? typedEvents.reduce((sum, e) => sum + (e.risk_score || 0), 0) / typedEvents.length : 0,
+      complianceRate: typedEvents.length > 0 ? (typedEvents.filter((e) => e.compliance_result).length / typedEvents.length) * 100 : 0
     };
 
     return report;

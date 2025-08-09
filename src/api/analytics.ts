@@ -25,6 +25,24 @@ export interface AnalyticsMetrics {
   };
 }
 
+interface OrderData {
+  total_amount: number;
+  status: string;
+  created_at: string;
+}
+
+interface CustomerData {
+  created_at: string;
+  total_orders?: number;
+  lifetime_value?: number;
+}
+
+interface ComplianceEventData {
+  event_type: string;
+  compliance_result: boolean;
+  risk_score: number;
+}
+
 export const analyticsAPI = {
   async getSalesMetrics(startDate: string, endDate: string): Promise<AnalyticsMetrics['salesMetrics']> {
     const orders = await sql`
@@ -32,8 +50,9 @@ export const analyticsAPI = {
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
     `;
 
-    const completedOrders = orders?.filter((o: any) => o.status === 'completed') || [];
-    const totalRevenue = completedOrders.reduce((sum: number, order: any) => sum + (order.total_amount || 0), 0);
+    const typedOrders = (orders as OrderData[]) || [];
+    const completedOrders = typedOrders.filter((o) => o.status === 'completed');
+    const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
     const totalOrders = completedOrders.length;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -63,17 +82,17 @@ export const analyticsAPI = {
       WHERE c.created_at >= ${startDate} AND c.created_at <= ${endDate}
     `;
 
-    const totalCustomers = customers?.length || 0;
-    const newCustomers = customers?.filter((c: any) => 
+    const typedCustomers = (customers as CustomerData[]) || [];
+    const totalCustomers = typedCustomers.length;
+    const newCustomers = typedCustomers.filter((c) => 
       new Date(c.created_at) >= new Date(startDate)
-    ).length || 0;
-    const returningCustomers = customers?.filter((c: any) => 
+    ).length;
+    const returningCustomers = typedCustomers.filter((c) => 
       (c.total_orders || 0) > 1
-    ).length || 0;
+    ).length;
 
-    const customerLifetimeValue = totalCustomers > 0 ? (customers?.reduce((sum: number, c: any) => 
-      sum + (c.lifetime_value || 0), 0
-    ) || 0) / totalCustomers : 0;
+    const customerLifetimeValue = totalCustomers > 0 ? 
+      typedCustomers.reduce((sum, c) => sum + (c.lifetime_value || 0), 0) / totalCustomers : 0;
 
     return {
       totalCustomers,
@@ -124,14 +143,18 @@ export const analyticsAPI = {
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
     `;
 
-    const totalEvents = complianceEvents?.length || 0;
-    const ageVerifications = complianceEvents?.filter((e: any) => e.event_type === 'age_verification') || [];
-    const stateBlocks = complianceEvents?.filter((e: any) => e.event_type === 'state_block') || [];
+    const typedEvents = (complianceEvents as ComplianceEventData[]) || [];
+    const totalEvents = typedEvents.length;
+    const ageVerifications = typedEvents.filter((e) => e.event_type === 'age_verification');
+    const stateBlocks = typedEvents.filter((e) => e.event_type === 'state_block');
     
-    const ageVerificationRate = ageVerifications.filter((e: any) => e.compliance_result).length / ageVerifications.length * 100 || 0;
-    const stateBlockRate = stateBlocks.filter((e: any) => !e.compliance_result).length / totalEvents * 100 || 0;
+    const ageVerificationRate = ageVerifications.length > 0 ? 
+      (ageVerifications.filter((e) => e.compliance_result).length / ageVerifications.length) * 100 : 0;
+    const stateBlockRate = totalEvents > 0 ? 
+      (stateBlocks.filter((e) => !e.compliance_result).length / totalEvents) * 100 : 0;
     
-    const averageRiskScore = totalEvents > 0 ? (complianceEvents?.reduce((sum: number, e: any) => sum + (e.risk_score || 0), 0) || 0) / totalEvents : 0;
+    const averageRiskScore = totalEvents > 0 ? 
+      typedEvents.reduce((sum, e) => sum + (e.risk_score || 0), 0) / totalEvents : 0;
     const complianceScore = (1 - averageRiskScore) * 100;
 
     return {

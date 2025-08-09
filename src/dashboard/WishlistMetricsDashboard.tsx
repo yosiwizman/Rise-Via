@@ -56,8 +56,24 @@ const MetricCard = ({ title, value, change, icon, trend = 'neutral', description
 
 export const WishlistMetricsDashboard = () => {
   const [metrics, setMetrics] = useState<WishlistAnalytics | null>(null);
-  const [priceAlertStats, setPriceAlertStats] = useState<any>(null);
-  const [dailyReport, setDailyReport] = useState<any>(null);
+  interface PriceAlertStats {
+    activeAlerts: number;
+    triggeredToday: number;
+    averageResponseTime: number;
+  }
+
+  interface DailyReport {
+    date: string;
+    totalEvents: number;
+    addEvents: number;
+    removeEvents: number;
+    shareEvents: number;
+    conversionRate: number;
+    topCategories: Array<{ category: string; count: number }>;
+  }
+
+  const [priceAlertStats, setPriceAlertStats] = useState<PriceAlertStats | null>(null);
+  const [dailyReport, setDailyReport] = useState<DailyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 

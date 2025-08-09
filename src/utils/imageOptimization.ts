@@ -170,12 +170,11 @@ export class ImageOptimizer {
    */
   static calculateOptimalSize(
     containerWidth: number,
-    containerHeight: number,
+    _containerHeight: number,
     imageAspectRatio: number,
     devicePixelRatio: number = window.devicePixelRatio || 1
   ): { width: number; height: number } {
     const targetWidth = containerWidth * devicePixelRatio;
-    containerHeight * devicePixelRatio;
     
     const optimalWidth = this.BREAKPOINTS.find(bp => bp >= targetWidth) || this.BREAKPOINTS[this.BREAKPOINTS.length - 1];
     const optimalHeight = Math.round(optimalWidth / imageAspectRatio);
