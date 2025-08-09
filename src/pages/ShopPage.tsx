@@ -10,7 +10,22 @@ import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  interface Product {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    category: string;
+    strainType: string;
+    thcaPercentage: number;
+    description: string;
+    effects: string[];
+    images: string[];
+    featured: boolean;
+    inventory: number;
+  }
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
   const { addToCart } = useCart();
 
@@ -20,12 +35,12 @@ export const ShopPage = () => {
     );
   }, [filter]);
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
 
-  const ProductCard = ({ product }: { product: any }) => {
+  const ProductCard = ({ product }: { product: Product }) => {
     return (
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
@@ -79,7 +94,7 @@ export const ShopPage = () => {
                 image: product.images[0],
                 category: product.category,
                 strainType: product.strainType,
-                thcaPercentage: product.thcaPercentage
+                thcaPercentage: parseFloat(String(product.thcaPercentage))
               });
               console.log('✅ Added to cart:', product.name);
             }}

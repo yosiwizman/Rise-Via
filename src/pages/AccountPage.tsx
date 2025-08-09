@@ -37,7 +37,12 @@ export const AccountPage = () => {
   const { customer, isAuthenticated, loading } = useCustomer();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
-  const [membershipTier, setMembershipTier] = useState<any>(null);
+  interface MembershipTier {
+    name: string;
+    benefits: string[];
+  }
+
+  const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
 
   useEffect(() => {

@@ -48,6 +48,8 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
+
+          trackCartEvent('add', existingItem, { quantity });
         } else {
           const newItem: CartItem = {
             ...itemData,
@@ -66,15 +68,15 @@ export const useCart = create<CartStore>()(
             error: null
           });
 
-        if (typeof window !== 'undefined' && window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('cart-item-added', {
-            detail: { name: sanitizedName, quantity }
-          }));
-        }
+          if (typeof window !== 'undefined' && window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('cart-item-added', {
+              detail: { name: sanitizedName, quantity }
+            }));
+          }
 
-        trackCartEvent('add', newItem, { quantity });
-        cartAnalytics.trackCartEvent('add', newItem, { quantity });
-        abandonedCartService.trackCartActivity();
+          trackCartEvent('add', newItem, { quantity });
+          cartAnalytics.trackCartEvent('add', newItem, { quantity });
+          abandonedCartService.trackCartActivity();
         }
       },
 
