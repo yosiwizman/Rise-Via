@@ -75,7 +75,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
         return;
       }
 
-      const orderId = await createOrder();
+      const orderId = await createOrder(customerInfo);
       clearCart();
       onSuccess(orderId);
     } catch (err) {
@@ -85,9 +85,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     }
   };
 
-  const createOrder = async (): Promise<string> => {
+  const createOrder = async (customerInfo: any): Promise<string> => {
     const orderData = {
-      customer_id: crypto.randomUUID(),
+      customer_id: customerInfo.email, // Use email as customer ID for now
       total: getCartTotal(),
       items: items.map(item => ({
         product_id: item.productId,
@@ -97,7 +97,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     };
 
     const order = await orderService.createOrder(orderData);
-    return order?.id || crypto.randomUUID();
+    if (!order) {
+      throw new Error('Failed to create order');
+    }
+    return order.id;
   };
 
   return (
