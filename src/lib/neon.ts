@@ -29,7 +29,7 @@ export interface CustomerProfile {
   customer_id: string;
   membership_tier: string;
   loyalty_points: number;
-  preferences: any;
+  preferences: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

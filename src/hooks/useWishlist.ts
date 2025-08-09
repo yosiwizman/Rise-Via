@@ -240,7 +240,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       }
 
       localStorage.removeItem(localStorageKey);
-    } catch (error) {
+    } catch {
       set({ error: 'Failed to migrate localStorage data' });
       toast.error('Failed to migrate localStorage wishlist');
     }
@@ -379,7 +379,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         stats: updatedStats,
         isLoading: false
       });
-    } catch (error) {
+    } catch {
       set({ isLoading: false });
       toast.error('Failed to update item priority');
     }
@@ -536,7 +536,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         items: updatedItems,
         isLoading: false
       });
-    } catch (error) {
+    } catch {
       set({ isLoading: false });
       toast.error('Failed to set price alert');
     }
@@ -562,7 +562,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         items: updatedItems,
         isLoading: false
       });
-    } catch (error) {
+    } catch {
       set({ isLoading: false });
       toast.error('Failed to remove price alert');
     }
