@@ -1,18 +1,38 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Save, Upload } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { ProductMediaManager } from './ProductMediaManager';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  type: string;
+  thc: string;
+  description?: string;
+  effects?: string[];
+  inventory: number;
+  active: boolean;
+  featured?: boolean;
+  images?: string[];
+  hover_image?: string;
+  video_url?: string;
+  strainType?: string;
+  thcaPercentage?: number;
+}
 
 interface ProductEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: any) => void;
-  product?: any;
+  onSave: (product: Product) => void;
+  product?: Product;
 }
 
 export const ProductEditor: React.FC<ProductEditorProps> = ({
@@ -23,14 +43,17 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
-    price: product?.price || '',
+    price: product?.price?.toString() || '',
     category: product?.category || '',
-    strainType: product?.strainType || '',
-    thcaPercentage: product?.thcaPercentage || '',
+    strainType: product?.strainType || product?.type || '',
+    thcaPercentage: product?.thcaPercentage?.toString() || product?.thc || '',
     description: product?.description || '',
     effects: product?.effects?.join(', ') || '',
-    inventory: product?.inventory || '',
-    featured: product?.featured || false
+    inventory: product?.inventory?.toString() || '',
+    featured: product?.featured || false,
+    images: product?.images || [],
+    hoverImage: product?.hover_image || '',
+    videoUrl: product?.video_url || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,9 +62,12 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
       ...formData,
       id: product?.id || Date.now().toString(),
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
-      price: parseFloat(formData.price),
-      thcaPercentage: parseFloat(formData.thcaPercentage),
-      inventory: parseInt(formData.inventory)
+      price: parseFloat(formData.price.toString()),
+      thcaPercentage: parseFloat(formData.thcaPercentage.toString()),
+      inventory: parseInt(formData.inventory.toString()),
+      type: formData.strainType,
+      thc: formData.thcaPercentage.toString(),
+      active: true
     };
     onSave(productData);
     onClose();
@@ -220,12 +246,23 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                 </Label>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 mb-2">Upload Product Images</p>
-                <Button type="button" variant="outline" className="text-gray-700">
-                  Choose Files
-                </Button>
+              <div className="space-y-4">
+                <h3 className="font-semibold">Product Images</h3>
+                <ProductMediaManager 
+                  initialImages={formData.images || []}
+                  initialHoverImage={formData.hoverImage}
+                  initialVideo={formData.videoUrl}
+                  onMediaUploaded={(urls) => {
+                    const imageUrls = urls.filter(url => !url.includes('/video/'));
+                    const videoUrls = urls.filter(url => url.includes('/video/'));
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      images: [...(prev.images || []), ...imageUrls].slice(0, 3),
+                      ...(videoUrls.length > 0 && !prev.videoUrl && { videoUrl: videoUrls[0] })
+                    }));
+                  }}
+                />
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">

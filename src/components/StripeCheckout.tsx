@@ -53,7 +53,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     setProcessing(true);
 
     try {
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
+      const { error } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
         billing_details: {
@@ -75,7 +75,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
         return;
       }
 
-      const orderId = await createOrder(paymentMethod.id, customerInfo);
+      const orderId = await createOrder(customerInfo);
       clearCart();
       onSuccess(orderId);
     } catch (err) {
@@ -85,30 +85,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     }
   };
 
-  const createOrder = async (paymentMethodId: string, customerInfo: any): Promise<string> => {
+  const createOrder = async (customerInfo: any): Promise<string> => {
     const orderData = {
-      payment_method_id: paymentMethodId,
-      customer_email: customerInfo.email,
-      customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-      shipping_address: {
-        line1: customerInfo.address,
-        city: customerInfo.city,
-        state: customerInfo.state,
-        postal_code: customerInfo.zipCode,
-      },
-      phone: customerInfo.phone,
-      total_amount: getCartTotal(),
-      status: 'confirmed' as const,
+      customer_id: customerInfo.email, // Use email as customer ID for now
+      total: getCartTotal(),
       items: items.map(item => ({
         product_id: item.productId,
-        name: item.name,
         quantity: item.quantity,
-        price: item.price,
-        total: item.price * item.quantity
+        price: item.price
       }))
     };
 
-    return await orderService.createOrder(orderData);
+    const order = await orderService.createOrder(orderData);
+    if (!order) {
+      throw new Error('Failed to create order');
+    }
+    return order.id;
   };
 
   return (
