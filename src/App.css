@@ -1,12 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 #root {
   max-width: none;
   width: 100%;
   margin: 0;
   padding: 0;
   text-align: left;
+  overflow-x: hidden;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
 
 .neon-glow {
   transition: all 0.3s ease;
@@ -58,6 +65,8 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #F8F9FA;
   color: #1F2937;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 @keyframes glow {

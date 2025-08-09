@@ -95,7 +95,7 @@ export class SecurityUtils {
    * Validates phone number format
    */
   static isValidPhone(phone: string): boolean {
-    const phoneRegex = /^\+?[\d\s\-\(\)]{10,15}$/;
+    const phoneRegex = /^\+?[\d\s\-()]{10,15}$/;
     return phoneRegex.test(phone);
   }
 

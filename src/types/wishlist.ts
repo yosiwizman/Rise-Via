@@ -62,19 +62,23 @@ export interface WishlistState {
   stats: WishlistStats;
   isLoading: boolean;
   error: string | null;
+  sessionToken: string;
+  sessionId: string | null;
 }
 
 export interface WishlistActions {
-  addToWishlist: (item: Omit<WishlistItem, 'id' | 'dateAdded' | 'priority'>) => void;
-  removeFromWishlist: (itemId: string) => void;
-  updateItemPriority: (itemId: string, priority: WishlistItem['priority']) => void;
-  clearWishlist: () => void;
+  addToWishlist: (item: Omit<WishlistItem, 'id' | 'dateAdded' | 'priority'>) => Promise<void>;
+  removeFromWishlist: (itemId: string) => Promise<void>;
+  updateItemPriority: (itemId: string, priority: WishlistItem['priority']) => Promise<void>;
+  clearWishlist: () => Promise<void>;
   isInWishlist: (itemId: string) => boolean;
   getWishlistCount: () => number;
+  initializeSession: () => Promise<void>;
+  migrateFromLocalStorage: () => Promise<void>;
   generateShareLink: () => Promise<string>;
   importWishlist: (shareCode: string) => Promise<boolean>;
-  setPriceAlert: (itemId: string, targetPrice: number) => void;
-  removePriceAlert: (itemId: string) => void;
+  setPriceAlert: (itemId: string, targetPrice: number) => Promise<void>;
+  removePriceAlert: (itemId: string) => Promise<void>;
   getItemsByCategory: (category: string) => WishlistItem[];
   getItemsByPriority: (priority: WishlistItem['priority']) => WishlistItem[];
   sortItems: (sortBy: 'name' | 'price' | 'dateAdded' | 'priority') => WishlistItem[];
