@@ -43,7 +43,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
   const [alertPrice, setAlertPrice] = useState('');
 
   const filteredAndSortedItems = useMemo(() => {
-    return sortItems().filter(item => 
+    return sortItems(sortBy).filter(item => 
       item && (filterPriority === 'all' || item.priority === filterPriority)
     );
   }, [items, sortBy, filterPriority, sortItems]);
@@ -68,7 +68,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
 
   const handleSavePriceAlert = () => {
     if (priceAlertItem && alertPrice) {
-      setPriceAlert();
+      setPriceAlert(priceAlertItem.id, parseFloat(alertPrice));
       setPriceAlertItem(null);
       setAlertPrice('');
     }
@@ -130,8 +130,8 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
             <Label className="text-sm font-medium">Priority:</Label>
             <Select
               value={item.priority}
-              onValueChange={(_value: 'low' | 'medium' | 'high') => 
-                updateItemPriority()
+              onValueChange={(value: 'low' | 'medium' | 'high') => 
+                updateItemPriority(item.id, value)
               }
             >
               <SelectTrigger className="w-24 h-8">
@@ -156,7 +156,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-risevia-teal">Alert at ${item.priceAlert.targetPrice}</span>
               <Button
-                onClick={() => removePriceAlert()}
+                onClick={() => removePriceAlert(item.id)}
                 size="sm"
                 variant="ghost"
                 className="text-red-500 hover:text-red-700"
