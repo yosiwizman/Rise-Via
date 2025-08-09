@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard, Bot } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,6 +15,7 @@ import { OrderManager } from '../components/admin/OrderManager';
 import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
 import { PaymentSettings } from '../components/admin/PaymentSettings';
+import { AIContentGenerator } from '../components/admin/AIContentGenerator';
 import { LabResultsManager } from '../components/admin/LabResultsManager';
 import { ComplianceReports } from './admin/ComplianceReports';
 
@@ -109,6 +110,7 @@ export const AdminPage = () => {
     { id: 'inventory', label: 'Inventory', icon: Warehouse },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'activity', label: 'Activity', icon: Activity },
+    { id: 'ai-content', label: 'AI Content', icon: Bot },
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'lab-results', label: 'Lab Results', icon: FileText },
     { id: 'compliance', label: 'Compliance', icon: Shield },
@@ -139,6 +141,9 @@ export const AdminPage = () => {
       
       case 'payments':
         return <PaymentSettings />;
+      
+      case 'ai-content':
+        return <AIContentGenerator />;
       case 'uploads':
         return (
           <div className="space-y-6">

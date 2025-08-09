@@ -8,6 +8,7 @@ import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
+import { FloatingChatButton } from './components/FloatingChatButton';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
@@ -33,6 +34,7 @@ import { priceTrackingService } from './services/priceTracking';
 import MobileCartButton from './components/MobileCartButton';
 import { Toaster } from './components/ui/toaster';
 import { ToastEventHandler } from './components/ToastEventHandler';
+import { ChatBot } from './components/ChatBot';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -204,11 +206,13 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
+                <FloatingChatButton />
               </>
             )}
           </div>
           <ToastEventHandler />
           <Toaster />
+          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
     </CustomerProvider>
