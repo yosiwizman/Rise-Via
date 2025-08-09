@@ -8,28 +8,23 @@ import { ProductDetailModal } from '../components/ProductDetailModal';
 import { SearchFilters } from '../components/SearchFilters';
 import { useCart } from '../hooks/useCart';
 import { productService } from '../services/productService';
+import { Product } from '../types/product';
 import productsData from '../data/products.json';
+
+interface FilterOptions {
+  strainType?: string;
+  thcaRange?: { min: number; max: number };
+  effects?: string[];
+  priceRange?: { min: number; max: number };
+  category?: string;
+  sortBy?: string;
+}
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  interface Product {
-    id: string;
-    name: string;
-    slug: string;
-    price: number;
-    category: string;
-    strainType: string;
-    thcaPercentage: number;
-    description: string;
-    effects: string[];
-    images: string[];
-    featured: boolean;
-    inventory: number;
-  }
-
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -47,11 +42,11 @@ export const ShopPage = () => {
       if (dbProducts.length > 0) {
         setProducts(dbProducts);
       } else {
-        setProducts(productsData.products as any);
+        setProducts(productsData.products as Product[]);
       }
     } catch (error) {
       console.error('Error loading products:', error);
-      setProducts(productsData.products as any);
+      setProducts(productsData.products as Product[]);
     } finally {
       setLoading(false);
     }
@@ -61,7 +56,7 @@ export const ShopPage = () => {
     setSearchTerm(term);
   };
 
-  const handleFilter = (filters: any) => {
+  const handleFilter = (filters: FilterOptions) => {
     setFilter(filters.strainType || 'all');
   };
 
@@ -70,14 +65,14 @@ export const ShopPage = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
+    const filtered = products.filter(product => {
       const matchesSearch = !searchTerm || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.effects.some((effect: string) => effect.toLowerCase().includes(searchTerm.toLowerCase()));
+        (product.effects || []).some((effect: string) => effect.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesType = filter === 'all' || 
-        (product.strain_type || (product as any).strainType) === filter;
+        (product.strain_type || product.strainType) === filter;
       
       return matchesSearch && matchesType;
     });
@@ -86,14 +81,16 @@ export const ShopPage = () => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'price':
-          const priceA = typeof a.prices === 'object' ? a.prices.gram : (a as any).price || 0;
-          const priceB = typeof b.prices === 'object' ? b.prices.gram : (b as any).price || 0;
+        case 'price': {
+          const priceA = typeof a.prices === 'object' ? a.prices.gram : a.price || 0;
+          const priceB = typeof b.prices === 'object' ? b.prices.gram : b.price || 0;
           return priceA - priceB;
-        case 'thca':
-          const thcaA = a.thca_percentage || (a as any).thcaPercentage || 0;
-          const thcaB = b.thca_percentage || (b as any).thcaPercentage || 0;
+        }
+        case 'thca': {
+          const thcaA = a.thca_percentage || a.thcaPercentage || 0;
+          const thcaB = b.thca_percentage || b.thcaPercentage || 0;
           return thcaB - thcaA;
+        }
         case 'popularity':
           return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
         default:
@@ -103,11 +100,23 @@ export const ShopPage = () => {
   }, [products, filter, searchTerm, sortBy]);
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
+    const modalProduct = {
+      id: product.id || '',
+      name: product.name,
+      price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+      images: product.images,
+      strainType: product.strain_type || product.strainType || '',
+      category: product.category,
+      thcaPercentage: product.thca_percentage || product.thcaPercentage || 0,
+      description: product.description || '',
+      effects: product.effects || [],
+      inventory: product.inventory || product.volume_available || 0
+    };
+    setSelectedProduct(modalProduct as Product);
     setShowModal(true);
   };
 
-  const ProductCard = ({ product }: { product: Product | any }) => {
+  const ProductCard = ({ product }: { product: Product }) => {
     return (
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
@@ -124,12 +133,12 @@ export const ShopPage = () => {
             <div onClick={(e) => e.stopPropagation()}>
               <WishlistButton
                 item={{
-                  id: product.id,
+                  id: product.id || '',
                   name: product.name,
-                  price: typeof product.prices === 'object' ? product.prices.gram : (product as any).price,
+                  price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
                   image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
                   category: product.category,
-                  effects: product.effects
+                  effects: product.effects || []
                 }}
                 size="md"
               />
@@ -138,18 +147,18 @@ export const ShopPage = () => {
         </div>
         <div className="p-4">
           <h3 className="font-bold text-lg mb-2 text-risevia-black dark:text-gray-100">{product.name}</h3>
-          <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strain_type || (product as any).strainType}</p>
+          <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strain_type || product.strainType}</p>
           <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">{product.description}</p>
           <div className="flex justify-between items-center mb-4">
             <span className="text-xl font-bold text-risevia-black dark:text-gray-100">
-              ${typeof product.prices === 'object' ? product.prices.gram : (product as any).price}
+              ${typeof product.prices === 'object' ? product.prices.gram : product.price}
             </span>
             <Badge className="bg-risevia-teal text-white">
-              {product.thca_percentage || (product as any).thcaPercentage}% THCA
+              {product.thca_percentage || product.thcaPercentage}% THCA
             </Badge>
           </div>
           <div className="flex flex-wrap gap-1 mb-4">
-            {product.effects.map((effect: string, index: number) => (
+            {(product.effects || []).map((effect: string, index: number) => (
               <Badge key={index} variant="outline" className="text-xs border-risevia-purple text-risevia-purple">
                 {effect}
               </Badge>
@@ -159,13 +168,13 @@ export const ShopPage = () => {
             onClick={(e) => {
               e.stopPropagation();
               addToCart({
-                productId: product.id,
+                productId: product.id || '',
                 name: product.name,
-                price: typeof product.prices === 'object' ? product.prices.gram : (product as any).price,
+                price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
                 image: product.images[0],
                 category: product.category,
-                strainType: product.strain_type || (product as any).strainType,
-                thcaPercentage: product.thca_percentage || (product as any).thcaPercentage
+                strainType: product.strain_type || product.strainType || '',
+                thcaPercentage: product.thca_percentage || product.thcaPercentage || 0
               });
               console.log('✅ Added to cart:', product.name);
             }}
@@ -237,7 +246,7 @@ export const ShopPage = () => {
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            Sativa ({products.filter(p => (p.strain_type || (p as any).strainType) === 'sativa').length})
+            Sativa ({products.filter(p => (p.strain_type || p.strainType) === 'sativa').length})
           </button>
           <button 
             onClick={() => setFilter('indica')}
@@ -247,7 +256,7 @@ export const ShopPage = () => {
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            Indica ({products.filter(p => (p.strain_type || (p as any).strainType) === 'indica').length})
+            Indica ({products.filter(p => (p.strain_type || p.strainType) === 'indica').length})
           </button>
           <button 
             onClick={() => setFilter('hybrid')}
@@ -257,7 +266,7 @@ export const ShopPage = () => {
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            Hybrid ({products.filter(p => (p.strain_type || (p as any).strainType) === 'hybrid').length})
+            Hybrid ({products.filter(p => (p.strain_type || p.strainType) === 'hybrid').length})
           </button>
         </motion.div>
         
@@ -307,7 +316,18 @@ export const ShopPage = () => {
       <ProductDetailModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        product={selectedProduct}
+        product={selectedProduct ? {
+          id: selectedProduct.id || '',
+          name: selectedProduct.name,
+          price: selectedProduct.price || 0,
+          images: selectedProduct.images,
+          strainType: selectedProduct.strainType || selectedProduct.strain_type || '',
+          category: selectedProduct.category,
+          thcaPercentage: selectedProduct.thcaPercentage || selectedProduct.thca_percentage || 0,
+          description: selectedProduct.description,
+          effects: selectedProduct.effects || [],
+          inventory: selectedProduct.inventory || selectedProduct.volume_available || 0
+        } : null}
       />
     </div>
   );

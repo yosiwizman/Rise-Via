@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { productService } from '../../services/productService';
+import { Product } from '../../types/product';
 import productsData from '../../data/products.json';
 
 interface InventoryItem {
@@ -41,7 +42,7 @@ export const InventoryManager: React.FC = () => {
   const [adjustmentType, setAdjustmentType] = useState<'increase' | 'decrease'>('increase');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     loadInventoryData();
@@ -57,15 +58,15 @@ export const InventoryManager: React.FC = () => {
       if (dbProducts.length > 0) {
         setProducts(dbProducts);
         const inventoryItems: InventoryItem[] = dbProducts.map(product => ({
-          id: product.id!,
+          id: product.id || '',
           name: product.name,
-          sku: product.sample_id,
-          currentStock: product.volume_available,
+          sku: product.sample_id || '',
+          currentStock: product.volume_available || 0,
           lowStockThreshold: 10,
           reorderPoint: 20,
           lastRestocked: product.updated_at || product.created_at || new Date().toISOString(),
           category: product.category,
-          price: typeof product.prices === 'object' ? product.prices.gram : 0
+          price: product.price || 0
         }));
         setInventory(inventoryItems);
         

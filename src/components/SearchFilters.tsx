@@ -52,7 +52,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
     onSearch(value);
   };
 
-  const handleFilterChange = (key: keyof FilterOptions, value: any) => {
+  const handleFilterChange = (key: keyof FilterOptions, value: string | number[] | { min: number; max: number } | string[]) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     onFilter(newFilters);
