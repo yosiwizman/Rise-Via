@@ -107,10 +107,10 @@ function calculateStats(items: WishlistItem[]): WishlistStats {
 function trackWishlistEvent(
   action: 'add' | 'remove' | 'clear' | 'share' | 'import',
   item?: WishlistItem,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `wishlist_${action}`, {
+    (window as { gtag: (...args: unknown[]) => void }).gtag('event', `wishlist_${action}`, {
       event_category: 'wishlist',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,
@@ -175,7 +175,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         ORDER BY created_at DESC
       `;
 
-      const items = itemsData ? (itemsData as any[]).map(mapDbItemToWishlistItem) : [];
+      const items = itemsData ? (itemsData as DbItem[]).map(mapDbItemToWishlistItem) : [];
 
       set({
         sessionId,
@@ -232,7 +232,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         ORDER BY created_at DESC
       `;
       if (itemsData) {
-        const items = (itemsData as any[]).map(mapDbItemToWishlistItem);
+        const items = (itemsData as DbItem[]).map(mapDbItemToWishlistItem);
         set({
           items,
           stats: calculateStats(items)

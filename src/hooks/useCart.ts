@@ -198,7 +198,7 @@ function calculateQuantityBreaks(basePrice: number): QuantityBreak[] {
   ];
 }
 
-function generateBundleSuggestions(itemData: any): BundleSuggestion[] {
+function generateBundleSuggestions(itemData: { strainType?: string; [key: string]: unknown }): BundleSuggestion[] {
   const suggestions = [
     {
       productId: 'bundle-suggestion-1',
