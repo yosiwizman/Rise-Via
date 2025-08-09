@@ -1,6 +1,8 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL || 'postgresql://placeholder');
+const databaseUrl = import.meta.env.VITE_DATABASE_URL || 'postgresql://placeholder:placeholder@localhost/placeholder';
+
+const sql = neon(databaseUrl);
 
 export { sql };
 
