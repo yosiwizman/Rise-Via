@@ -42,7 +42,7 @@ export const ProductManager: React.FC = () => {
       } else {
         throw new Error('No products found in database');
       }
-    } catch (error) {
+    } catch {
       // fallback to static data
       const loadedProducts = productsData.products.map(product => ({
         ...product,
