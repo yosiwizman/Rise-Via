@@ -1,12 +1,13 @@
 import { cartAnalytics } from '../analytics/cartAnalytics';
 import { emailService } from './emailService';
+import { CartItem } from '../types/cart';
 
 interface AbandonedCart {
   sessionId: string;
   userId?: string;
   email?: string;
   customerName?: string;
-  items: any[];
+  items: CartItem[];
   totalValue: number;
   abandonedAt: number;
   emailsSent: string[];
@@ -103,7 +104,7 @@ class AbandonedCartService {
     };
   }
 
-  private updateAbandonmentTimer(cartData: any, email?: string, customerName?: string) {
+  private updateAbandonmentTimer(cartData: { sessionId: string; userId: string; items: CartItem[]; stats: { totalValue: number } }, email?: string, customerName?: string) {
     const abandonedCarts = this.getAbandonedCarts();
     const existingCartIndex = abandonedCarts.findIndex(cart => cart.sessionId === cartData.sessionId);
 
@@ -163,7 +164,7 @@ class AbandonedCartService {
     try {
       const discountCode = emailConfig.discount ? this.generateDiscountCode(emailConfig.discount) : undefined;
       
-      await this.sendEmailViaResend(cart, emailConfig, discountCode);
+      await this.sendEmailViaResend(cart);
       
       cart.emailsSent.push(emailConfig.type);
       if (discountCode) {
@@ -189,7 +190,7 @@ class AbandonedCartService {
     return `${prefix}${discount}${suffix}`;
   }
 
-  private async sendEmailViaResend(cart: AbandonedCart, _emailConfig: EmailSequenceConfig, _discountCode?: string) {
+  private async sendEmailViaResend(cart: AbandonedCart) {
     return emailService.sendOrderConfirmation(cart.email!, {
       orderNumber: `CART-${cart.sessionId.slice(-8)}`,
       total: cart.totalValue

@@ -1,11 +1,27 @@
 import { customerService } from './customerService';
 import { listmonkService } from './ListmonkService';
 
+interface Customer {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  created_at: string;
+  customer_profiles?: Array<{
+    membership_tier?: string;
+    loyalty_points?: number;
+    lifetime_value?: number;
+    total_orders?: number;
+    last_order_date?: string;
+    is_b2b?: boolean;
+  }>;
+}
+
 export interface CustomerSegment {
   id: string;
   name: string;
   description: string;
-  criteria: (customer: any) => boolean;
+  criteria: (customer: Customer) => boolean;
   listmonkListId?: number;
   color: string;
 }
@@ -18,7 +34,7 @@ class CustomerSegmentationService {
       description: 'High-value customers with $1500+ lifetime value',
       color: '#8b5cf6',
       criteria: (customer) => {
-        const profile = customer.customer_profiles?.[0] || customer.profile;
+        const profile = customer.customer_profiles?.[0];
         return (profile?.lifetime_value || 0) >= 1500;
       }
     },
@@ -28,7 +44,7 @@ class CustomerSegmentationService {
       description: 'Customers with 2+ orders and $500+ lifetime value',
       color: '#10b981',
       criteria: (customer) => {
-        const profile = customer.customer_profiles?.[0] || customer.profile;
+        const profile = customer.customer_profiles?.[0];
         return (profile?.total_orders || 0) >= 2 && (profile?.lifetime_value || 0) >= 500;
       }
     },
@@ -49,7 +65,7 @@ class CustomerSegmentationService {
       description: 'No purchases in 60+ days',
       color: '#ef4444',
       criteria: (customer) => {
-        const profile = customer.customer_profiles?.[0] || customer.profile;
+        const profile = customer.customer_profiles?.[0];
         if (!profile?.last_order_date) return true;
         const lastOrder = new Date(profile.last_order_date).getTime();
         const sixtyDaysAgo = Date.now() - (60 * 24 * 60 * 60 * 1000);
@@ -62,7 +78,7 @@ class CustomerSegmentationService {
       description: 'Business customers and wholesale accounts',
       color: '#f59e0b',
       criteria: (customer) => {
-        const profile = customer.customer_profiles?.[0] || customer.profile;
+        const profile = customer.customer_profiles?.[0];
         return profile?.is_b2b === true;
       }
     },
@@ -95,10 +111,10 @@ class CustomerSegmentationService {
     }
   ];
 
-  async segmentCustomers(): Promise<Map<string, any[]>> {
+  async segmentCustomers(): Promise<Map<string, Customer[]>> {
     try {
       const customers = await customerService.getAll();
-      const segmentedCustomers = new Map<string, any[]>();
+      const segmentedCustomers = new Map<string, Customer[]>();
 
       for (const segment of this.segments) {
         const matchingCustomers = customers.filter(segment.criteria);
@@ -175,7 +191,7 @@ class CustomerSegmentationService {
     }
   }
 
-  async addCustomerToSegments(customer: any): Promise<void> {
+  async addCustomerToSegments(customer: Customer): Promise<void> {
     try {
       const segments = this.segments.filter(segment => segment.criteria(customer));
       
@@ -207,14 +223,14 @@ class CustomerSegmentationService {
     }
   }
 
-  getSegmentStats(segmentedCustomers: Map<string, any[]>) {
+  getSegmentStats(segmentedCustomers: Map<string, Customer[]>) {
     const stats = new Map();
     
     for (const [segmentId, customers] of segmentedCustomers) {
       const segment = this.segments.find(s => s.id === segmentId);
       if (segment) {
         const totalValue = customers.reduce((sum, customer) => {
-          const profile = customer.customer_profiles?.[0] || customer.profile;
+          const profile = customer.customer_profiles?.[0];
           return sum + (profile?.lifetime_value || 0);
         }, 0);
 
