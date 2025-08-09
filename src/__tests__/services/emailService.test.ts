@@ -1,12 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { emailService } from '../../services/emailService'
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-  },
+vi.mock('../../lib/neon', () => ({
+  sql: vi.fn(() => Promise.resolve([]))
 }))
 
 describe('emailService', () => {

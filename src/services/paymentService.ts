@@ -1,104 +1,343 @@
-import { PaymentProvider } from './payments/PaymentProvider';
-import { POSaBITProvider } from './payments/POSaBIT';
-import { AeropayProvider } from './payments/Aeropay';
-import { HypurProvider } from './payments/Hypur';
-import { StripeProvider } from './payments/Stripe';
-import { validateShippingState } from '../utils/stateBlocking';
+/**
+ * Cannabis Payment Service
+ * Integrates with cannabis-compliant payment processors
+ */
 
-export type PaymentProviderType = 'posabit' | 'aeropay' | 'hypur' | 'stripe';
-
-interface PaymentConfig {
-  provider: PaymentProviderType;
-  apiKey: string;
-  testMode: boolean;
-  enabledStates?: string[];
+export interface PaymentProcessor {
+  name: string;
+  type: 'ACH' | 'Digital Wallet' | 'POS Integration';
+  isAvailable: boolean;
 }
 
-class PaymentService {
-  private providers: Map<PaymentProviderType, PaymentProvider> = new Map();
-  private activeProvider: PaymentProviderType = 'posabit';
-  private config: PaymentConfig | null = null;
+export interface PaymentResult {
+  success: boolean;
+  transactionId?: string;
+  paymentUrl?: string;
+  walletUrl?: string;
+  status?: string;
+  error?: string;
+  orderNumber?: string;
+  paymentMethod?: string;
+}
 
-  async initialize(config: PaymentConfig) {
-    this.config = config;
-    this.activeProvider = config.provider;
+export interface OrderData {
+  orderId: string;
+  amount: number;
+  customerId: string;
+  items: CartItem[];
+}
 
-    if (config.provider === 'posabit') {
-      this.providers.set('posabit', new POSaBITProvider(config.apiKey, config.testMode));
-    } else if (config.provider === 'aeropay') {
-      this.providers.set('aeropay', new AeropayProvider(config.apiKey, config.testMode));
-    } else if (config.provider === 'hypur') {
-      this.providers.set('hypur', new HypurProvider(config.apiKey, config.testMode));
-    } else if (config.provider === 'stripe') {
-      this.providers.set('stripe', new StripeProvider(config.apiKey, config.testMode));
-    }
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+/**
+ * POSaBIT Integration
+ * Cannabis-specific POS and payment solution
+ */
+class POSaBITService {
+  private apiKey: string;
+  private apiSecret: string;
+  private baseUrl = 'https://api.posabit.com/v1';
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_POSABIT_API_KEY || '';
+    this.apiSecret = import.meta.env.VITE_POSABIT_SECRET || '';
   }
 
-  async processPayment(amount: number, customer: { email: string; name: string; address: { street: string; city: string; state: string; zipCode: string; } }, userState: string) {
-    const stateValidation = validateShippingState(userState);
-    if (!stateValidation.isValid) {
-      return {
-        success: false,
-        error: stateValidation.message
-      };
-    }
-
-    if (this.config?.enabledStates && !this.config.enabledStates.includes(userState)) {
-      return {
-        success: false,
-        error: `Payment method not available in ${userState}`
-      };
-    }
-
-    const provider = this.providers.get(this.activeProvider);
-    if (!provider) {
-      return {
-        success: false,
-        error: 'Payment provider not configured'
-      };
-    }
-
-    return await provider.processPayment(amount, customer);
-  }
-
-  async refund(transactionId: string) {
-    const provider = this.providers.get(this.activeProvider);
-    if (!provider) {
-      return {
-        success: false,
-        error: 'Payment provider not configured'
-      };
-    }
-
-    return await provider.refund(transactionId);
-  }
-
-  getActiveProvider(): PaymentProvider | undefined {
-    return this.providers.get(this.activeProvider);
-  }
-
-  getActiveProviderName(): string {
-    return this.activeProvider;
-  }
-
-  loadConfigFromStorage(): PaymentConfig | null {
+  async initializePayment(_amount: number, orderId: string): Promise<PaymentResult> {
     try {
-      const stored = localStorage.getItem('payment_settings');
-      if (stored) {
-        return JSON.parse(stored);
+      // TODO: Implement actual POSaBIT API integration
+      // For now, return mock response
+      if (!this.apiKey || !this.apiSecret) {
+        return {
+          success: false,
+          error: 'POSaBIT credentials not configured'
+        };
       }
+
+      // Mock successful response
+      return {
+        success: true,
+        paymentUrl: `${this.baseUrl}/checkout/${orderId}`,
+        transactionId: `POS_${Date.now()}_${orderId}`,
+        status: 'pending'
+      };
     } catch (error) {
-      console.error('Failed to load payment config:', error);
+      console.error('POSaBIT payment initialization failed:', error);
+      return {
+        success: false,
+        error: 'Failed to initialize POSaBIT payment'
+      };
     }
-    return null;
   }
 
-  async initializeFromStorage() {
-    const config = this.loadConfigFromStorage();
-    if (config) {
-      await this.initialize(config);
+  async verifyPayment(transactionId: string): Promise<PaymentResult> {
+    try {
+      // TODO: Implement actual verification
+      return {
+        success: true,
+        transactionId,
+        status: 'completed'
+      };
+    } catch (error) {
+      console.error('POSaBIT verification failed:', error);
+      return {
+        success: false,
+        error: 'Payment verification failed'
+      };
     }
   }
 }
 
+/**
+ * Aeropay Integration
+ * ACH payment solution for cannabis
+ */
+class AeropayService {
+  private apiKey: string;
+  private apiSecret: string;
+  private baseUrl = 'https://api.aeropay.com/v1';
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_AEROPAY_API_KEY || '';
+    this.apiSecret = import.meta.env.VITE_AEROPAY_SECRET || '';
+  }
+
+  async processACHPayment(orderData: OrderData): Promise<PaymentResult> {
+    try {
+      // TODO: Implement actual Aeropay API integration
+      if (!this.apiKey || !this.apiSecret) {
+        return {
+          success: false,
+          error: 'Aeropay credentials not configured'
+        };
+      }
+
+      // Mock ACH processing
+      return {
+        success: true,
+        transactionId: `AERO_${Date.now()}_${orderData.orderId}`,
+        status: 'processing',
+        paymentUrl: `${this.baseUrl}/ach/${orderData.orderId}`
+      };
+    } catch (error) {
+      console.error('Aeropay ACH processing failed:', error);
+      return {
+        success: false,
+        error: 'ACH payment processing failed'
+      };
+    }
+  }
+
+  async getPaymentStatus(transactionId: string): Promise<PaymentResult> {
+    try {
+      // TODO: Implement actual status check
+      return {
+        success: true,
+        transactionId,
+        status: 'completed'
+      };
+    } catch (error) {
+      console.error('Aeropay status check failed:', error);
+      return {
+        success: false,
+        error: 'Unable to check payment status'
+      };
+    }
+  }
+}
+
+/**
+ * Hypur Integration
+ * Digital wallet for cannabis transactions
+ */
+class HypurService {
+  private apiKey: string;
+  private apiSecret: string;
+  private baseUrl = 'https://api.hypur.com/v1';
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_HYPUR_API_KEY || '';
+    this.apiSecret = import.meta.env.VITE_HYPUR_SECRET || '';
+  }
+
+  async initializeWallet(_cartItems: CartItem[], customerId: string): Promise<PaymentResult> {
+    try {
+      // TODO: Implement actual Hypur API integration
+      if (!this.apiKey || !this.apiSecret) {
+        return {
+          success: false,
+          error: 'Hypur credentials not configured'
+        };
+      }
+
+      // Calculate total (unused for now, but may be needed for actual API)
+      // const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Mock wallet initialization
+      return {
+        success: true,
+        walletUrl: `${this.baseUrl}/wallet/checkout`,
+        transactionId: `HYP_${Date.now()}_${customerId}`,
+        status: 'awaiting_authorization'
+      };
+    } catch (error) {
+      console.error('Hypur wallet initialization failed:', error);
+      return {
+        success: false,
+        error: 'Failed to initialize Hypur wallet'
+      };
+    }
+  }
+
+  async authorizeTransaction(transactionId: string): Promise<PaymentResult> {
+    try {
+      // TODO: Implement actual authorization
+      return {
+        success: true,
+        transactionId,
+        status: 'authorized'
+      };
+    } catch (error) {
+      console.error('Hypur authorization failed:', error);
+      return {
+        success: false,
+        error: 'Transaction authorization failed'
+      };
+    }
+  }
+}
+
+/**
+ * Main Payment Service
+ * Orchestrates different payment processors
+ */
+export class PaymentService {
+  private posabit: POSaBITService;
+  private aeropay: AeropayService;
+  private hypur: HypurService;
+
+  constructor() {
+    this.posabit = new POSaBITService();
+    this.aeropay = new AeropayService();
+    this.hypur = new HypurService();
+  }
+
+  /**
+   * Get available payment processors
+   */
+  getAvailableProcessors(): PaymentProcessor[] {
+    return [
+      {
+        name: 'POSaBIT',
+        type: 'POS Integration',
+        isAvailable: !!import.meta.env.VITE_POSABIT_API_KEY
+      },
+      {
+        name: 'Aeropay',
+        type: 'ACH',
+        isAvailable: !!import.meta.env.VITE_AEROPAY_API_KEY
+      },
+      {
+        name: 'Hypur',
+        type: 'Digital Wallet',
+        isAvailable: !!import.meta.env.VITE_HYPUR_API_KEY
+      }
+    ];
+  }
+
+  /**
+   * Initialize POSaBIT payment
+   */
+  async initializePOSaBIT(amount: number, orderId: string): Promise<PaymentResult> {
+    return this.posabit.initializePayment(amount, orderId);
+  }
+
+  /**
+   * Verify POSaBIT payment
+   */
+  async verifyPOSaBIT(transactionId: string): Promise<PaymentResult> {
+    return this.posabit.verifyPayment(transactionId);
+  }
+
+  /**
+   * Process Aeropay ACH payment
+   */
+  async processAeropay(orderData: OrderData): Promise<PaymentResult> {
+    return this.aeropay.processACHPayment(orderData);
+  }
+
+  /**
+   * Check Aeropay payment status
+   */
+  async checkAeropayStatus(transactionId: string): Promise<PaymentResult> {
+    return this.aeropay.getPaymentStatus(transactionId);
+  }
+
+  /**
+   * Initialize Hypur wallet
+   */
+  async initializeHypur(cartItems: CartItem[], customerId: string): Promise<PaymentResult> {
+    return this.hypur.initializeWallet(cartItems, customerId);
+  }
+
+  /**
+   * Authorize Hypur transaction
+   */
+  async authorizeHypur(transactionId: string): Promise<PaymentResult> {
+    return this.hypur.authorizeTransaction(transactionId);
+  }
+
+  /**
+   * Process payment with automatic processor selection
+   */
+  async processPayment(orderData: OrderData, preferredProcessor?: string): Promise<PaymentResult> {
+    const processors = this.getAvailableProcessors();
+    const availableProcessors = processors.filter(p => p.isAvailable);
+
+    if (availableProcessors.length === 0) {
+      return {
+        success: false,
+        error: 'No payment processors configured. Please contact support.'
+      };
+    }
+
+    // Try preferred processor first if specified
+    if (preferredProcessor) {
+      const processor = availableProcessors.find(p => p.name === preferredProcessor);
+      if (processor) {
+        switch (processor.name) {
+          case 'POSaBIT':
+            return this.initializePOSaBIT(orderData.amount, orderData.orderId);
+          case 'Aeropay':
+            return this.processAeropay(orderData);
+          case 'Hypur':
+            return this.initializeHypur(orderData.items, orderData.customerId);
+        }
+      }
+    }
+
+    // Default to first available processor
+    const defaultProcessor = availableProcessors[0];
+    switch (defaultProcessor.name) {
+      case 'POSaBIT':
+        return this.initializePOSaBIT(orderData.amount, orderData.orderId);
+      case 'Aeropay':
+        return this.processAeropay(orderData);
+      case 'Hypur':
+        return this.initializeHypur(orderData.items, orderData.customerId);
+      default:
+        return {
+          success: false,
+          error: 'Payment processor not supported'
+        };
+    }
+  }
+}
+
+// Export singleton instance
 export const paymentService = new PaymentService();

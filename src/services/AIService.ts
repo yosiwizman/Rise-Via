@@ -1,260 +1,339 @@
-import productsData from '../data/products.json';
-import { sanitizeAIResponse } from '../utils/aiCompliance';
+/**
+ * AI Service for Rise-Via Cannabis E-commerce
+ * Provides intelligent product recommendations and customer support
+ */
 
-interface ProductGenerationRequest {
-  name: string;
-  strainType: 'sativa' | 'indica' | 'hybrid';
-  thcaPercentage: number;
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
+  dangerouslyAllowBrowser: true // Note: In production, use a backend API
+});
+
+export interface UserPreferences {
+  desiredEffects?: string[];
+  medicalConditions?: string[];
+  experienceLevel?: 'beginner' | 'intermediate' | 'expert';
+  preferredStrainType?: 'sativa' | 'indica' | 'hybrid';
+  thcTolerance?: 'low' | 'medium' | 'high';
+  priceRange?: { min: number; max: number };
+}
+
+export interface ProductRecommendation {
+  productId: string;
+  productName: string;
+  reason: string;
+  matchScore: number;
   effects: string[];
-  category: string;
+  thcLevel: number;
 }
 
-interface BlogPostRequest {
-  topic: string;
-  keywords: string[];
-  targetLength: number;
-  tone: 'educational' | 'promotional' | 'informative';
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: Date;
 }
 
-export const aiService = {
-  async generateProductDescription(productData: ProductGenerationRequest): Promise<string> {
-    try {
-      
-      const prompt = `Generate a compliant cannabis product description for:
-      Name: ${productData.name}
-      Type: ${productData.strainType}
-      THCA: ${productData.thcaPercentage}%
-      Effects: ${productData.effects.join(', ')}
-      Category: ${productData.category}
-      
-      Requirements:
-      - No medical claims
-      - Include effects and flavor profile
-      - Mention THCA percentage
-      - Keep under 200 words
-      - Professional tone`;
+export class AIService {
+  private static conversationHistory: ChatMessage[] = [];
+  private static systemPrompt = `You are a knowledgeable cannabis consultant for Rise-Via, a premium THCA cannabis e-commerce platform. 
+Your role is to:
+1. Provide accurate, helpful information about cannabis products
+2. Make personalized strain recommendations based on user preferences
+3. Educate users about effects, terpenes, and responsible use
+4. Maintain compliance with all cannabis regulations
+5. Never provide medical advice - recommend consulting healthcare providers for medical questions
+6. Always verify users are 21+ before providing recommendations
+7. Be friendly, professional, and educational
 
-      const response = await this.callFlowiseAPI('/api/v1/prediction/product-description', {
-        question: prompt,
-        productData
+Important compliance notes:
+- Only discuss legal THCA products (less than 0.3% Delta-9 THC)
+- Remind users to check their local laws
+- Do not make unsubstantiated health claims
+- Focus on effects and experiences, not medical benefits`;
+
+  /**
+   * Get personalized strain recommendations
+   */
+  static async getStrainRecommendation(userPreferences: UserPreferences): Promise<string> {
+    try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return 'AI recommendations are currently unavailable. Please browse our catalog or contact support for assistance.';
+      }
+
+      const prompt = `Based on the following cannabis preferences, recommend suitable THCA strains:
+      
+Desired Effects: ${userPreferences.desiredEffects?.join(', ') || 'Not specified'}
+Experience Level: ${userPreferences.experienceLevel || 'Not specified'}
+Preferred Strain Type: ${userPreferences.preferredStrainType || 'Any'}
+THC Tolerance: ${userPreferences.thcTolerance || 'Unknown'}
+Price Range: ${userPreferences.priceRange ? `$${userPreferences.priceRange.min}-$${userPreferences.priceRange.max}` : 'Any'}
+Medical Conditions: ${userPreferences.medicalConditions?.join(', ') || 'None specified'}
+
+Please recommend 3 specific strains and explain why each would be suitable. Focus on effects, terpene profiles, and user experience. Keep recommendations compliant and educational.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: this.systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
       });
 
-      const sanitizedResponse = sanitizeAIResponse(response.text);
-      return sanitizedResponse;
+      return response.choices[0]?.message?.content || 'Unable to generate recommendations at this time.';
     } catch (error) {
-      console.error('Product description generation failed:', error);
-      return this.getFallbackProductDescription(productData);
+      console.error('AI recommendation error:', error);
+      return 'Recommendation service temporarily unavailable. Please try again later.';
     }
-  },
+  }
 
-  async generateBlogPost(request: BlogPostRequest): Promise<string> {
-    try {
-      
-      const prompt = `Write a ${request.targetLength}-word blog post about ${request.topic}.
-      Keywords to include: ${request.keywords.join(', ')}
-      Tone: ${request.tone}
-      
-      Requirements:
-      - Educational content only
-      - No medical claims
-      - Include legal disclaimers
-      - Cannabis industry focus
-      - SEO optimized`;
-
-      const response = await this.callFlowiseAPI('/api/v1/prediction/blog-post', {
-        question: prompt,
-        ...request
-      });
-
-      const sanitizedResponse = sanitizeAIResponse(response.text);
-      return sanitizedResponse;
-    } catch (error) {
-      console.error('Blog post generation failed:', error);
-      return this.getFallbackBlogPost(request);
-    }
-  },
-
-  async getChatResponse(message: string, context: Record<string, unknown> = {}): Promise<string> {
-    try {
-      const cannabisContext = this.buildCannabisContext();
-      
-      const prompt = `User question: ${message}
-      
-      Context: Cannabis e-commerce platform
-      Available products: ${productsData.products.length} strains
-      Knowledge base: ${JSON.stringify(cannabisContext)}
-      
-      Provide helpful, compliant response about:
-      - Strain information and effects
-      - General cannabis education
-      - Product recommendations
-      - Dosage guidance (general only)
-      - Legal information
-      
-      Always include compliance disclaimer.`;
-
-      const response = await this.callFlowiseAPI('/api/v1/prediction/chat', {
-        question: prompt,
-        context
-      });
-
-      const sanitizedResponse = sanitizeAIResponse(response.text);
-      return sanitizedResponse;
-    } catch (error) {
-      console.error('Chat response failed:', error);
-      return this.getFallbackChatResponse(message);
-    }
-  },
-
-  async getStrainRecommendations(preferences: {
-    effects?: string[];
-    strainType?: string;
-    thcaRange?: [number, number];
-  }): Promise<Array<{
-    id: string;
+  /**
+   * Generate product descriptions
+   */
+  static async generateProductDescription(productData: {
     name: string;
     strainType: string;
-    thcaPercentage: number;
+    thcPercentage: number;
+    cbdPercentage: number;
+    terpenes: string[];
     effects: string[];
-    price: number;
-    images: string[];
-  }>> {
-    const products = productsData.products;
-    
-    const filtered = products.filter(product => {
-      if (preferences.strainType && product.strainType !== preferences.strainType) {
-        return false;
-      }
-      
-      if (preferences.thcaRange) {
-        const [min, max] = preferences.thcaRange;
-        if (product.thcaPercentage < min || product.thcaPercentage > max) {
-          return false;
-        }
-      }
-      
-      if (preferences.effects && preferences.effects.length > 0) {
-        const hasMatchingEffect = preferences.effects.some(effect => 
-          product.effects.some(productEffect => 
-            productEffect.toLowerCase().includes(effect.toLowerCase())
-          )
-        );
-        if (!hasMatchingEffect) return false;
-      }
-      
-      return true;
-    });
-
-    return filtered.slice(0, 5);
-  },
-
-  async generateMetaDescription(content: string): Promise<string> {
+  }): Promise<string> {
     try {
-      const prompt = `Generate an SEO meta description (150-160 characters) for this cannabis content:
-      ${content.substring(0, 500)}...
-      
-      Requirements:
-      - Include relevant keywords
-      - Compelling and informative
-      - Cannabis industry appropriate
-      - Under 160 characters`;
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return '';
+      }
 
-      const response = await this.callFlowiseAPI('/api/v1/prediction/meta', {
-        question: prompt,
-        content
+      const prompt = `Create a compelling, SEO-friendly product description for:
+      
+Product: ${productData.name}
+Strain Type: ${productData.strainType}
+THC: ${productData.thcPercentage}%
+CBD: ${productData.cbdPercentage}%
+Terpenes: ${productData.terpenes.join(', ')}
+Effects: ${productData.effects.join(', ')}
+
+Create a 150-word description that highlights the unique characteristics, effects, and experience. Make it engaging and informative while maintaining compliance.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: this.systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 250,
+        temperature: 0.8
       });
 
-      return response.text.substring(0, 160);
+      return response.choices[0]?.message?.content || '';
     } catch (error) {
-      console.error('Meta description generation failed:', error);
-      return "Premium cannabis products with lab-tested quality. Explore our selection of THCA flower, edibles, and concentrates. 21+ only.";
+      console.error('Product description generation error:', error);
+      return '';
     }
-  },
+  }
 
-  async callFlowiseAPI(endpoint: string, data: Record<string, unknown>): Promise<{ text: string }> {
-    const flowiseUrl = import.meta.env.VITE_FLOWISE_URL || 'http://localhost:3000';
-    const apiKey = import.meta.env.VITE_FLOWISE_API_KEY;
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+  /**
+   * Chat conversation handler
+   */
+  static async chat(message: string): Promise<string> {
+    try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return 'Chat service is currently unavailable. Please contact our support team for assistance.';
+      }
 
-    if (apiKey) {
-      headers['Authorization'] = `Bearer ${apiKey}`;
+      // Add user message to history
+      this.conversationHistory.push({
+        role: 'user',
+        content: message,
+        timestamp: new Date()
+      });
+
+      // Keep conversation history limited to last 10 messages
+      if (this.conversationHistory.length > 10) {
+        this.conversationHistory = this.conversationHistory.slice(-10);
+      }
+
+      // Prepare messages for API
+      const messages = [
+        { role: 'system' as const, content: this.systemPrompt },
+        ...this.conversationHistory.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        }))
+      ];
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages,
+        max_tokens: 300,
+        temperature: 0.7
+      });
+
+      const assistantResponse = response.choices[0]?.message?.content || 'I apologize, but I couldn\'t process your request. Please try again.';
+
+      // Add assistant response to history
+      this.conversationHistory.push({
+        role: 'assistant',
+        content: assistantResponse,
+        timestamp: new Date()
+      });
+
+      return assistantResponse;
+    } catch (error) {
+      console.error('Chat error:', error);
+      return 'I\'m having trouble connecting right now. Please try again in a moment.';
     }
-    
-    const response = await fetch(`${flowiseUrl}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data)
-    });
+  }
 
-    if (!response.ok) {
-      throw new Error(`Flowise API error: ${response.statusText}`);
+  /**
+   * Answer frequently asked questions
+   */
+  static async answerFAQ(question: string): Promise<string> {
+    try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return 'Please refer to our FAQ page or contact support for assistance.';
+      }
+
+      const prompt = `Answer this cannabis-related question concisely and accurately:
+      
+Question: ${question}
+
+Provide a helpful, educational response that maintains compliance with cannabis regulations. If it's a medical question, remind them to consult a healthcare provider.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: this.systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 200,
+        temperature: 0.6
+      });
+
+      return response.choices[0]?.message?.content || 'Unable to answer at this time.';
+    } catch (error) {
+      console.error('FAQ answer error:', error);
+      return 'Unable to process your question. Please contact our support team.';
     }
+  }
 
-    return await response.json();
-  },
+  /**
+   * Analyze customer sentiment from reviews
+   */
+  static async analyzeSentiment(reviewText: string): Promise<{
+    sentiment: 'positive' | 'neutral' | 'negative';
+    score: number;
+    keywords: string[];
+  }> {
+    try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return { sentiment: 'neutral', score: 0.5, keywords: [] };
+      }
 
-  buildCannabisContext(): Record<string, unknown> {
-    const cannabisKnowledge = {
-      strainTypes: ['sativa', 'indica', 'hybrid'],
-      commonEffects: ['relaxed', 'euphoric', 'creative', 'energetic', 'focused', 'happy', 'sleepy'],
-      categories: ['flower', 'pre-rolls', 'concentrates', 'edibles'],
-      thcaRange: '20-32%',
-      legalAge: 21,
-      complianceRequired: true,
-      terpenes: ['myrcene', 'limonene', 'pinene', 'linalool', 'caryophyllene'],
-      consumptionMethods: ['smoking', 'vaporizing', 'edibles', 'tinctures'],
-      safetyGuidelines: [
-        'Start low, go slow',
-        'Do not drive or operate machinery',
-        'Keep away from children and pets',
-        'Store in cool, dry place'
-      ]
-    };
-    
-    return cannabisKnowledge;
-  },
+      const prompt = `Analyze the sentiment of this cannabis product review:
+      
+"${reviewText}"
 
-  getFallbackProductDescription(productData: ProductGenerationRequest): string {
-    const effectsText = productData.effects.join(', ').toLowerCase();
-    const typeDescription = {
-      sativa: 'energizing and uplifting',
-      indica: 'relaxing and calming', 
-      hybrid: 'balanced and versatile'
-    }[productData.strainType];
+Return a JSON object with:
+- sentiment: "positive", "neutral", or "negative"
+- score: 0-1 (0 = very negative, 1 = very positive)
+- keywords: array of key phrases that indicate the sentiment`;
 
-    return `${productData.name} is a premium ${productData.strainType} strain with ${productData.thcaPercentage}% THCA. Known for its ${typeDescription} effects including ${effectsText}. This high-quality ${productData.category} offers a distinctive experience for adult consumers. Lab-tested for purity and potency.
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: 'You are a sentiment analysis expert. Always return valid JSON.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 150,
+        temperature: 0.3
+      });
 
-This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women. Keep out of reach of children and pets.`;
-  },
+      const result = response.choices[0]?.message?.content;
+      if (result) {
+        try {
+          return JSON.parse(result);
+        } catch {
+          // Fallback if JSON parsing fails
+          return { sentiment: 'neutral', score: 0.5, keywords: [] };
+        }
+      }
 
-  getFallbackBlogPost(request: BlogPostRequest): string {
-    return `# Understanding ${request.topic}
-
-Cannabis education continues to evolve as more research becomes available. When exploring ${request.keywords.join(', ')}, it's important to understand the fundamentals.
-
-## Key Considerations
-
-The cannabis industry emphasizes quality, safety, and compliance. Products undergo rigorous testing to ensure purity and accurate labeling.
-
-## Important Information
-
-Always purchase from licensed dispensaries and follow local regulations. Cannabis affects everyone differently, so start with small amounts and wait to assess effects.
-
-The information provided is for educational purposes only and has not been evaluated by the FDA. Cannabis products are for adult use only (21+).`;
-  },
-
-  getFallbackChatResponse(message: string): string {
-    if (message.toLowerCase().includes('strain') || message.toLowerCase().includes('effect')) {
-      return "I can help you learn about different cannabis strains and their general effects. Our products include sativa, indica, and hybrid varieties with various THCA percentages. Each strain has unique characteristics and effects. For specific product recommendations, browse our shop or speak with a budtender. I provide educational information only. For medical advice, consult a healthcare professional.";
+      return { sentiment: 'neutral', score: 0.5, keywords: [] };
+    } catch (error) {
+      console.error('Sentiment analysis error:', error);
+      return { sentiment: 'neutral', score: 0.5, keywords: [] };
     }
-    
-    if (message.toLowerCase().includes('dosage') || message.toLowerCase().includes('dose')) {
-      return "Dosage varies greatly between individuals and products. General guidance suggests starting with small amounts and waiting to assess effects before consuming more. Factors like tolerance, body weight, and experience level all play a role. Always follow product labeling and local regulations. I provide educational information only. For medical advice, consult a healthcare professional.";
+  }
+
+  /**
+   * Generate compliance-aware marketing copy
+   */
+  static async generateMarketingCopy(productName: string, targetAudience: string): Promise<string> {
+    try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        return '';
+      }
+
+      const prompt = `Create a short, engaging marketing tagline for:
+      
+Product: ${productName}
+Target Audience: ${targetAudience}
+
+Requirements:
+- Maximum 15 words
+- Compliance-friendly (no medical claims)
+- Focus on experience and quality
+- Engaging and memorable`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: this.systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 50,
+        temperature: 0.9
+      });
+
+      return response.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('Marketing copy generation error:', error);
+      return '';
     }
-    
-    return "I'm here to provide educational information about cannabis products and general guidance. I can help with strain information, effects, and general cannabis education. How can I assist you today? I provide educational information only. For medical advice, consult a healthcare professional.";
+  }
+
+  /**
+   * Clear conversation history
+   */
+  static clearHistory(): void {
+    this.conversationHistory = [];
+  }
+
+  /**
+   * Get conversation history
+   */
+  static getHistory(): ChatMessage[] {
+    return [...this.conversationHistory];
+  }
+}
+
+// Export singleton instance methods for convenience
+export const aiService = {
+  getRecommendation: AIService.getStrainRecommendation,
+  generateDescription: AIService.generateProductDescription,
+  generateProductDescription: AIService.generateProductDescription, // alias for compatibility
+  chat: AIService.chat,
+  answerFAQ: AIService.answerFAQ,
+  analyzeSentiment: AIService.analyzeSentiment,
+  generateCopy: AIService.generateMarketingCopy,
+  clearHistory: AIService.clearHistory,
+  getHistory: AIService.getHistory,
+  // Add missing methods with basic implementations
+  generateBlogPost: async (data: { topic: string; keywords: string[]; targetLength: number; tone: string }) => {
+    const prompt = `Write a ${data.targetLength}-word ${data.tone} blog post about ${data.topic}. Include these keywords: ${data.keywords.join(', ')}. Focus on cannabis education and compliance.`;
+    return AIService.answerFAQ(prompt);
   }
 };

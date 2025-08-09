@@ -47,9 +47,10 @@ export const AIContentGenerator = () => {
       const result = await aiService.generateProductDescription({
         name: productForm.name,
         strainType: productForm.strainType as 'sativa' | 'indica' | 'hybrid',
-        thcaPercentage: parseFloat(productForm.thcaPercentage),
-        effects: productForm.effects.split(',').map(e => e.trim()),
-        category: productForm.category
+        thcPercentage: parseFloat(productForm.thcaPercentage),
+        cbdPercentage: 0, // Default CBD percentage
+        terpenes: [], // Default empty terpenes
+        effects: productForm.effects.split(',').map(e => e.trim())
       });
       setGeneratedContent(result);
     } catch (error) {

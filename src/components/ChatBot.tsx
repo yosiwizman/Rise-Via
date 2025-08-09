@@ -1,13 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+/**
+ * AI Chat Bot Component for Rise-Via
+ * Provides intelligent cannabis consultation and support
+ */
+
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { aiService } from '../services/AIService';
 
-interface ChatMessage {
+interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -16,44 +22,52 @@ interface ChatMessage {
 
 export const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hi! I\'m your cannabis education assistant. I can help you learn about strains, effects, and general cannabis information. How can I help you today?',
+      content: 'Welcome to Rise-Via! I\'m your cannabis consultant. How can I help you find the perfect strain today?',
       timestamp: new Date()
     }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  // Focus input when chat opens
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
 
-    const userMessage: ChatMessage = {
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputMessage.trim(),
+      content: inputValue,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    setInputValue('');
     setIsLoading(true);
 
     try {
-      const response = await aiService.getChatResponse(userMessage.content);
-      
-      const assistantMessage: ChatMessage = {
+      // Get AI response
+      const response = await aiService.chat(inputValue);
+
+      const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: response,
@@ -63,14 +77,12 @@ export const ChatBot = () => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Chat error:', error);
-      
-      const errorMessage: ChatMessage = {
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'I apologize, but I\'m having trouble responding right now. Please try again in a moment.',
+        content: 'I apologize, but I\'m having trouble responding right now. Please try again or contact our support team.',
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -84,154 +96,159 @@ export const ChatBot = () => {
     }
   };
 
-  const quickQuestions = [
-    "What's the difference between sativa and indica?",
-    "How do I choose the right strain?",
-    "What are terpenes?",
-    "How should I store cannabis products?"
+  const quickActions = [
+    'Recommend a strain for relaxation',
+    'What\'s the difference between Sativa and Indica?',
+    'Help me find products for beginners',
+    'Tell me about terpenes'
   ];
 
-  const handleQuickQuestion = (question: string) => {
-    setInputMessage(question);
+  const handleQuickAction = (action: string) => {
+    setInputValue(action);
+    setTimeout(() => handleSendMessage(), 100);
   };
 
   return (
     <>
+      {/* Chat Button */}
       <AnimatePresence>
         {!isOpen && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50"
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-risevia-purple to-risevia-teal text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-shadow"
           >
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="w-16 h-16 rounded-full bg-gradient-to-r from-risevia-purple to-risevia-teal shadow-lg hover:shadow-xl transition-all duration-300"
-              size="lg"
-            >
-              <MessageCircle className="w-8 h-8 text-white" />
-            </Button>
-          </motion.div>
+            <MessageCircle className="w-6 h-6" />
+          </motion.button>
         )}
       </AnimatePresence>
 
+      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-96 h-[600px] max-h-[80vh]"
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)]"
           >
-            <Card className="h-full flex flex-col shadow-2xl border-risevia-purple/20">
-              <CardHeader className="bg-gradient-to-r from-risevia-purple to-risevia-teal text-white rounded-t-lg">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Bot className="w-5 h-5" />
-                    Cannabis Assistant
-                  </CardTitle>
+            <Card className="bg-risevia-charcoal border-risevia-purple/20 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-risevia-purple to-risevia-teal p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Bot className="w-5 h-5 text-white" />
+                    <h3 className="text-white font-semibold">Cannabis Consultant</h3>
+                  </div>
                   <Button
-                    onClick={() => setIsOpen(false)}
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    onClick={() => setIsOpen(false)}
                     className="text-white hover:bg-white/20"
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
-                <Badge className="bg-white/20 text-white w-fit">
-                  Educational Information Only
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/50 mt-2">
+                  AI-Powered • 21+ Only
                 </Badge>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col p-0">
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.role === 'user'
-                            ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white'
-                            : 'bg-gray-100 text-risevia-black'
-                        }`}
+              <CardContent className="p-0">
+                {/* Messages Area */}
+                <ScrollArea 
+                  ref={scrollAreaRef}
+                  className="h-96 p-4 overflow-y-auto"
+                >
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="flex items-start gap-2">
-                          {message.role === 'assistant' && (
-                            <Bot className="w-4 h-4 mt-1 text-risevia-purple flex-shrink-0" />
-                          )}
-                          {message.role === 'user' && (
-                            <User className="w-4 h-4 mt-1 text-white flex-shrink-0" />
-                          )}
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                            {message.content}
+                        <div className={`flex items-start space-x-2 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                          <div className={`p-2 rounded-full ${message.role === 'user' ? 'bg-risevia-purple' : 'bg-risevia-teal'}`}>
+                            {message.role === 'user' ? (
+                              <User className="w-4 h-4 text-white" />
+                            ) : (
+                              <Bot className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <div className={`px-4 py-2 rounded-lg ${
+                            message.role === 'user' 
+                              ? 'bg-risevia-purple/20 text-white' 
+                              : 'bg-risevia-black/50 text-gray-200'
+                          }`}>
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
                           </div>
                         </div>
-                        <div className={`text-xs mt-2 opacity-70 ${
-                          message.role === 'user' ? 'text-white' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      </motion.div>
+                    ))}
 
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                        <div className="flex items-center gap-2">
-                          <Bot className="w-4 h-4 text-risevia-purple" />
-                          <Loader2 className="w-4 h-4 animate-spin text-risevia-purple" />
-                          <span className="text-sm text-gray-600">Thinking...</span>
+                    {isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex justify-start"
+                      >
+                        <div className="flex items-center space-x-2 bg-risevia-black/50 px-4 py-2 rounded-lg">
+                          <Loader2 className="w-4 h-4 animate-spin text-risevia-teal" />
+                          <span className="text-sm text-gray-400">Thinking...</span>
                         </div>
-                      </div>
-                    </div>
-                  )}
+                      </motion.div>
+                    )}
+                  </div>
+                </ScrollArea>
 
-                  {messages.length === 1 && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 font-medium">Quick questions:</p>
-                      {quickQuestions.map((question, index) => (
+                {/* Quick Actions */}
+                {messages.length === 1 && (
+                  <div className="px-4 pb-2">
+                    <p className="text-xs text-gray-400 mb-2">Quick questions:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {quickActions.map((action, index) => (
                         <button
                           key={index}
-                          onClick={() => handleQuickQuestion(question)}
-                          className="block w-full text-left text-sm p-2 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
+                          onClick={() => handleQuickAction(action)}
+                          className="text-xs bg-risevia-black/50 text-gray-300 px-2 py-1 rounded-md hover:bg-risevia-purple/20 transition-colors"
                         >
-                          {question}
+                          {action}
                         </button>
                       ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  <div ref={messagesEndRef} />
-                </div>
-
-                <div className="border-t p-4">
-                  <div className="flex gap-2">
+                {/* Input Area */}
+                <div className="p-4 border-t border-risevia-purple/20">
+                  <div className="flex space-x-2">
                     <Input
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Ask about strains, effects, or cannabis info..."
-                      className="flex-1"
+                      placeholder="Ask about strains, effects, or products..."
+                      className="bg-risevia-black/50 border-risevia-purple/20 text-white placeholder:text-gray-500"
                       disabled={isLoading}
                     />
                     <Button
                       onClick={handleSendMessage}
-                      disabled={!inputMessage.trim() || isLoading}
-                      className="bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                      disabled={!inputValue.trim() || isLoading}
+                      className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
                     >
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Educational information only. Not medical advice.
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    For medical advice, consult a healthcare provider
                   </p>
                 </div>
               </CardContent>

@@ -1,0 +1,213 @@
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL || '');
+
+export async function testConnection() {
+  try {
+    const result = await sql`SELECT 1 as test`;
+    console.log('Neon Database connected:', result);
+    return true;
+  } catch (error) {
+    console.error('Neon Database connection failed:', error);
+    return false;
+  }
+}
+
+// Create required tables if they don't exist
+export async function initializeTables() {
+  try {
+    // Products table
+    await sql`
+      CREATE TABLE IF NOT EXISTS products (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        thc_percentage DECIMAL(5,2),
+        cbd_percentage DECIMAL(5,2),
+        inventory INTEGER DEFAULT 0,
+        description TEXT,
+        effects TEXT[],
+        active BOOLEAN DEFAULT true,
+        images TEXT[],
+        strain_type VARCHAR(50),
+        terpenes TEXT[],
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Users table  
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(20),
+        date_of_birth DATE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Customers table (for legacy compatibility)
+    await sql`
+      CREATE TABLE IF NOT EXISTS customers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(20),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Customer profiles table
+    await sql`
+      CREATE TABLE IF NOT EXISTS customer_profiles (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        membership_tier VARCHAR(50) DEFAULT 'GREEN',
+        loyalty_points INTEGER DEFAULT 0,
+        preferences JSONB DEFAULT '{}',
+        is_b2b BOOLEAN DEFAULT false,
+        business_name VARCHAR(255),
+        business_license VARCHAR(100),
+        segment VARCHAR(50),
+        lifetime_value DECIMAL(10,2) DEFAULT 0,
+        total_orders INTEGER DEFAULT 0,
+        referral_code VARCHAR(50),
+        total_referrals INTEGER DEFAULT 0,
+        last_order_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Wishlist sessions table
+    await sql`
+      CREATE TABLE IF NOT EXISTS wishlist_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_token VARCHAR(255) UNIQUE NOT NULL,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Wishlist items table
+    await sql`
+      CREATE TABLE IF NOT EXISTS wishlist_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id UUID REFERENCES wishlist_sessions(id) ON DELETE CASCADE,
+        product_id VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Orders table
+    await sql`
+      CREATE TABLE IF NOT EXISTS orders (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_number VARCHAR(50) UNIQUE NOT NULL,
+        user_id UUID REFERENCES users(id),
+        customer_id UUID REFERENCES customers(id),
+        total DECIMAL(10,2) NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL,
+        tax DECIMAL(10,2) DEFAULT 0,
+        discount DECIMAL(10,2) DEFAULT 0,
+        shipping DECIMAL(10,2) DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'pending',
+        payment_status VARCHAR(50) DEFAULT 'pending',
+        payment_method VARCHAR(50),
+        shipping_address JSONB,
+        billing_address JSONB,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Order items table
+    await sql`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+        product_id VARCHAR(255) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        quantity INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        discount DECIMAL(10,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Cart items table
+    await sql`
+      CREATE TABLE IF NOT EXISTS cart_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        session_token VARCHAR(255),
+        product_id VARCHAR(255) NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Loyalty transactions table
+    await sql`
+      CREATE TABLE IF NOT EXISTS loyalty_transactions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL,
+        points INTEGER NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Activity logs table (for admin dashboard)
+    await sql`
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id),
+        action VARCHAR(100) NOT NULL,
+        details JSONB,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for better performance
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
+
+    console.log('All tables initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('Table initialization failed:', error);
+    return false;
+  }
+}
+
+// Helper function for password hashing
+export async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Export the sql instance for direct queries
+export { sql };

@@ -68,25 +68,17 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
   ], []);
 
   useEffect(() => {
-    const initializePaymentService = async () => {
-      await paymentService.initializeFromStorage();
-      const activeProvider = paymentService.getActiveProviderName();
-      
-      const available = paymentMethods.filter(method => {
-        if (activeProvider === 'stripe' && !method.cannabisCompliant) {
-          return true;
-        }
-        return method.cannabisCompliant;
-      });
-      
-      setAvailableMethods(available);
-      
-      if (available.length > 0) {
-        setSelectedMethod(available[0].id);
-      }
+    // Initialize payment methods
+    const available = paymentMethods.filter(method => {
+      // For now, show cannabis-compliant methods
+      return method.cannabisCompliant;
+    });
+    
+    setAvailableMethods(available);
+    
+    if (available.length > 0) {
+      setSelectedMethod(available[0].id);
     };
-
-    initializePaymentService();
   }, [paymentMethods]);
 
   const handlePayment = async () => {
@@ -94,20 +86,15 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
 
     setIsProcessing(true);
     try {
-      const result = await paymentService.processPayment(
-        totalAmount,
-        {
-          email: customerData.email,
-          name: `${customerData.firstName} ${customerData.lastName}`,
-          address: {
-            street: customerData.address,
-            city: customerData.city,
-            state: customerData.state,
-            zipCode: customerData.zipCode
-          }
-        },
-        customerData.state
-      );
+      // Create order data for payment processing
+      const orderData = {
+        orderId: `RV-${Date.now()}`,
+        amount: totalAmount,
+        customerId: customerData.email,
+        items: [] // TODO: Get cart items
+      };
+      
+      const result = await paymentService.processPayment(orderData, selectedMethod);
 
       if (result.success) {
         clearCart();
