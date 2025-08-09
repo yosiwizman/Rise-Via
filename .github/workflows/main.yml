@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with Tech Debt Tracking
+name: CI/CD Pipeline with Tech Debt Tracking 
 
 on:
   push:
