@@ -40,7 +40,7 @@ export const authService = {
       };
 
       localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-      return { user: sessionUser };
+      return { success: true, user: sessionUser };
     } catch (error) {
       throw error;
     }
@@ -72,7 +72,7 @@ export const authService = {
       };
 
       localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-      return { user: sessionUser };
+      return { success: true, user: sessionUser };
     } catch (error) {
       throw error;
     }

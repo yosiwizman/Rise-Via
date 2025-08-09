@@ -36,7 +36,7 @@ export const LoginPage = () => {
       if (result.success) {
         window.location.href = '/account';
       } else {
-        alert(result.error || 'Authentication failed');
+        alert(result.message || 'Authentication failed');
       }
     } catch (error) {
       console.error('Auth error:', error);

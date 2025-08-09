@@ -43,7 +43,7 @@ export const LabResultsManager: React.FC = () => {
         SELECT * FROM lab_results 
         ORDER BY created_at DESC
       `;
-      setLabResults(data || []);
+      setLabResults((data as LabResult[]) || []);
     } catch (error) {
       console.error('Failed to fetch lab results:', error);
     }
