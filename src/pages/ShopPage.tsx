@@ -75,6 +75,7 @@ export const ShopPage = () => {
                 productId: product.id,
                 name: product.name,
                 price: product.price,
+                originalPrice: product.price,
                 image: product.images[0],
                 category: product.category,
                 strainType: product.strainType,
