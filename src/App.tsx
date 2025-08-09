@@ -7,12 +7,13 @@ import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
+import { FloatingChatButton } from './components/FloatingChatButton';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { LearnPage } from './pages/LearnPage';
 import { LegalPage } from './pages/LegalPage';
 import { ContactPage } from './pages/ContactPage';
-import { CheckoutPage } from './pages/CheckoutPage';
 import { ShippingPage } from './pages/ShippingPage';
 import { LabResultsPage } from './pages/LabResultsPage';
 import { CareersPage } from './pages/CareersPage';
@@ -20,22 +21,27 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { WishlistPage } from './components/wishlist/WishlistPage';
 import { SharedWishlistPage } from './components/wishlist/WishlistShare';
 import { AdminPage } from './pages/AdminPage';
-import { CustomerProvider } from './contexts/CustomerContext';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { B2BPage } from './pages/B2BPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { HealthCheck } from './components/HealthCheck';
+import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
 import MobileCartButton from './components/MobileCartButton';
+import { Toaster } from './components/ui/toaster';
+import { ToastEventHandler } from './components/ToastEventHandler';
+import { ChatBot } from './components/ChatBot';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
@@ -60,6 +66,8 @@ function App() {
       setCurrentPage('register');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
+    } else if (path === '/checkout') {
+      setCurrentPage('checkout');
     } else if (path === '/health') {
       setCurrentPage('health');
     } else {
@@ -81,6 +89,41 @@ function App() {
     script.async = true;
     script.onload = () => {
       console.log('✅ ADA widget loaded!');
+      setTimeout(() => {
+        const adaWidget = document.querySelector('[aria-label*="Accessibility"]') || 
+                         document.querySelector('[data-uw-feature-tour]') ||
+                         document.querySelector('.uw-s10-bottom-right');
+        if (adaWidget) {
+          const element = adaWidget as HTMLElement;
+          element.style.zIndex = '9999';
+          element.style.position = 'fixed';
+          element.style.display = 'block';
+          element.style.visibility = 'visible';
+          element.removeAttribute('offscreen');
+          
+          if (window.innerWidth <= 768) {
+            element.style.bottom = '80px';
+            element.style.left = '20px';
+            element.style.right = 'auto';
+          } else {
+            element.style.bottom = '20px';
+            element.style.right = '20px';
+            element.style.left = 'auto';
+          }
+          element.style.top = 'auto';
+          element.style.width = '60px';
+          element.style.height = '60px';
+          
+          console.log('✅ ADA widget positioned:', {
+            mobile: window.innerWidth <= 768,
+            bottom: element.style.bottom,
+            left: element.style.left,
+            right: element.style.right,
+            display: element.style.display,
+            visibility: element.style.visibility
+          });
+        }
+      }, 1000);
     };
     document.head.appendChild(script);
 
@@ -93,6 +136,7 @@ function App() {
     setUserState(state);
     setShowStateBlocker(false);
   };
+
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -113,7 +157,7 @@ function App() {
       case 'careers':
         return <CareersPage />;
       case 'wishlist':
-        return <WishlistPage />;
+        return <WishlistPage onNavigate={setCurrentPage} />;
       case 'wishlist-shared':
         return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
       case 'admin':
@@ -148,12 +192,13 @@ function App() {
             
             {isAgeVerified && (
               <>
+                <WishlistInitializer />
                 <Navigation 
                   currentPage={currentPage} 
                   onNavigate={setCurrentPage}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
-                  setSearchOpen={() => {}}
+                  setSearchOpen={setSearchOpen}
                 />
                 <main>
                   {renderCurrentPage()}
@@ -161,9 +206,13 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
+                <FloatingChatButton />
               </>
             )}
           </div>
+          <ToastEventHandler />
+          <Toaster />
+          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
     </CustomerProvider>

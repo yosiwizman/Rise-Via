@@ -17,7 +17,7 @@ export class WishlistAnalyticsService {
   public trackWishlistEvent(
     action: 'add' | 'remove' | 'share' | 'import' | 'clear' | 'conversion',
     item?: WishlistItem,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     const eventData = {
       action,
@@ -40,7 +40,7 @@ export class WishlistAnalyticsService {
     console.log('📊 Wishlist Analytics Event:', eventData);
   }
 
-  private storeAnalyticsEvent(eventData: any): void {
+  private storeAnalyticsEvent(eventData: Record<string, unknown>): void {
     try {
       const existingEvents = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
       existingEvents.push(eventData);
@@ -55,9 +55,9 @@ export class WishlistAnalyticsService {
     }
   }
 
-  private sendToGoogleAnalytics(eventData: any): void {
+  private sendToGoogleAnalytics(eventData: Record<string, unknown>): void {
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      (window as any).gtag('event', `wishlist_${eventData.action}`, {
+      (window as { gtag: (...args: unknown[]) => void }).gtag('event', `wishlist_${eventData.action}`, {
         event_category: 'wishlist',
         event_label: eventData.itemName || 'bulk_action',
         value: eventData.itemPrice || 0,
@@ -143,12 +143,12 @@ export class WishlistAnalyticsService {
   public calculateReturnVisitorRate(): number {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      const uniqueUsers = new Set(events.map((e: any) => e.userId));
+      const uniqueUsers = new Set(events.map((e: { userId: string }) => e.userId));
       const returningUsers = new Set();
 
       const userSessions: Record<string, Set<string>> = {};
       
-      events.forEach((event: any) => {
+      events.forEach((event: { userId: string; sessionId: string }) => {
         if (!userSessions[event.userId]) {
           userSessions[event.userId] = new Set();
         }
@@ -183,8 +183,8 @@ export class WishlistAnalyticsService {
       const currentItems = state.items?.length || 0;
 
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      events.filter((e: any) => e.action === 'add');
-      events.filter((e: any) => e.action === 'remove');
+      events.filter((e: { action: string }) => e.action === 'add');
+      events.filter((e: { action: string }) => e.action === 'remove');
 
       const average = currentItems;
 
@@ -199,7 +199,7 @@ export class WishlistAnalyticsService {
     }
   }
 
-  public getAnalyticsEvents(limit: number = 100): any[] {
+  public getAnalyticsEvents(limit: number = 100): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
       return events.slice(-limit);
@@ -209,20 +209,20 @@ export class WishlistAnalyticsService {
     }
   }
 
-  public getEventsByAction(action: string): any[] {
+  public getEventsByAction(action: string): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      return events.filter((e: any) => e.action === action);
+      return events.filter((e: { action: string }) => e.action === action);
     } catch (error) {
       console.error('Error getting events by action:', error);
       return [];
     }
   }
 
-  public getEventsByTimeRange(startTime: number, endTime: number): any[] {
+  public getEventsByTimeRange(startTime: number, endTime: number): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      return events.filter((e: any) => e.timestamp >= startTime && e.timestamp <= endTime);
+      return events.filter((e: { timestamp: number }) => e.timestamp >= startTime && e.timestamp <= endTime);
     } catch (error) {
       console.error('Error getting events by time range:', error);
       return [];
@@ -252,7 +252,7 @@ export class WishlistAnalyticsService {
     const conversionRate = addEvents > 0 ? (conversionEvents / addEvents) * 100 : 0;
 
     const categoryCount: Record<string, number> = {};
-    todayEvents.forEach(event => {
+    todayEvents.forEach((event: { itemCategory?: string }) => {
       if (event.itemCategory) {
         categoryCount[event.itemCategory] = (categoryCount[event.itemCategory] || 0) + 1;
       }

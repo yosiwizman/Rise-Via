@@ -7,14 +7,29 @@ import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { SearchFilters } from '../components/SearchFilters';
 import { useCart } from '../hooks/useCart';
-import { productService, Product } from '../services/productService';
+import { productService } from '../services/productService';
 import productsData from '../data/products.json';
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  interface Product {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    category: string;
+    strainType: string;
+    thcaPercentage: number;
+    description: string;
+    effects: string[];
+    images: string[];
+    featured: boolean;
+    inventory: number;
+  }
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -59,7 +74,7 @@ export const ShopPage = () => {
       const matchesSearch = !searchTerm || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.effects.some(effect => effect.toLowerCase().includes(searchTerm.toLowerCase()));
+        product.effects.some((effect: string) => effect.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesType = filter === 'all' || 
         (product.strain_type || (product as any).strainType) === filter;
@@ -87,7 +102,7 @@ export const ShopPage = () => {
     });
   }, [products, filter, searchTerm, sortBy]);
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
@@ -102,6 +117,7 @@ export const ShopPage = () => {
           <img 
             src={product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`} 
             alt={product.name}
+            loading="lazy"
             className="w-full h-48 object-cover"
           />
           <div className="absolute top-2 right-2">

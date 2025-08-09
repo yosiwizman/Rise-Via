@@ -102,14 +102,14 @@ Navigation Pattern:
 === API & DATA LAYER ANALYSIS ===
 
 Database Configuration:
-- Supabase client configured in src/lib/supabase.ts
-- Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_SUPABASE_SERVICE_KEY
-- Admin client with service key for elevated operations
-- Test environment with mock Supabase URLs
+- Neon PostgreSQL client configured in src/lib/neon.ts
+- Environment variables: VITE_DATABASE_URL
+- Direct SQL queries using @neondatabase/serverless
+- Test environment with mock SQL functions
 
 API Services:
 - Email Service: Resend API integration (VITE_RESEND_API_KEY)
-- No direct supabase.from() calls found in search
+- Direct SQL queries using Neon client template literals
 - Suggests data may be loaded from JSON files instead of live database
 
 Data Sources Analysis:
@@ -118,9 +118,7 @@ Data Sources Analysis:
 - Potential disconnect between documented schema and actual implementation
 
 Environment Variables Used:
-- VITE_SUPABASE_URL - Supabase project URL
-- VITE_SUPABASE_ANON_KEY - Public API key
-- VITE_SUPABASE_SERVICE_KEY - Admin service key
+- VITE_DATABASE_URL - Neon PostgreSQL connection string
 - VITE_RESEND_API_KEY - Email service API key
 - NODE_ENV - Development/production detection
 
@@ -159,7 +157,7 @@ State Patterns:
 
 Authentication Implementation:
 - Admin Authentication: Simple localStorage token system (admin/admin123)
-- Customer Authentication: CustomerContext with Supabase integration
+- Customer Authentication: CustomerContext with Neon database integration
 - Registration: Full form with password validation (min 6 chars)
 - Login: LoginPage component with authentication flow
 - Age Verification: Required 21+ verification for registration
@@ -279,11 +277,11 @@ Dependency Overview:
 - Build Tool: Vite 6.0.1 with TypeScript compilation
 - UI Library: Comprehensive Radix UI component suite
 - State Management: Zustand 5.0.7 (configured but not extensively used)
-- Database: Supabase 2.53.0 for backend services
+- Database: Neon PostgreSQL with @neondatabase/serverless for backend services
 - Styling: Tailwind CSS 3.4.16 with animations
 
 Key Production Dependencies:
-- @supabase/supabase-js (2.53.0) - Database and auth
+- @neondatabase/serverless (0.9.5) - Database and auth
 - framer-motion (12.23.12) - Animations
 - lucide-react (0.364.0) - Icon library
 - react-hook-form (7.62.0) - Form management
@@ -367,9 +365,9 @@ Development Activity:
 === DATABASE SCHEMA ANALYSIS ===
 
 Database Configuration:
-- Supabase PostgreSQL backend configured
+- Neon PostgreSQL backend configured
 - Environment variables set for connection
-- Admin service key available for elevated operations
+- Direct SQL query access with serverless driver
 
 Schema References Found in Code:
 - Products: Referenced in ShopPage, ProductEditor, ProductManager

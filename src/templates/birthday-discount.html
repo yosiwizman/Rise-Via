@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ec4899; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .birthday-banner { background: #fdf2f8; border: 2px solid #ec4899; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px; }
+        .button { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Happy Birthday {{customer_name}}! 🎂</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{customer_name}},</p>
+            <p>The Rise Via family wants to wish you a very happy birthday! To celebrate your special day, we have a birthday gift just for you.</p>
+            
+            <div class="birthday-banner">
+                <h2 style="color: #ec4899; margin: 0;">🎁 Birthday Special 🎁</h2>
+                <h3 style="color: #ec4899; margin: 10px 0;">25% OFF</h3>
+                <p style="margin: 10px 0;">Use Code: BIRTHDAY25</p>
+                <p><small>Valid for 7 days from your birthday</small></p>
+            </div>
+            
+            <h3>Celebrate with Premium THCA:</h3>
+            <ul>
+                <li>🌿 Choose from 80+ premium strains</li>
+                <li>🎯 Perfect for your birthday celebration</li>
+                <li>📦 Fast, discreet delivery</li>
+                <li>🎉 Make your day extra special</li>
+            </ul>
+            
+            <p style="text-align: center;">
+                <a href="{{shop_url}}?discount=BIRTHDAY25" class="button">Shop Your Birthday Gift</a>
+            </p>
+            
+            <p>We hope you have a wonderful birthday celebration!</p>
+        </div>
+        <div class="footer">
+            <p><small>*Birthday offer valid for 7 days. Cannot be combined with other offers.</small></p>
+            <p>With birthday wishes,</p>
+            <p>The Rise Via Team</p>
+        </div>
+    </div>
+</body>
+</html>

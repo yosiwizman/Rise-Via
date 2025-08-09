@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
 import { productService } from '../../services/productService';
+import productsData from '../../data/products.json';
+
 interface DBProduct {
   id?: string;
   sample_id: string;
@@ -34,7 +36,6 @@ interface DBProduct {
   created_at?: string;
   updated_at?: string;
 }
-import productsData from '../../data/products.json';
 
 interface Product {
   id: string;
@@ -43,9 +44,16 @@ interface Product {
   category: string;
   thc: string;
   type: string;
-  effects: string[];
+  effects?: string[];
   inventory: number;
   active: boolean;
+  description?: string;
+  featured?: boolean;
+  images?: string[];
+  hover_image?: string;
+  video_url?: string;
+  strainType?: string;
+  thcaPercentage?: number;
 }
 
 export const ProductManager: React.FC = () => {
@@ -222,7 +230,7 @@ export const ProductManager: React.FC = () => {
           p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
         ));
       } else {
-        setProducts(prev => [...prev, productData]);
+        setProducts(prev => [...prev, { ...productData, id: Date.now().toString() }]);
       }
     }
   };
@@ -438,7 +446,7 @@ export const ProductManager: React.FC = () => {
         isOpen={isProductEditorOpen}
         onClose={() => setIsProductEditorOpen(false)}
         onSave={handleSaveProduct}
-        product={editingProduct}
+        product={editingProduct || undefined}
       />
     </div>
   );
