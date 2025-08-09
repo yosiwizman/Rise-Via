@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -72,7 +72,9 @@ export const AccountPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCustomerData();
+      startTransition(() => {
+        fetchCustomerData();
+      });
     }
   }, [isAuthenticated, fetchCustomerData]);
 
