@@ -8,8 +8,9 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { SEOHead } from '../components/SEOHead';
 import { ProductWarnings } from '../components/ProductWarnings';
-// import { StripeCheckout } from '../components/StripeCheckout';
+import { PaymentMethodSelector } from '../components/PaymentMethodSelector';
 import { ShippingInfo } from '../components/ShippingInfo';
+import { useCart } from '../hooks/useCart';
 
 interface CheckoutPageProps {
   onNavigate: (page: string) => void;
@@ -17,6 +18,7 @@ interface CheckoutPageProps {
 }
 
 export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) => {
+  const { getCartTotal } = useCart();
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -33,7 +35,6 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
     termsAccepted: false
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
-  const [paymentError] = useState<string | null>(null);
   const [orderSuccess] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,29 +309,25 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {paymentError && (
-                  <Card className="bg-red-950/20 border-red-500/50">
-                    <CardContent className="p-4">
-                      <p className="text-red-400">{paymentError}</p>
-                    </CardContent>
-                  </Card>
-                )}
-                {/* <StripeCheckout
-                  onSuccess={(orderId) => {
-                    setOrderSuccess(orderId);
-                    setPaymentError(null);
-                  }}
-                  onError={(error) => {
-                    setPaymentError(error);
-                    setOrderSuccess(null);
-                  }}
-                  customerInfo={formData}
-                /> */}
-                <div className="bg-risevia-charcoal border-risevia-purple/20 rounded-lg p-6 text-center">
-                  <p className="text-gray-300">Payment processing temporarily disabled for testing</p>
-                </div>
-              </div>
+              <PaymentMethodSelector 
+                onPaymentComplete={(result) => {
+                  if (result.success) {
+                    localStorage.setItem('lastOrder', JSON.stringify({
+                      orderNumber: result.orderNumber,
+                      total: getCartTotal(),
+                      paymentMethod: result.paymentMethod,
+                      transactionId: result.transactionId,
+                      timestamp: new Date().toISOString()
+                    }));
+                    onNavigate('order-confirmation');
+                  } else {
+                    alert('Payment failed: ' + result.error);
+                    setShowPaymentOptions(false);
+                  }
+                }}
+                customerData={formData}
+                totalAmount={getCartTotal()}
+              />
             )}
           </motion.div>
         </div>

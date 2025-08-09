@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,6 +14,7 @@ import { BulkProductUpload } from '../components/admin/BulkProductUpload';
 import { OrderManager } from '../components/admin/OrderManager';
 import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
+import { PaymentSettings } from '../components/admin/PaymentSettings';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -109,6 +110,7 @@ export const AdminPage = () => {
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'coi', label: 'COI Documents', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
+    { id: 'payments', label: 'Payment Settings', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -132,9 +134,8 @@ export const AdminPage = () => {
       case 'activity':
         return <ActivityLogs />;
       
-      case 'products':
-        return <ProductManager />;
-      
+      case 'payments':
+        return <PaymentSettings />;
       case 'uploads':
         return (
           <div className="space-y-6">
