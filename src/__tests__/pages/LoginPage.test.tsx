@@ -44,7 +44,7 @@ describe('LoginPage', () => {
     vi.mocked(useCustomer).mockReturnValue({
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+    } as ReturnType<typeof useCustomer>)
 
     render(<LoginPageWrapper />)
     
@@ -67,7 +67,7 @@ describe('LoginPage', () => {
     vi.mocked(useCustomer).mockReturnValue({
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+    } as ReturnType<typeof useCustomer>)
 
     render(<LoginPageWrapper />)
     
@@ -125,10 +125,10 @@ describe('LoginPage', () => {
     vi.mocked(useCustomer).mockReturnValue({
       login: mockLogin,
       register: vi.fn(),
-    } as any)
+    } as ReturnType<typeof useCustomer>)
 
-    delete (window as any).location
-    window.location = { href: '' } as any
+    delete (window as { location?: unknown }).location
+    window.location = { href: '' } as unknown as Location
 
     render(<LoginPageWrapper />)
     
