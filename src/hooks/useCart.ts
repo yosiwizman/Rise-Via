@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartStore, CartItem, CartStats } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
-import { abandonedCartService } from '../services/AbandonedCartService';
+import { abandonedCartService } from '../services/abandonedCartService';
 
 const STORAGE_KEY = 'risevia-cart';
 

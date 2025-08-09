@@ -1,5 +1,165 @@
 import type { WishlistItem } from '../types/wishlist';
 
+interface ImageSource {
+  src: string;
+  width: number;
+  height?: number;
+  type?: string;
+}
+
+interface OptimizedImageSources {
+  webp: ImageSource[];
+  fallback: ImageSource[];
+}
+
+export class ImageOptimizer {
+  private static webpSupported: boolean | null = null;
+
+  static async supportsWebP(): Promise<boolean> {
+    if (this.webpSupported !== null) {
+      return this.webpSupported;
+    }
+
+    return new Promise((resolve) => {
+      const webP = new Image();
+      webP.onload = webP.onerror = () => {
+        this.webpSupported = webP.height === 2;
+        resolve(this.webpSupported);
+      };
+      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+    });
+  }
+
+  static generateSrcSet(baseUrl: string, sizes: number[] = [320, 480, 768, 1024, 1200, 1920]): string {
+    if (!baseUrl) return sizes.map(size => ` ${size}w`).join(', ');
+    
+    return sizes.map(size => {
+      const optimizedUrl = this.generateOptimizedUrl(baseUrl, size, 'jpg');
+      return `${optimizedUrl} ${size}w`;
+    }).join(', ');
+  }
+
+  static getOptimizedImageSources(src: string, sizes: number[] = [320, 640, 768, 1024, 1280]): OptimizedImageSources {
+    const webpSources = sizes.map(width => ({
+      src: this.generateOptimizedUrl(src, width, 'webp'),
+      width,
+      type: 'image/webp'
+    }));
+
+    const fallbackSources = sizes.map(width => ({
+      src: this.generateOptimizedUrl(src, width, 'jpg'),
+      width,
+      type: 'image/jpeg'
+    }));
+
+    return {
+      webp: webpSources,
+      fallback: fallbackSources
+    };
+  }
+
+  private static generateOptimizedUrl(src: string, width: number, format: string): string {
+    if (src.startsWith('data:') || src.startsWith('blob:')) {
+      return src;
+    }
+    
+    try {
+      const url = new URL(src, window.location.origin);
+      url.searchParams.set('w', width.toString());
+      url.searchParams.set('f', format);
+      url.searchParams.set('q', '75');
+      return url.toString();
+    } catch {
+      return src;
+    }
+  }
+
+  static generateBlurPlaceholder(width: number = 40, height: number = 40): string {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) return '';
+      
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#f3f4f6');
+      gradient.addColorStop(1, '#e5e7eb');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      return canvas.toDataURL('image/jpeg', 0.1);
+    } catch {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo=';
+    }
+  }
+
+  static createLazyLoadObserver(callback: (entry: IntersectionObserverEntry) => void, options?: IntersectionObserverInit): IntersectionObserver {
+    const defaultOptions = {
+      rootMargin: '50px',
+      threshold: 0.1,
+      ...options
+    };
+    
+    return new IntersectionObserver((entries) => {
+      entries.forEach(callback);
+    }, defaultOptions);
+  }
+
+  static async loadProgressiveImage(
+    lowQualityUrl: string,
+    highQualityUrl: string,
+    onProgress?: (stage: 'loading' | 'low-quality' | 'high-quality') => void
+  ): Promise<{ lowQuality: HTMLImageElement; highQuality: HTMLImageElement }> {
+    onProgress?.('loading');
+    
+    const loadImage = (url: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    };
+
+    const lowQuality = await loadImage(lowQualityUrl);
+    onProgress?.('low-quality');
+    
+    const highQuality = await loadImage(highQualityUrl);
+    onProgress?.('high-quality');
+    
+    return { lowQuality, highQuality };
+  }
+
+  static async preloadImages(urls: string[]): Promise<HTMLImageElement[]> {
+    return Promise.all(urls.map(url => {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }));
+  }
+
+  static calculateOptimalSize(
+    containerWidth: number,
+    containerHeight: number,
+    aspectRatio: number,
+    devicePixelRatio: number = window.devicePixelRatio || 1
+  ): { width: number; height: number } {
+    const targetWidth = containerWidth * devicePixelRatio;
+    const breakpoints = [320, 480, 768, 1024, 1200, 1920];
+    
+    const optimalWidth = breakpoints.find(bp => bp >= targetWidth) || breakpoints[breakpoints.length - 1];
+    const optimalHeight = Math.round(optimalWidth / aspectRatio);
+    
+    return { width: optimalWidth, height: Math.max(optimalHeight, containerHeight) };
+  }
+}
+
 interface PriceCheckResult {
   itemId: string;
   currentPrice: number;
