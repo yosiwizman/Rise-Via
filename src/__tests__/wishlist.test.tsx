@@ -62,7 +62,9 @@ describe('useWishlist', () => {
     const testProduct = {
       id: 'product-3',
       name: 'Test Product',
-      price: 29.99
+      price: 29.99,
+      image: '/test-image.jpg',
+      category: 'flower'
     }
 
     await act(async () => {
