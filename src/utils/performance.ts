@@ -50,8 +50,12 @@ export class PerformanceMonitor {
       let clsValue = 0;
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+          const layoutShiftEntry = entry as PerformanceEntry & {
+            hadRecentInput?: boolean;
+            value?: number;
+          };
+          if (!layoutShiftEntry.hadRecentInput) {
+            clsValue += layoutShiftEntry.value || 0;
           }
         }
         this.metrics.cumulativeLayoutShift = clsValue;
@@ -64,7 +68,10 @@ export class PerformanceMonitor {
     if ('PerformanceObserver' in window) {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          this.metrics.firstInputDelay = (entry as any).processingStart - entry.startTime;
+          const fidEntry = entry as PerformanceEntry & {
+            processingStart?: number;
+          };
+          this.metrics.firstInputDelay = (fidEntry.processingStart || 0) - entry.startTime;
         }
       });
       observer.observe({ entryTypes: ['first-input'] });
@@ -79,8 +86,8 @@ export class PerformanceMonitor {
     const metrics = this.getMetrics();
     console.log('Performance Metrics:', metrics);
     
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'performance_metrics', {
+    if (typeof window !== 'undefined' && (window as typeof window & { gtag?: Function }).gtag) {
+      (window as typeof window & { gtag: Function }).gtag('event', 'performance_metrics', {
         custom_parameter_1: 'performance_monitoring',
         load_time: metrics.loadTime,
         fcp: metrics.firstContentfulPaint,

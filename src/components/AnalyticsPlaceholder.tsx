@@ -11,8 +11,8 @@ interface AnalyticsEvent {
 
 export const useAnalytics = () => {
   const trackEvent = (eventData: AnalyticsEvent) => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', eventData.action, {
+    if (typeof window !== 'undefined' && (window as typeof window & { gtag?: Function }).gtag) {
+      (window as typeof window & { gtag: Function }).gtag('event', eventData.action, {
         event_category: eventData.category,
         event_label: eventData.label,
         value: eventData.value,
@@ -21,8 +21,8 @@ export const useAnalytics = () => {
       });
     }
 
-    if (typeof window !== 'undefined' && (window as any).plausible) {
-      (window as any).plausible(eventData.action, {
+    if (typeof window !== 'undefined' && (window as typeof window & { plausible?: Function }).plausible) {
+      (window as typeof window & { plausible: Function }).plausible(eventData.action, {
         props: {
           category: eventData.category,
           label: eventData.label,
@@ -35,15 +35,15 @@ export const useAnalytics = () => {
   };
 
   const trackPageView = (page: string) => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('config', 'GA_MEASUREMENT_ID', {
+    if (typeof window !== 'undefined' && (window as typeof window & { gtag?: Function }).gtag) {
+      (window as typeof window & { gtag: Function }).gtag('config', 'GA_MEASUREMENT_ID', {
         page_path: page,
         privacy_mode: true
       });
     }
 
-    if (typeof window !== 'undefined' && (window as any).plausible) {
-      (window as any).plausible('pageview', { u: window.location.href });
+    if (typeof window !== 'undefined' && (window as typeof window & { plausible?: Function }).plausible) {
+      (window as typeof window & { plausible: Function }).plausible('pageview', { u: window.location.href });
     }
   };
 

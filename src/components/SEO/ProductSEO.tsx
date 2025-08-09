@@ -115,7 +115,7 @@ export const ProductSEO = ({ product, canonical }: ProductSEOProps) => {
     };
 
     if (product.labResultsUrl) {
-      (structuredData as any).certifications = [{
+      (structuredData as typeof structuredData & { certifications: Array<{ "@type": string; name: string; url: string }> }).certifications = [{
         "@type": "Certification",
         "name": "Certificate of Analysis",
         "url": product.labResultsUrl
