@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, startTransition } from 'react';
 import { PerformanceMonitor } from '../utils/performance';
 
 interface AnalyticsEvent {
@@ -118,44 +118,50 @@ export const useAnalytics = () => {
 
 export const AnalyticsProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
-    PerformanceMonitor.init();
+    startTransition(() => {
+      PerformanceMonitor.init();
 
-    const gaScript = document.createElement('script');
-    gaScript.async = true;
-    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
-    document.head.appendChild(gaScript);
+      const gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
+      document.head.appendChild(gaScript);
 
-    const gaConfigScript = document.createElement('script');
-    gaConfigScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'GA_MEASUREMENT_ID', {
-        privacy_mode: true,
-        anonymize_ip: true,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false,
-        cookie_flags: 'SameSite=None;Secure'
+      const gaConfigScript = document.createElement('script');
+      gaConfigScript.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID', {
+          privacy_mode: true,
+          anonymize_ip: true,
+          allow_google_signals: false,
+          allow_ad_personalization_signals: false,
+          cookie_flags: 'SameSite=None;Secure'
+        });
+      `;
+      document.head.appendChild(gaConfigScript);
+
+      const plausibleScript = document.createElement('script');
+      plausibleScript.defer = true;
+      plausibleScript.setAttribute('data-domain', 'risevia.com');
+      plausibleScript.src = 'https://plausible.io/js/script.js';
+      document.head.appendChild(plausibleScript);
+
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          PerformanceMonitor.reportMetrics();
+        }, 3000);
       });
-    `;
-    document.head.appendChild(gaConfigScript);
-
-    const plausibleScript = document.createElement('script');
-    plausibleScript.defer = true;
-    plausibleScript.setAttribute('data-domain', 'risevia.com');
-    plausibleScript.src = 'https://plausible.io/js/script.js';
-    document.head.appendChild(plausibleScript);
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        PerformanceMonitor.reportMetrics();
-      }, 3000);
     });
 
     return () => {
-      document.head.removeChild(gaScript);
-      document.head.removeChild(gaConfigScript);
-      document.head.removeChild(plausibleScript);
+      const gaScript = document.querySelector('script[src*="googletagmanager"]');
+      const gaConfigScript = document.querySelector('script:not([src])');
+      const plausibleScript = document.querySelector('script[src*="plausible"]');
+      
+      if (gaScript) document.head.removeChild(gaScript);
+      if (gaConfigScript && gaConfigScript.innerHTML.includes('gtag')) document.head.removeChild(gaConfigScript);
+      if (plausibleScript) document.head.removeChild(plausibleScript);
     };
   }, []);
 

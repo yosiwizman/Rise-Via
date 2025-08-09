@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test-utils'
 
-const MockButton = ({ children, onClick, disabled }: any) => (
+const MockButton = ({ children, onClick, disabled }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) => (
   <button onClick={onClick} disabled={disabled}>
     {children}
   </button>

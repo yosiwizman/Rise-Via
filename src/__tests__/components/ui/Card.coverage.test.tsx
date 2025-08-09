@@ -1,21 +1,25 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../../test-utils'
 
-const MockCard = ({ children, className = '', ...props }: any) => (
+const MockCard = ({ children, className = '', ...props }: {
+  children: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}) => (
   <div className={`card ${className}`} {...props}>
     {children}
   </div>
 )
 
-const MockCardHeader = ({ children }: any) => (
+const MockCardHeader = ({ children }: { children: React.ReactNode }) => (
   <div className="card-header">{children}</div>
 )
 
-const MockCardContent = ({ children }: any) => (
+const MockCardContent = ({ children }: { children: React.ReactNode }) => (
   <div className="card-content">{children}</div>
 )
 
-const MockCardFooter = ({ children }: any) => (
+const MockCardFooter = ({ children }: { children: React.ReactNode }) => (
   <div className="card-footer">{children}</div>
 )
 

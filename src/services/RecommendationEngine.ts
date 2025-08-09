@@ -11,7 +11,7 @@ interface Product {
 }
 
 export class RecommendationEngine {
-  static getRecommendations(currentProduct: Product, _userHistory: string[] = []) {
+  static getRecommendations(currentProduct: Product) {
     const products = productsData.products;
     
     const similarEffects = products.filter(p => 
@@ -92,7 +92,13 @@ export class RecommendationEngine {
     return scored.slice(0, 8);
   }
 
-  private static calculatePreferenceScore(product: Product, preferences: any): number {
+  private static calculatePreferenceScore(product: Product, preferences: {
+    preferredEffects: string[];
+    experienceLevel: 'beginner' | 'intermediate' | 'expert';
+    preferredTime: 'morning' | 'afternoon' | 'evening';
+    medicalVsRecreational: 'medical' | 'recreational';
+    flavorPreferences: string[];
+  }): number {
     let score = 0;
     
     const effectMatches = product.effects.filter(e => preferences.preferredEffects.includes(e)).length;
