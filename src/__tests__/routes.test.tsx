@@ -18,6 +18,18 @@ vi.mock('../utils/imageOptimization', () => ({
   },
 }))
 
+vi.mock('../components/ui/carousel', () => ({
+  Carousel: ({ children }: { children: React.ReactNode }) => <div data-testid="mock-carousel">{children}</div>,
+  CarouselContent: ({ children }: { children: React.ReactNode }) => <div data-testid="carousel-content">{children}</div>,
+  CarouselItem: ({ children }: { children: React.ReactNode }) => <div data-testid="carousel-item">{children}</div>,
+  CarouselPrevious: () => <button data-testid="carousel-prev">Previous</button>,
+  CarouselNext: () => <button data-testid="carousel-next">Next</button>,
+}))
+
+vi.mock('embla-carousel-react', () => ({
+  default: () => [vi.fn(), { scrollTo: vi.fn(), canScrollNext: vi.fn(() => true), canScrollPrev: vi.fn(() => false) }],
+}))
+
 describe('Critical Routes', () => {
   const mockNavigate = vi.fn()
 
@@ -38,7 +50,8 @@ describe('Critical Routes', () => {
 
   it('HomePage contains expected content', () => {
     render(<HomePage onNavigate={mockNavigate} />)
-    expect(screen.getByText(/RiseViA/i)).toBeInTheDocument()
+    const riseViaElements = screen.getAllByText(/RiseViA/i)
+    expect(riseViaElements.length).toBeGreaterThan(0)
   })
 
   it('ShopPage contains shop-related content', () => {
