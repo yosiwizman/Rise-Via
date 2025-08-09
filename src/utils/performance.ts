@@ -86,8 +86,8 @@ export class PerformanceMonitor {
     const metrics = this.getMetrics();
     console.log('Performance Metrics:', metrics);
     
-    if (typeof window !== 'undefined' && (window as typeof window & { gtag?: Function }).gtag) {
-      (window as typeof window & { gtag: Function }).gtag('event', 'performance_metrics', {
+    if (typeof window !== 'undefined' && (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag) {
+      (window as typeof window & { gtag: (...args: unknown[]) => void }).gtag('event', 'performance_metrics', {
         custom_parameter_1: 'performance_monitoring',
         load_time: metrics.loadTime,
         fcp: metrics.firstContentfulPaint,
