@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Download, Calendar, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -6,16 +6,19 @@ import { Input } from '../../components/ui/input';
 import { complianceService } from '../../services/ComplianceService';
 
 export const ComplianceReports: React.FC = () => {
-  const [reportData, setReportData] = useState<any>(null);
+  const [reportData, setReportData] = useState<{
+    totalEvents: number;
+    ageVerifications: number;
+    stateBlocks: number;
+    purchaseLimitViolations: number;
+    averageRiskScore: number;
+    complianceRate: number;
+  } | null>(null);
   const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    generateReport();
-  }, []);
-
-  const generateReport = async () => {
+  const generateReport = useCallback(async () => {
     setLoading(true);
     try {
       const data = await complianceService.getComplianceReport(startDate, endDate);
@@ -25,7 +28,11 @@ export const ComplianceReports: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    generateReport();
+  }, [generateReport]);
 
   const exportReport = () => {
     if (!reportData) return;

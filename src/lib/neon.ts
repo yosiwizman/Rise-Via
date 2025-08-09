@@ -87,3 +87,4 @@ export interface WishlistItem {
   product_id: string;
   created_at: string;
 }
+}

@@ -1,5 +1,26 @@
 import { sql } from '../lib/neon';
 
+interface OrderData {
+  total_amount: number;
+  status: string;
+  created_at: string;
+}
+
+interface CustomerData {
+  id: string;
+  created_at: string;
+  customer_profiles?: Array<{
+    lifetime_value: number;
+    total_orders: number;
+  }>;
+}
+
+interface ComplianceEventData {
+  event_type: string;
+  compliance_result: boolean;
+  risk_score: number;
+}
+
 export interface AnalyticsMetrics {
   salesMetrics: {
     totalRevenue: number;
@@ -31,8 +52,8 @@ export const analyticsAPI = {
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
     `;
 
-    const completedOrders = orders?.filter((o: any) => o.status === 'completed') || [];
-    const totalRevenue = completedOrders.reduce((sum: number, order: any) => sum + order.total_amount, 0);
+    const completedOrders = orders?.filter((o: OrderData) => o.status === 'completed') || [];
+    const totalRevenue = completedOrders.reduce((sum: number, order: OrderData) => sum + order.total_amount, 0);
     const totalOrders = completedOrders.length;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -63,14 +84,14 @@ export const analyticsAPI = {
     `;
 
     const totalCustomers = customers?.length || 0;
-    const newCustomers = customers?.filter((c: any) => 
+    const newCustomers = customers?.filter((c: CustomerData) => 
       new Date(c.created_at) >= new Date(startDate)
     ).length || 0;
-    const returningCustomers = customers?.filter((c: any) => 
-      c.total_orders > 1
+    const returningCustomers = customers?.filter((c: CustomerData) => 
+      (c.total_orders || 0) > 1
     ).length || 0;
 
-    const customerLifetimeValue = totalCustomers > 0 ? (customers?.reduce((sum: number, c: any) => 
+    const customerLifetimeValue = totalCustomers > 0 ? (customers?.reduce((sum: number, c: CustomerData) => 
       sum + (c.lifetime_value || 0), 0
     ) || 0) / totalCustomers : 0;
 
@@ -91,7 +112,7 @@ export const analyticsAPI = {
       LIMIT 10
     `;
 
-    const topProducts = wishlistItems?.map((item: any) => ({
+    const topProducts = wishlistItems?.map((item) => ({
       name: `Product ${item.product_id}`,
       sales: item.popularity,
       revenue: item.popularity * 50
@@ -105,7 +126,7 @@ export const analyticsAPI = {
       SELECT 'concentrates' as category, COUNT(*) as sales FROM wishlist_items
     `;
 
-    const categoryPerformance = categoryData?.map((cat: any) => ({
+    const categoryPerformance = categoryData?.map((cat) => ({
       category: cat.category,
       sales: cat.sales
     })) || [];
@@ -124,13 +145,13 @@ export const analyticsAPI = {
     `;
 
     const totalEvents = complianceEvents?.length || 0;
-    const ageVerifications = complianceEvents?.filter((e: any) => e.event_type === 'age_verification') || [];
-    const stateBlocks = complianceEvents?.filter((e: any) => e.event_type === 'state_block') || [];
+    const ageVerifications = complianceEvents?.filter((e: ComplianceEventData) => e.event_type === 'age_verification') || [];
+    const stateBlocks = complianceEvents?.filter((e: ComplianceEventData) => e.event_type === 'state_block') || [];
     
-    const ageVerificationRate = ageVerifications.filter((e: any) => e.compliance_result).length / ageVerifications.length * 100 || 0;
-    const stateBlockRate = stateBlocks.filter((e: any) => !e.compliance_result).length / totalEvents * 100 || 0;
+    const ageVerificationRate = ageVerifications.filter((e: ComplianceEventData) => e.compliance_result).length / ageVerifications.length * 100 || 0;
+    const stateBlockRate = stateBlocks.filter((e: ComplianceEventData) => !e.compliance_result).length / totalEvents * 100 || 0;
     
-    const averageRiskScore = totalEvents > 0 ? (complianceEvents?.reduce((sum: number, e: any) => sum + e.risk_score, 0) || 0) / totalEvents : 0;
+    const averageRiskScore = totalEvents > 0 ? (complianceEvents?.reduce((sum: number, e: ComplianceEventData) => sum + e.risk_score, 0) || 0) / totalEvents : 0;
     const complianceScore = (1 - averageRiskScore) * 100;
 
     return {
