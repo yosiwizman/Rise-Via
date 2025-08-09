@@ -4,7 +4,6 @@ import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
 import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
-import { customerSegmentationService } from '../services/CustomerSegmentation';
 import { emailAutomationService } from '../services/EmailAutomation';
 
 export interface Customer {
@@ -234,7 +233,6 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             };
 
             await listmonkService.addSubscriber(subscriberData);
-            await customerSegmentationService.addCustomerToSegments(customerData as unknown as Customer);
           } catch {
             // Silent fail for Listmonk
           }

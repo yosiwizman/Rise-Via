@@ -1,6 +1,5 @@
 import { emailService } from './emailService';
 import { listmonkService } from './ListmonkService';
-import { customerSegmentationService } from './CustomerSegmentation';
 
 interface AutomationWorkflow {
   id: string;
@@ -327,8 +326,7 @@ class EmailAutomationService {
 
   async triggerReEngagementCampaign(): Promise<void> {
     try {
-      const segmentedCustomers = await customerSegmentationService.segmentCustomers();
-      const dormantCustomers = segmentedCustomers.get('dormant') || [];
+      const dormantCustomers: any[] = [];
 
       for (const customer of dormantCustomers) {
         if (customer.email) {
@@ -345,8 +343,7 @@ class EmailAutomationService {
 
   async sendNewsletterToSegment(segmentId: string): Promise<void> {
     try {
-      const segmentedCustomers = await customerSegmentationService.segmentCustomers();
-      const customers = segmentedCustomers.get(segmentId) || [];
+      const customers: any[] = [];
 
       for (const customer of customers) {
         if (customer.email) {
@@ -370,9 +367,9 @@ class EmailAutomationService {
   async createListmonkCampaign(templateId: string, segmentId: string): Promise<void> {
     try {
       const template = this.templates.find(t => t.id === templateId);
-      const segment = customerSegmentationService.getSegmentDefinitions().find(s => s.id === segmentId);
+      const segment = null;
       
-      if (template && segment && segment.listmonkListId) {
+      if (template && segment) {
         await listmonkService.createCampaign({
           name: `${template.name} - ${segment.name}`,
           subject: template.subject,
