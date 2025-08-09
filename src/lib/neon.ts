@@ -73,17 +73,61 @@ export interface LoyaltyTransaction {
   created_at: string;
 }
 
+<<<<<<< HEAD
 export interface WishlistSession {
   id: string;
   session_token: string;
   user_id?: string;
   created_at: string;
   updated_at: string;
+||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
+
+const neonConnectionString = import.meta.env?.VITE_NEON_DATABASE_URL;
+
+if (!neonConnectionString) {
+  console.error('Missing Neon database URL - check VITE_NEON_DATABASE_URL environment variable');
+  throw new Error('Missing required Neon database URL');
+=======
+
+const neonConnectionString = import.meta.env?.VITE_NEON_DATABASE_URL;
+
+if (!neonConnectionString) {
+  console.warn('Missing Neon database URL - check VITE_NEON_DATABASE_URL environment variable. Database features will be disabled.');
+>>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
 }
 
+<<<<<<< HEAD
 export interface WishlistItem {
   id: string;
   session_id: string;
   product_id: string;
   created_at: string;
+||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
+export const neonClient = neon(neonConnectionString);
+
+export async function executeQuery(sql: string, params: (string | number | null | undefined)[] = []) {
+  try {
+    const result = await neonClient(sql, params);
+    return { data: result, error: null };
+  } catch (error) {
+    console.error('Neon query error:', error);
+    return { data: null, error };
+  }
+=======
+export const neonClient = neonConnectionString ? neon(neonConnectionString) : null;
+
+export async function executeQuery(sql: string, params: (string | number | null | undefined)[] = []) {
+  if (!neonClient) {
+    console.warn('Neon database not configured - returning empty result');
+    return { data: [], error: new Error('Database not configured') };
+  }
+  
+  try {
+    const result = await neonClient(sql, params);
+    return { data: result, error: null };
+  } catch (error) {
+    console.error('Neon query error:', error);
+    return { data: null, error };
+  }
+>>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
 }

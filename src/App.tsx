@@ -8,6 +8,7 @@ import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
+import { FloatingChatButton } from './components/FloatingChatButton';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { CustomerProvider } from './contexts/CustomerContext';
@@ -275,6 +276,7 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
+                <FloatingChatButton />
               </>
             )}
           </div>
