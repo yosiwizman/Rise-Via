@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard, Bot } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
+import { DashboardMetrics } from '../components/admin/DashboardMetrics';
 import { ProductManager } from '../components/admin/ProductManager';
+import { ProductMediaManager } from '../components/admin/ProductMediaManager';
+import { BulkProductUpload } from '../components/admin/BulkProductUpload';
+import { OrderManager } from '../components/admin/OrderManager';
+import { InventoryManager } from '../components/admin/InventoryManager';
+import { ActivityLogs } from '../components/admin/ActivityLogs';
+import { PaymentSettings } from '../components/admin/PaymentSettings';
+import { AIContentGenerator } from '../components/admin/AIContentGenerator';
+import { LabResultsManager } from '../components/admin/LabResultsManager';
+import { ComplianceReports } from './admin/ComplianceReports';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -95,129 +105,58 @@ export const AdminPage = () => {
 
   const adminTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'orders', label: 'Orders', icon: Package },
     { id: 'products', label: 'Products', icon: Package },
+    { id: 'inventory', label: 'Inventory', icon: Warehouse },
+    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'activity', label: 'Activity', icon: Activity },
+    { id: 'ai-content', label: 'AI Content', icon: Bot },
     { id: 'uploads', label: 'Media', icon: Upload },
-    { id: 'coi', label: 'COI Documents', icon: FileText },
+    { id: 'lab-results', label: 'Lab Results', icon: FileText },
+    { id: 'compliance', label: 'Compliance', icon: Shield },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
+    { id: 'payments', label: 'Payment Settings', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">15</div>
-                <p className="text-xs text-muted-foreground">Active cannabis strains</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,547</div>
-                <p className="text-xs text-muted-foreground">Units in stock</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">COI Documents</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">Lab certificates</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg THC%</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">25.2%</div>
-                <p className="text-xs text-muted-foreground">THCA potency</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <DashboardMetrics />;
       
-      case 'customers':
-        return <CustomerList />;
+      case 'orders':
+        return <OrderManager />;
       
       case 'products':
         return <ProductManager />;
       
+      case 'inventory':
+        return <InventoryManager />;
+      
+      case 'customers':
+        return <CustomerList />;
+      
+      case 'activity':
+        return <ActivityLogs />;
+      
+      case 'payments':
+        return <PaymentSettings />;
+      
+      case 'ai-content':
+        return <AIContentGenerator />;
       case 'uploads':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Media Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Upload Product Images</h3>
-                  <p className="text-gray-600 mb-4">Drag and drop images or click to browse</p>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Choose Files
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Cloudinary integration features:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Multi-image upload for product galleries</li>
-                    <li>Automatic image optimization and resizing</li>
-                    <li>Cloud storage with CDN delivery</li>
-                    <li>Image transformation and effects</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <ProductMediaManager />
+            <BulkProductUpload />
+          </div>
         );
       
-      case 'coi':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Certificate of Analysis (COI) Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Lab Certificates</h3>
-                  <Button className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
-                    Upload COI Document
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-600">
-                  COI document management features:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>PDF upload and storage for lab results</li>
-                    <li>Link COI documents to specific product batches</li>
-                    <li>QR code generation for easy COI access</li>
-                    <li>Compliance tracking and expiration alerts</li>
-                    <li>Public COI viewer for customer transparency</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+      case 'lab-results':
+        return <LabResultsManager />;
+
+      case 'compliance':
+        return <ComplianceReports />;
       
       default:
         return (

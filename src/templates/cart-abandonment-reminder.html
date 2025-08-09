@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Left Something in Your Cart</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #f59e0b; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .cart-items { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .button { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>You Left Something in Your Cart! 🛒</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{customer_name}},</p>
+            <p>You left some great items in your cart. Don't miss out on these premium THCA products!</p>
+            
+            <div class="cart-items">
+                <h3>Your Cart Items:</h3>
+                {{cart_items}}
+                <p><strong>Total: ${{cart_total}}</strong></p>
+            </div>
+            
+            <h3>Why Choose Rise Via?</h3>
+            <ul>
+                <li>🌿 Premium quality THCA flower</li>
+                <li>🔬 Lab tested for purity and potency</li>
+                <li>📦 Fast, discreet shipping</li>
+                <li>💯 100% satisfaction guarantee</li>
+            </ul>
+            
+            <p style="text-align: center;">
+                <a href="{{cart_url}}" class="button">Complete Your Order</a>
+            </p>
+        </div>
+        <div class="footer">
+            <p>Questions? Reply to this email or contact us at support@risevia.com</p>
+            <p>The Rise Via Team</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,108 +1,133 @@
-import { supabase } from '../lib/supabase';
+import { sql } from '../lib/neon';
 
 export interface Order {
-  id?: string;
-  order_number?: string;
-  payment_method_id: string;
-  customer_email: string;
-  customer_name: string;
-  shipping_address: {
-    line1: string;
-    city: string;
-    state: string;
-    postal_code: string;
-  };
-  phone: string;
-  total_amount: number;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  items: OrderItem[];
-  created_at?: string;
-  updated_at?: string;
+  id: string
+  customer_id: string
+  total: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface OrderItem {
-  id?: string;
-  order_id?: string;
-  product_id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  total: number;
+  id: string
+  order_id: string
+  product_id: string
+  quantity: number
+  price: number
+  created_at: string
+}
+
+export interface CreateOrderData {
+  customer_id: string
+  items: Array<{
+    product_id: string
+    quantity: number
+    price: number
+  }>
+  total: number
 }
 
 export const orderService = {
-  async createOrder(orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at'>): Promise<string> {
-    const orderNumber = `RV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    
-    const { data, error } = await supabase
-      .from('orders')
-      .insert([{
-        ...orderData,
-        order_number: orderNumber,
-      }])
-      .select()
-      .single();
+  async createOrder(orderData: CreateOrderData): Promise<Order | null> {
+    try {
+      const orders = await sql`
+        INSERT INTO orders (customer_id, total, status)
+        VALUES (${orderData.customer_id}, ${orderData.total}, 'pending')
+        RETURNING *
+      `;
 
-    if (error) {
-      throw new Error(`Failed to create order: ${error.message}`);
+      if (orders.length === 0) return null;
+
+      const order = orders[0];
+
+      for (const item of orderData.items) {
+        await sql`
+          INSERT INTO order_items (order_id, product_id, quantity, price)
+          VALUES (${order.id}, ${item.product_id}, ${item.quantity}, ${item.price})
+        `;
+      }
+
+      return order as Order;
+    } catch (error) {
+      return null;
     }
-
-    return data.id;
   },
 
   async getOrder(orderId: string): Promise<Order | null> {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', orderId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      throw new Error(`Failed to fetch order: ${error.message}`);
+    try {
+      const orders = await sql`
+        SELECT * FROM orders 
+        WHERE id = ${orderId}
+      `;
+      return orders.length > 0 ? orders[0] as Order : null;
+    } catch (error) {
+      return null;
     }
-
-    return data;
   },
 
   async getOrdersByCustomerEmail(email: string): Promise<Order[]> {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('customer_email', email)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw new Error(`Failed to fetch orders: ${error.message}`);
-    }
-
-    return data || [];
-  },
-
-  async updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', orderId);
-
-    if (error) {
-      throw new Error(`Failed to update order status: ${error.message}`);
+    try {
+      const orders = await sql`
+        SELECT * FROM orders 
+        WHERE customer_email = ${email}
+        ORDER BY created_at DESC
+      `;
+      return (orders as Order[]) || [];
+    } catch (error) {
+      return [];
     }
   },
 
-  async getAllOrders(limit = 50, offset = 0): Promise<Order[]> {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) {
-      throw new Error(`Failed to fetch orders: ${error.message}`);
+  async getOrdersByCustomer(customerId: string): Promise<Order[]> {
+    try {
+      const orders = await sql`
+        SELECT * FROM orders 
+        WHERE customer_id = ${customerId}
+        ORDER BY created_at DESC
+      `;
+      return (orders || []) as Order[];
+    } catch (error) {
+      return [];
     }
+  },
 
-    return data || [];
-  }
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    try {
+      const items = await sql`
+        SELECT * FROM order_items 
+        WHERE order_id = ${orderId}
+        ORDER BY created_at ASC
+      `;
+      return (items || []) as any[];
+    } catch (error) {
+      return [];
+    }
+  },
+
+  async updateOrderStatus(orderId: string, status: string): Promise<Order | null> {
+    try {
+      const orders = await sql`
+        UPDATE orders 
+        SET status = ${status}, updated_at = NOW()
+        WHERE id = ${orderId}
+        RETURNING *
+      `;
+      return orders.length > 0 ? orders[0] as Order : null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  async getOrderWithItems(orderId: string): Promise<(Order & { items: OrderItem[] }) | null> {
+    try {
+      const order = await this.getOrder(orderId);
+      if (!order) return null;
+
+      const items = await this.getOrderItems(orderId);
+      return { ...order, items };
+    } catch (error) {
+      return null;
+    }
+  },
 };

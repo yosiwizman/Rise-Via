@@ -25,3 +25,21 @@
   }
 }
 
+/* Fix UserWay ADA widget position on mobile */
+@media (max-width: 768px) {
+  /* UserWay widget button */
+  [id*="userway"],
+  [class*="userway"],
+  .userway-widget {
+    bottom: 100px !important;
+    right: 10px !important;
+    z-index: 40 !important;
+  }
+  
+  /* When mobile menu is open, temporarily hide widget */
+  .menu-open [class*="userway"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+

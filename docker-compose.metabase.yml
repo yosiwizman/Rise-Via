@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  metabase:
+    image: metabase/metabase:latest
+    container_name: risevia-metabase
+    ports:
+      - "3001:3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase
+      - MB_DB_PASS=metabase_password
+      - MB_DB_HOST=metabase-db
+    depends_on:
+      - metabase-db
+    volumes:
+      - metabase-data:/metabase-data
+
+  metabase-db:
+    image: postgres:13
+    container_name: metabase-postgres
+    environment:
+      - POSTGRES_DB=metabase
+      - POSTGRES_USER=metabase
+      - POSTGRES_PASSWORD=metabase_password
+    volumes:
+      - metabase-db-data:/var/lib/postgresql/data
+
+volumes:
+  metabase-data:
+  metabase-db-data:

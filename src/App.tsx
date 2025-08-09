@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, lazy } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -8,12 +8,10 @@ import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
-import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { CustomerProvider } from './contexts/CustomerContext';
-import { useAgeGate } from './hooks/useAgeGate';
-import { getUserState } from './utils/cookies';
-import { priceTrackingService } from './services/priceTracking';
+import { FloatingChatButton } from './components/FloatingChatButton';
+import MobileCartButton from './components/MobileCartButton';
+import { ToastEventHandler } from './components/ToastEventHandler';
+import { ChatBot } from './components/ChatBot';
 import { Toaster } from './components/ui/sonner';
 
 const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
@@ -28,9 +26,14 @@ const SharedWishlistPage = lazy(() => import('./components/wishlist/WishlistShar
 const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then(module => ({ default: module.AccountPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+import RegisterPage from './pages/RegisterPage';
 const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
+import { CustomerProvider } from './contexts/CustomerContext';
+import { useAgeGate } from './hooks/useAgeGate';
+import { getUserState } from './utils/cookies';
+import { priceTrackingService } from './services/priceTracking';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -58,6 +61,8 @@ function App() {
       setCurrentPage('account');
     } else if (path === '/login') {
       setCurrentPage('login');
+    } else if (path === '/register') {
+      setCurrentPage('register');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
     } else if (path === '/checkout') {
@@ -84,8 +89,6 @@ function App() {
     script.setAttribute('data-position', '6');
     script.async = true;
     script.onload = () => {
-      console.log('✅ ADA widget loaded!');
-      
       const positionWidget = () => {
         const selectors = [
           '[aria-label*="Accessibility"]',
@@ -98,136 +101,92 @@ function App() {
           'iframe[src*="userway"]',
           'div[style*="position: fixed"]'
         ];
-        
         let adaWidget = null;
         for (const selector of selectors) {
           adaWidget = document.querySelector(selector);
           if (adaWidget) {
-            console.log(`🎯 Found ADA widget with selector: ${selector}`);
             break;
           }
         }
-        
         if (adaWidget) {
-          console.log('🔧 Positioning ADA widget to right-middle as requested');
           const element = adaWidget as HTMLElement;
-          
           element.style.removeProperty('left');
-          element.removeAttribute('style');
-          
-          element.style.cssText = `
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 999999 !important;
-            position: fixed !important;
-            top: 50% !important;
-            right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
-            left: auto !important;
-            transform: translateY(-50%) !important;
-            bottom: auto !important;
-            width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-            height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-            border-radius: 50% !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            background-color: #6366f1 !important;
-            border: 2px solid #8b5cf6 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          `;
-          
-          console.log('📱 Applied aggressive right-side positioning with cssText');
-          
+          element.removeAttribute('offscreen');
+
+          // Mobile and Desktop positioning
+          if (window.innerWidth <= 768) {
+            element.style.top = '50%';
+            element.style.right = '15px';
+            element.style.left = 'auto';
+            element.style.width = '50px';
+            element.style.height = '50px';
+          } else {
+            element.style.top = '50%';
+            element.style.right = '20px';
+            element.style.left = 'auto';
+            element.style.width = '60px';
+            element.style.height = '60px';
+          }
+          element.style.bottom = 'auto';
+          element.style.transform = 'translateY(-50%)';
+          element.style.zIndex = '999999';
+          element.style.position = 'fixed';
+          element.style.display = 'block';
+          element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.borderRadius = '50%';
+          element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          element.style.backgroundColor = '#6366f1';
+          element.style.border = '2px solid #8b5cf6';
+          element.style.margin = '0';
+          element.style.padding = '0';
+
+          // Accessibility: right-click to hide/show
           let isHidden = false;
           element.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             isHidden = !isHidden;
-            element.style.setProperty('opacity', isHidden ? '0.3' : '1', 'important');
-            element.style.setProperty('pointer-events', isHidden ? 'none' : 'auto', 'important');
-            console.log(`🔄 ADA widget ${isHidden ? 'hidden' : 'shown'}`);
+            element.style.opacity = isHidden ? '0.3' : '1';
+            element.style.pointerEvents = isHidden ? 'none' : 'auto';
           });
-          
           element.title = 'Right-click to hide/show • Accessibility Widget';
-          console.log('✅ ADA widget positioned to RIGHT side successfully');
-          
+
+          // Mutation observer to prevent forced left positioning
           const styleObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                 const currentStyle = element.getAttribute('style') || '';
                 if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
-                  console.log('🚫 UserWay tried to reposition to LEFT - forcing RIGHT immediately');
-                  element.style.cssText = `
-                    display: block !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    z-index: 999999 !important;
-                    position: fixed !important;
-                    top: 50% !important;
-                    right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
-                    left: auto !important;
-                    transform: translateY(-50%) !important;
-                    bottom: auto !important;
-                    width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-                    height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-                    border-radius: 50% !important;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                    background-color: #6366f1 !important;
-                    border: 2px solid #8b5cf6 !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                  `;
+                  element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
+                  element.style.left = 'auto';
                 }
               }
             });
           });
-          
           styleObserver.observe(element, {
             attributes: true,
             attributeFilter: ['style']
           });
-          
+
+          // Interval to maintain right-side positioning
           const maintainPosition = () => {
             const currentStyle = element.getAttribute('style') || '';
             if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
-              console.log('🔄 Interval check: Re-applying RIGHT positioning');
-              element.style.cssText = `
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                z-index: 999999 !important;
-                position: fixed !important;
-                top: 50% !important;
-                right: ${window.innerWidth <= 768 ? '15px' : '20px'} !important;
-                left: auto !important;
-                transform: translateY(-50%) !important;
-                bottom: auto !important;
-                width: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-                height: ${window.innerWidth <= 768 ? '50px' : '60px'} !important;
-                border-radius: 50% !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                background-color: #6366f1 !important;
-                border: 2px solid #8b5cf6 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-              `;
+              element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
+              element.style.left = 'auto';
             }
           };
-          
           setInterval(maintainPosition, 1000);
-          
-        } else {
-          console.warn('⚠️ ADA widget not found, retrying...');
-          setTimeout(positionWidget, 1000);
         }
       };
-      
+
       setTimeout(positionWidget, 500);
       setTimeout(positionWidget, 1500);
       setTimeout(positionWidget, 3000);
       setTimeout(positionWidget, 5000);
-      
+
       window.addEventListener('resize', positionWidget);
-      
+
       const observer = new MutationObserver(() => {
         positionWidget();
       });
@@ -245,12 +204,6 @@ function App() {
     setShowStateBlocker(false);
   };
 
-  const PageLoader = () => (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-    </div>
-  );
-
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'home':
@@ -258,95 +211,37 @@ function App() {
       case 'shop':
         return <ShopPage />;
       case 'learn':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <LearnPage />
-          </Suspense>
-        );
+        return <LearnPage />;
       case 'legal':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <LegalPage />
-          </Suspense>
-        );
+        return <LegalPage />;
       case 'contact':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <ContactPage />
-          </Suspense>
-        );
+        return <ContactPage />;
       case 'shipping':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <ShippingPage />
-          </Suspense>
-        );
+        return <ShippingPage />;
       case 'lab-results':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <LabResultsPage />
-          </Suspense>
-        );
+        return <LabResultsPage />;
       case 'careers':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <CareersPage />
-          </Suspense>
-        );
+        return <CareersPage />;
       case 'wishlist':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <WishlistPage onNavigate={setCurrentPage} />
-          </Suspense>
-        );
+        return <WishlistPage onNavigate={setCurrentPage} />;
       case 'wishlist-shared':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />
-          </Suspense>
-        );
+        return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
       case 'admin':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <AdminPage />
-          </Suspense>
-        );
+        return <AdminPage />;
       case 'account':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <AccountPage />
-          </Suspense>
-        );
+        return <AccountPage />;
       case 'login':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <LoginPage />
-          </Suspense>
-        );
+        return <LoginPage />;
+      case 'register':
+        return <RegisterPage onNavigate={setCurrentPage} />;
       case 'b2b':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <B2BPage />
-          </Suspense>
-        );
+        return <B2BPage />;
       case 'checkout':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />
-          </Suspense>
-        );
+        return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
       case 'health':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <HealthCheck />
-          </Suspense>
-        );
+        return <HealthCheck />;
       default:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <NotFoundPage onNavigate={setCurrentPage} />
-          </Suspense>
-        );
+        return <NotFoundPage onNavigate={setCurrentPage} />;
     }
   };
 
@@ -356,16 +251,14 @@ function App() {
         <AnalyticsProvider>
           <div className="min-h-screen bg-risevia-black text-white">
             <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-            
             {showStateBlocker && (
               <StateBlocker onStateVerified={handleStateVerified} />
             )}
-            
             {isAgeVerified && (
               <>
                 <WishlistInitializer />
-                <Navigation 
-                  currentPage={currentPage} 
+                <Navigation
+                  currentPage={currentPage}
                   onNavigate={setCurrentPage}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
@@ -375,10 +268,15 @@ function App() {
                   {renderCurrentPage()}
                 </main>
                 <Footer onNavigate={setCurrentPage} />
+                <MobileCartButton />
                 <CookieConsentBanner />
+                <FloatingChatButton />
               </>
             )}
           </div>
+          <ToastEventHandler />
+          <Toaster />
+          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
       <Toaster />

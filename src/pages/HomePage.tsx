@@ -29,24 +29,24 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
           muted
           loop
           playsInline
+          poster="https://res.cloudinary.com/dcegcrkbw/image/upload/v1734100281/hero-poster.jpg"
           className="absolute inset-0 w-full h-full object-contain object-center z-0 bg-black"
-          onLoadedData={() => console.log('✅ Video loaded successfully!')}
-          onError={(e) => console.error('Video error:', e)}
         >
           <source src="https://res.cloudinary.com/dq6ddlsjq/video/upload/v1754348759/YOU_ARE_THE_ONE_lyi5ay.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
 
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-black/30 z-1"></div>
 
-        <div className="absolute bottom-20 left-8 text-left z-10 max-w-md">
+        <div className="absolute bottom-16 left-4 right-4 md:bottom-20 md:left-8 md:right-auto text-left z-10 max-w-md mx-auto md:mx-0">
           <motion.div
             initial={{ scale: 0.8, x: -50 }}
             animate={{ scale: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="mb-8"
+            className="mb-6 md:mb-8"
           >
-            <h1 className="text-5xl md:text-7xl font-bold gradient-text mb-4">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold gradient-text mb-4 text-center md:text-left">
               RiseViA
             </h1>
           </motion.div>
@@ -55,7 +55,7 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed"
+            className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 md:mb-8 leading-relaxed text-center md:text-left"
           >
             Premium THCA Cannabis Products<br />
             <span className="text-risevia-teal">Lab-Tested • Legal • Delivered</span>
@@ -65,14 +65,15 @@ export const HomePage = ({ onNavigate }: HomePageProps) => {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
+            className="text-center md:text-left"
           >
             <Button
               onClick={() => onNavigate('shop')}
               size="lg"
-              className="neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold px-8 py-4 text-lg rounded-2xl"
+              className="neon-glow bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-2xl touch-manipulation"
             >
               Explore Strains
-              <ChevronRight className="ml-2 w-5 h-5" />
+              <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </motion.div>
         </div>

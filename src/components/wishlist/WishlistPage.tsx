@@ -11,6 +11,8 @@ import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../hooks/use-toast';
 import { WishlistItem } from '../../types/wishlist';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
@@ -30,6 +32,8 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
     generateShareLink,
     sortItems
   } = useWishlist();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
 
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'dateAdded' | 'priority'>('dateAdded');
   const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -40,7 +44,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
 
   const filteredAndSortedItems = useMemo(() => {
     return sortItems(sortBy).filter(item => 
-      filterPriority === 'all' || item.priority === filterPriority
+      item && (filterPriority === 'all' || item.priority === filterPriority)
     );
   }, [items, sortBy, filterPriority, sortItems]);
 
@@ -175,9 +179,23 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
 
           <div className="flex space-x-2">
             <Button
-              disabled
+              onClick={() => {
+                addToCart({
+                  productId: item.id,
+                  name: item.name,
+                  price: item.price,
+                  image: item.image,
+                  category: item.category,
+                  strainType: item.category || 'Unknown',
+                  thcaPercentage: 0
+                });
+                toast({
+                  title: "Added to Cart",
+                  description: `${item.name} has been added to your cart.`,
+                });
+              }}
               size="sm"
-              className="flex-1 bg-gray-600 text-gray-400 cursor-not-allowed"
+              className="flex-1 bg-risevia-teal hover:bg-risevia-teal/80 text-white"
             >
               <ShoppingCart size={14} className="mr-1" />
               Add to Cart
@@ -352,14 +370,14 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
           transition={{ delay: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {filteredAndSortedItems.map((item, index) => (
+          {filteredAndSortedItems.filter(item => item !== null).map((item, index) => (
             <motion.div
-              key={item.id}
+              key={item!.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item} />
+              <WishlistItemCard item={item!} />
             </motion.div>
           ))}
         </motion.div>

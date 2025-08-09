@@ -1,0 +1,179 @@
+import { Resend } from 'resend';
+import { sql } from '../lib/neon'
+
+const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  subject: string
+  body: string
+  created_at: string
+}
+
+export interface EmailLog {
+  id: string
+  to_email: string
+  subject: string
+  body: string
+  status: 'sent' | 'failed' | 'pending'
+  sent_at?: string
+  created_at: string
+}
+
+const emailService = {
+  sendWelcomeEmail: async (to: string, name: string) => {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'Rise Via <welcome@risevia.com>',
+        to,
+        subject: 'Welcome to Rise Via!',
+        html: `
+          <h1>Welcome to Rise Via!</h1>
+          <p>Hi ${name},</p>
+          <p>Thank you for creating an account with Rise Via.</p>
+          <p>You can now browse our premium THCA cannabis products and enjoy member benefits.</p>
+          <p>Happy shopping!</p>
+          <p>The Rise Via Team</p>
+        `
+      });
+      
+      if (error) throw error;
+
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+        VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email sent', 'sent', NOW())
+      `
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status)
+        VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email failed', 'failed')
+      `
+      
+      return { success: false, error };
+    }
+  },
+
+  sendOrderConfirmation: async (to: string, orderData: { orderNumber: string; total: number }) => {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'Rise Via <orders@risevia.com>',
+        to,
+        subject: `Order Confirmation #${orderData.orderNumber}`,
+        html: `
+          <h1>Order Confirmation</h1>
+          <p>Thank you for your order!</p>
+          <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+          <p><strong>Total:</strong> $${orderData.total}</p>
+          <p>We'll send you updates as your order is processed.</p>
+        `
+      });
+      
+      if (error) throw error;
+
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+        VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation sent', 'sent', NOW())
+      `
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send order confirmation:', error);
+      
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status)
+        VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation failed', 'failed')
+      `
+      
+      return { success: false, error };
+    }
+  },
+
+  sendOrderStatusUpdate: async (to: string, orderData: { orderNumber: string; total: number }, newStatus: string) => {
+    try {
+      const statusMessages = {
+        pending: 'Your order has been received and is being processed.',
+        processing: 'Your order is currently being prepared for shipment.',
+        shipped: 'Your order has been shipped and is on its way!',
+        delivered: 'Your order has been successfully delivered.',
+        cancelled: 'Your order has been cancelled.'
+      };
+
+      const { data, error } = await resend.emails.send({
+        from: 'Rise Via <orders@risevia.com>',
+        to,
+        subject: `Order Update #${orderData.orderNumber} - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+        html: `
+          <h1>Order Status Update</h1>
+          <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+          <p><strong>Status:</strong> ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</p>
+          <p>${statusMessages[newStatus as keyof typeof statusMessages] || 'Your order status has been updated.'}</p>
+          <p><strong>Total:</strong> $${orderData.total}</p>
+          <p>Thank you for choosing Rise Via!</p>
+        `
+      });
+      
+      if (error) throw error;
+
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+        VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status updated to ${newStatus}`}, 'sent', NOW())
+      `
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send order status update:', error);
+      
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status)
+        VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status update failed for ${newStatus}`}, 'failed')
+      `
+      
+      return { success: false, error };
+    }
+  },
+
+  async sendEmail(to: string, subject: string, body: string): Promise<boolean> {
+    try {
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+        VALUES (${to}, ${subject}, ${body}, 'sent', NOW())
+      `
+      return true
+    } catch (error) {
+      return false
+    }
+  },
+
+  async getEmailLogs(limit: number = 50): Promise<EmailLog[]> {
+    try {
+      const logs = await sql`
+        SELECT * FROM email_logs 
+        ORDER BY created_at DESC 
+        LIMIT ${limit}
+      `
+      return (logs || []) as any[]
+    } catch (error) {
+      return []
+    }
+  },
+
+  async getEmailTemplate(name: string): Promise<EmailTemplate | null> {
+    try {
+      const templates = await sql`
+        SELECT * FROM email_templates 
+        WHERE name = ${name}
+      `
+      return templates.length > 0 ? templates[0] as any : null
+    } catch (error) {
+      return null
+    }
+  }
+};
+
+export { emailService };
+export default emailService;

@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartStore, CartItem, CartStats } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
+import { abandonedCartService } from '../services/AbandonedCartService';
 
 const STORAGE_KEY = 'risevia-cart';
 
@@ -47,6 +48,8 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
+
+          trackCartEvent('add', existingItem, { quantity });
         } else {
           const newItem: CartItem = {
             ...itemData,
@@ -64,9 +67,17 @@ export const useCart = create<CartStore>()(
             stats: updatedStats,
             error: null
           });
-        }
 
-        trackCartEvent('add', itemData, { quantity });
+          if (typeof window !== 'undefined' && window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('cart-item-added', {
+              detail: { name: sanitizedName, quantity }
+            }));
+          }
+
+          trackCartEvent('add', newItem, { quantity });
+          cartAnalytics.trackCartEvent('add', newItem, { quantity });
+          abandonedCartService.trackCartActivity();
+        }
       },
 
       removeFromCart: (itemId) => {
@@ -86,6 +97,7 @@ export const useCart = create<CartStore>()(
 
         trackCartEvent('remove', itemToRemove);
         cartAnalytics.trackCartEvent('remove', itemToRemove);
+        abandonedCartService.trackCartActivity();
       },
 
       updateQuantity: (itemId, quantity) => {
@@ -104,6 +116,8 @@ export const useCart = create<CartStore>()(
           items: updatedItems,
           stats: updatedStats
         });
+        
+        abandonedCartService.trackCartActivity();
       },
 
       clearCart: () => {
@@ -161,11 +175,11 @@ function calculateStats(items: CartItem[]): CartStats {
 
 function trackCartEvent(
   action: 'add' | 'remove' | 'update' | 'clear',
-  item?: any,
-  metadata?: Record<string, any>
+  item?: CartItem,
+  metadata?: Record<string, unknown>
 ) {
   if (typeof window !== 'undefined' && 'gtag' in window) {
-    (window as any).gtag('event', `cart_${action}`, {
+    (window as { gtag: (...args: unknown[]) => void }).gtag('event', `cart_${action}`, {
       event_category: 'cart',
       event_label: item?.name || 'bulk_action',
       value: item?.price || 0,
