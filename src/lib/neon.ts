@@ -1,6 +1,8 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL || 'postgresql://placeholder');
+const connectionString = import.meta.env.VITE_DATABASE_URL || 'postgresql://user:password@localhost:5432/risevia';
+
+const sql = neon(connectionString);
 
 export { sql };
 
