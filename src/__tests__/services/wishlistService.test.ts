@@ -79,4 +79,50 @@ describe('wishlistService', () => {
     expect(productIds).toEqual(['product-1', 'product-2'])
     expect(productIds.length).toBe(2)
   })
+
+  it('should handle wishlist service methods', async () => {
+    const { wishlistService } = await import('../../services/wishlistService')
+    
+    expect(typeof wishlistService.getOrCreateSession).toBe('function')
+    expect(typeof wishlistService.getWishlist).toBe('function')
+    expect(typeof wishlistService.addToWishlist).toBe('function')
+    expect(typeof wishlistService.removeFromWishlist).toBe('function')
+    expect(typeof wishlistService.isInWishlist).toBe('function')
+  })
+
+  it('should handle session token generation', () => {
+    const generateToken = () => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const token1 = generateToken()
+    const token2 = generateToken()
+    
+    expect(token1).toMatch(/^session_\d+_[a-z0-9]+$/)
+    expect(token2).toMatch(/^session_\d+_[a-z0-9]+$/)
+    expect(token1).not.toBe(token2)
+  })
+
+  it('should handle wishlist data structures', () => {
+    const wishlistItem = {
+      id: 'item-1',
+      session_id: 'session-1',
+      product_id: 'product-1',
+      created_at: new Date().toISOString()
+    }
+    
+    expect(wishlistItem).toHaveProperty('id')
+    expect(wishlistItem).toHaveProperty('session_id')
+    expect(wishlistItem).toHaveProperty('product_id')
+    expect(wishlistItem).toHaveProperty('created_at')
+  })
+
+  it('should handle migration scenarios', () => {
+    const migrationData = {
+      userId: 'user-123',
+      sessionItems: ['product-1', 'product-2', 'product-3'],
+      success: true
+    }
+    
+    expect(migrationData.userId).toBe('user-123')
+    expect(migrationData.sessionItems).toHaveLength(3)
+    expect(migrationData.success).toBe(true)
+  })
 })

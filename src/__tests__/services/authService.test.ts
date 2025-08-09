@@ -114,8 +114,9 @@ describe('authService', () => {
       const metadata = { firstName: 'John', lastName: 'Doe' }
       const result = await authService.register('new@example.com', 'password123', metadata)
       
-      expect(result.user.id).toBe(mockData.user.id)
-      expect(result.user.email).toBe(mockData.user.email)
+      expect(result).toBeTruthy()
+      expect(result!.user!.id).toBe(mockData.user.id)
+      expect(result!.user!.email).toBe(mockData.user.email)
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
         email: 'new@example.com',
         password: 'password123',
@@ -174,8 +175,9 @@ describe('authService', () => {
 
       const result = await authService.getCurrentUser()
       
-      expect(result.id).toBe(mockUser.id)
-      expect(result.email).toBe(mockUser.email)
+      expect(result).toBeTruthy()
+      expect(result!.id).toBe(mockUser.id)
+      expect(result!.email).toBe(mockUser.email)
     })
   })
 
@@ -198,8 +200,9 @@ describe('authService', () => {
 
       const result = await authService.getSession()
       
-      expect(result.access_token).toBe(mockSession.access_token)
-      expect(result.user.id).toBe(mockSession.user.id)
+      expect(result).toBeTruthy()
+      expect(result!.access_token).toBe(mockSession.access_token)
+      expect(result!.user.id).toBe(mockSession.user.id)
     })
   })
 

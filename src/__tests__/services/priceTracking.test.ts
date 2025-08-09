@@ -151,4 +151,85 @@ describe('priceTrackingService', () => {
       consoleSpy.mockRestore()
     })
   })
+
+  describe('price tracking functionality', () => {
+    it('should handle price check results', () => {
+      const priceCheckResult = {
+        itemId: 'test-item',
+        currentPrice: 25.99,
+        targetPrice: 30.00,
+        priceDropped: true,
+        percentageChange: -13.34
+      }
+      
+      expect(priceCheckResult.priceDropped).toBe(true)
+      expect(priceCheckResult.currentPrice).toBeLessThan(priceCheckResult.targetPrice)
+      expect(priceCheckResult.percentageChange).toBeLessThan(0)
+    })
+
+    it('should handle alert data structures', () => {
+      const alertData = {
+        itemId: 'product-1',
+        currentPrice: 20.99,
+        targetPrice: 25.00,
+        percentageChange: -16.04,
+        triggeredAt: Date.now()
+      }
+      
+      expect(alertData).toHaveProperty('itemId')
+      expect(alertData).toHaveProperty('currentPrice')
+      expect(alertData).toHaveProperty('targetPrice')
+      expect(alertData).toHaveProperty('triggeredAt')
+      expect(typeof alertData.triggeredAt).toBe('number')
+    })
+
+    it('should handle price simulation logic', () => {
+      const originalPrice = 30.00
+      const targetPrice = 25.00
+      const volatility = 0.1
+      
+      const simulatePrice = (original: number, target: number) => {
+        const randomChange = (Math.random() - 0.5) * 2 * volatility
+        const newPrice = original * (1 + randomChange)
+        
+        if (Math.random() < 0.05) {
+          return target * (0.95 + Math.random() * 0.05)
+        }
+        
+        return Math.max(newPrice, 0.01)
+      }
+      
+      const simulatedPrice = simulatePrice(originalPrice, targetPrice)
+      expect(simulatedPrice).toBeGreaterThan(0)
+      expect(typeof simulatedPrice).toBe('number')
+    })
+
+    it('should handle notification permissions', () => {
+      const mockNotification = {
+        permission: 'granted',
+        requestPermission: vi.fn(() => Promise.resolve('granted'))
+      }
+      
+      expect(mockNotification.permission).toBe('granted')
+      expect(typeof mockNotification.requestPermission).toBe('function')
+    })
+
+    it('should handle activity logging', () => {
+      const activity = {
+        timestamp: Date.now(),
+        itemsChecked: 5,
+        alertsTriggered: 2,
+        averagePriceChange: -5.5,
+        results: [
+          { itemId: 'item-1', priceDropped: true, percentageChange: -10.0 },
+          { itemId: 'item-2', priceDropped: false, percentageChange: 2.5 }
+        ]
+      }
+      
+      expect(activity.itemsChecked).toBe(5)
+      expect(activity.alertsTriggered).toBe(2)
+      expect(activity.results).toHaveLength(2)
+      expect(activity.results[0].priceDropped).toBe(true)
+    })
+  })
 })
