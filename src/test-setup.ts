@@ -7,29 +7,14 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-vi.mock('./lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signInWithPassword: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signOut: vi.fn(() => Promise.resolve({ error: null })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-      insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      update: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      delete: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-  },
+vi.mock('./lib/neon', () => ({
+  sql: vi.fn(() => Promise.resolve([])),
 }))
 
 Object.defineProperty(import.meta, 'env', {
   value: {
     MODE: 'test',
-    VITE_SUPABASE_URL: 'https://test.supabase.co',
-    VITE_SUPABASE_ANON_KEY: 'test-key',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   },
   writable: true,
 })

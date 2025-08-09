@@ -6,15 +6,16 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-import { supabase } from '../lib/supabase';
+import { orderService } from '../services/orderService';
+import { customerService } from '../services/customerService';
 
 interface Order {
   id: string;
-  orderNumber: string;
+  orderNumber?: string;
   total: number;
   status: string;
-  createdAt: string;
-  items: Array<{
+  created_at: string;
+  items?: Array<{
     product: {
       name: string;
       images: string[];
@@ -29,7 +30,7 @@ interface LoyaltyTransaction {
   type: string;
   points: number;
   description: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const AccountPage = () => {
@@ -49,29 +50,11 @@ export const AccountPage = () => {
     try {
       if (!customer?.id) return;
 
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
+      const ordersData = await orderService.getOrdersByCustomer(customer.id);
+      const transactionsData = await customerService.getLoyaltyTransactions(customer.id);
 
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('loyalty_transactions')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
-
-      if (!ordersError && ordersData) {
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
-
-      if (!transactionsError && transactionsData) {
-        setLoyaltyTransactions(transactionsData);
-      } else {
-        setLoyaltyTransactions([]);
-      }
+      setOrders(ordersData || []);
+      setLoyaltyTransactions(transactionsData || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const mockMembershipTier = {
@@ -103,26 +86,21 @@ export const AccountPage = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('customer_profiles')
-        .update({ 
-          loyalty_points: currentPoints - points 
-        })
-        .eq('customer_id', customer?.id);
+      const updatedProfile = await customerService.updateCustomerProfile(customer?.id!, { 
+        loyalty_points: currentPoints - points 
+      });
 
-      if (error) {
+      if (!updatedProfile) {
         alert('Failed to redeem points');
         return;
       }
 
-      await supabase
-        .from('loyalty_transactions')
-        .insert([{
-          customer_id: customer?.id,
-          type: 'REDEEMED',
-          points: -points,
-          description: `Redeemed ${points} points for $${points / 20} discount`
-        }]);
+      await customerService.addLoyaltyTransaction({
+        customer_id: customer?.id!,
+        type: 'REDEEMED',
+        points: -points,
+        description: `Redeemed ${points} points for $${points / 20} discount`
+      });
 
       alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
       setRedeemPoints('');
@@ -300,12 +278,12 @@ export const AccountPage = () => {
                   <div key={order.id} className="border-b pb-3 last:border-b-0">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-medium">Order #{order.orderNumber}</div>
+                        <div className="font-medium">Order #{order.orderNumber || order.id}</div>
                         <div className="text-sm text-gray-600">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.created_at).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {order.items.length} item(s)
+                          {order.items?.length || 0} item(s)
                         </div>
                       </div>
                       <div className="text-right">
@@ -339,7 +317,7 @@ export const AccountPage = () => {
                     <div>
                       <div className="text-sm font-medium">{transaction.description}</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
+                        {new Date(transaction.created_at).toLocaleDateString()}
                       </div>
                     </div>
                     <div className={`font-medium ${

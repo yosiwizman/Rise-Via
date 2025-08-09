@@ -51,7 +51,7 @@ export const CustomerList = () => {
       };
       
       const data = await customerService.search(searchTerm, filters);
-      setCustomers(data || []);
+      setCustomers((data || []) as Customer[]);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       setCustomers([]);

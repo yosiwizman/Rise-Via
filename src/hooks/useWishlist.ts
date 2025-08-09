@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { wishlistService } from '../services/wishlistService'
-import { supabase } from '../lib/supabase'
+import { authService } from '../services/authService'
 import productsData from '../data/products.json'
 
 export const useWishlist = () => {
@@ -12,7 +12,7 @@ export const useWishlist = () => {
     migrateLocalStorageWishlist()
     loadWishlist()
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const authStateChange = authService.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await wishlistService.migrateSessionWishlist(session.user.id)
         loadWishlist()
@@ -21,7 +21,11 @@ export const useWishlist = () => {
       }
     })
     
-    return () => subscription.unsubscribe()
+    return () => {
+      if (authStateChange && typeof authStateChange.then === 'function') {
+        authStateChange.then(res => res.data.subscription.unsubscribe());
+      }
+    }
   }, [])
 
   const migrateLocalStorageWishlist = async () => {
@@ -49,7 +53,7 @@ export const useWishlist = () => {
     setLoading(true)
     const { data, error } = await wishlistService.getWishlist()
     if (error) {
-      setError(error.message)
+      setError(typeof error === 'string' ? error : 'An error occurred')
     } else {
       setWishlistItems(data || [])
     }
@@ -62,7 +66,7 @@ export const useWishlist = () => {
     if (!error) {
       await loadWishlist()
     } else {
-      setError(error.message)
+      setError(typeof error === 'string' ? error : 'An error occurred')
     }
   }
 
@@ -71,7 +75,7 @@ export const useWishlist = () => {
     if (!error) {
       await loadWishlist()
     } else {
-      setError(error.message)
+      setError(typeof error === 'string' ? error : 'An error occurred')
     }
   }
 
