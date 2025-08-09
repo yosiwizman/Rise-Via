@@ -22,7 +22,7 @@ describe('Validation Utils', () => {
   })
 
   it('should validate required fields', () => {
-    const validateRequired = (value: any) => {
+    const validateRequired = (value: unknown) => {
       return value !== null && value !== undefined && String(value).trim() !== ''
     }
     

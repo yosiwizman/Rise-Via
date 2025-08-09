@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 describe('Array Utils', () => {
   it('should remove duplicates from array', () => {
-    const removeDuplicates = (arr: any[]) => {
+    const removeDuplicates = <T>(arr: T[]) => {
       return [...new Set(arr)]
     }
     
@@ -11,8 +11,8 @@ describe('Array Utils', () => {
   })
 
   it('should chunk arrays', () => {
-    const chunk = (arr: any[], size: number) => {
-      const chunks: any[] = []
+    const chunk = <T>(arr: T[], size: number) => {
+      const chunks: T[][] = []
       for (let i = 0; i < arr.length; i += size) {
         chunks.push(arr.slice(i, i + size))
       }
@@ -24,7 +24,7 @@ describe('Array Utils', () => {
   })
 
   it('should shuffle arrays', () => {
-    const shuffle = (arr: any[]) => {
+    const shuffle = <T>(arr: T[]) => {
       const shuffled = [...arr]
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
