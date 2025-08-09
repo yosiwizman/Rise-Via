@@ -36,7 +36,7 @@ export class ErrorHandler {
       ...context
     };
 
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('Error caught by ErrorHandler:', error);
       console.error('Error details:', errorDetails);
       if (errorInfo?.componentStack) {
