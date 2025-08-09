@@ -104,7 +104,7 @@ export const ShopPage = () => {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
     const productData = {
       productId: product.id || '',
       name: product.name,
