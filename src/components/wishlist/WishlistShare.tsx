@@ -69,7 +69,7 @@ export const SharedWishlistPage = ({ shareCode, onNavigate }: SharedWishlistPage
 
     setImporting(true);
     try {
-      const success = await importWishlist();
+      const success = await importWishlist(shareCode);
       if (success) {
         setImportSuccess(true);
         setTimeout(() => {

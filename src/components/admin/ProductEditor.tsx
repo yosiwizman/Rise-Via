@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Save, Upload } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Product } from '../../types/product';
+import { ProductMediaManager } from './ProductMediaManager';
+import type { Product } from '../../types/product';
 
 interface ProductEditorProps {
   isOpen: boolean;
@@ -26,12 +26,15 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
     name: product?.name || '',
     price: product?.price?.toString() || '',
     category: product?.category || '',
-    strainType: product?.strainType || '',
-    thcaPercentage: product?.thcaPercentage?.toString() || '',
+    strainType: product?.strainType || product?.type || '',
+    thcaPercentage: product?.thcaPercentage?.toString() || product?.thc || '',
     description: product?.description || '',
     effects: product?.effects?.join(', ') || '',
     inventory: product?.inventory?.toString() || '',
-    featured: product?.featured || false
+    featured: product?.featured || false,
+    images: product?.images || [],
+    hoverImage: product?.hover_image || '',
+    videoUrl: product?.video_url || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,15 +42,13 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
     const productData: Product = {
       id: product?.id || Date.now().toString(),
       name: formData.name,
+      price: parseFloat(String(formData.price)),
       category: formData.category,
-      strainType: formData.strainType,
-      thcaPercentage: parseFloat(formData.thcaPercentage.toString()),
-      price: parseFloat(formData.price.toString()),
-      images: product?.images || [],
-      description: formData.description,
+      thc: String(formData.thcaPercentage || '0'),
+      type: formData.strainType || 'hybrid',
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
-      featured: formData.featured,
-      inventory: parseInt(formData.inventory.toString())
+      inventory: parseInt(formData.inventory.toString()),
+      active: true
     };
     onSave(productData);
     onClose();
@@ -186,19 +187,6 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="description" className="text-gray-700 font-medium">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  className="w-full border rounded px-3 py-2 text-gray-900 bg-white min-h-[100px]"
-                  placeholder="Enter product description"
-                  rows={4}
-                />
-              </div>
 
               <div>
                 <Label htmlFor="effects" className="text-gray-700 font-medium">
@@ -226,12 +214,23 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                 </Label>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 mb-2">Upload Product Images</p>
-                <Button type="button" variant="outline" className="text-gray-700">
-                  Choose Files
-                </Button>
+              <div className="space-y-4">
+                <h3 className="font-semibold">Product Images</h3>
+                <ProductMediaManager 
+                  initialImages={formData.images || []}
+                  initialHoverImage={formData.hoverImage}
+                  initialVideo={formData.videoUrl}
+                  onMediaUploaded={(urls) => {
+                    const imageUrls = urls.filter(url => !url.includes('/video/'));
+                    const videoUrls = urls.filter(url => url.includes('/video/'));
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      images: [...(prev.images || []), ...imageUrls].slice(0, 3),
+                      ...(videoUrls.length > 0 && !prev.videoUrl && { videoUrl: videoUrls[0] })
+                    }));
+                  }}
+                />
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">

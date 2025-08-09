@@ -38,6 +38,8 @@ export const CustomerList = () => {
   const [filterSegment, setFilterSegment] = useState('all');
   const [filterB2B, setFilterB2B] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -47,7 +49,7 @@ export const CustomerList = () => {
       };
       
       const data = await customerService.search(searchTerm, filters);
-      setCustomers(data || []);
+      setCustomers((data || []) as Customer[]);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       setCustomers([]);
@@ -102,6 +104,16 @@ export const CustomerList = () => {
     a.download = 'customers.csv';
     a.click();
   };
+
+  const totalPages = Math.ceil(customers.length / ITEMS_PER_PAGE);
+  const paginatedCustomers = customers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterSegment, filterB2B]);
 
   if (loading) {
     return <div className="flex justify-center p-8">Loading customers...</div>;
@@ -201,7 +213,7 @@ export const CustomerList = () => {
                 </tr>
               </thead>
               <tbody>
-                {customers.map((customer) => (
+                {paginatedCustomers.map((customer) => (
                   <tr key={customer.id} className="border-b hover:bg-gray-50">
                     <td className="p-3">
                       <div>
@@ -251,6 +263,60 @@ export const CustomerList = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+              
+              <span className="text-sm text-gray-600 ml-4">
+                Page {currentPage} of {totalPages} ({customers.length} total customers)
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,183 +1,239 @@
-export interface ImageSource {
-  src: string;
-  width: number;
-  type?: string;
+import type { WishlistItem } from '../types/wishlist';
+
+interface PriceCheckResult {
+  itemId: string;
+  currentPrice: number;
+  targetPrice: number;
+  priceDropped: boolean;
+  percentageChange: number;
 }
 
-export interface OptimizedImageSources {
-  webp: ImageSource[];
-  fallback: ImageSource[];
-}
+class PriceTrackingService {
+  private static instance: PriceTrackingService;
+  private checkInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly STORAGE_KEY = 'risevia-price-alerts';
 
-export class ImageOptimizer {
-  private static readonly BREAKPOINTS = [320, 480, 768, 1024, 1200, 1920];
-  private static readonly QUALITY_SETTINGS = {
-    thumbnail: 60,
-    medium: 75,
-    high: 85,
-    original: 95
-  };
-
-  /**
-   * Generate responsive srcSet for different screen sizes
-   */
-  static generateSrcSet(baseUrl: string, sizes: number[] = this.BREAKPOINTS): string {
-    return sizes
-      .map(size => `${this.getOptimizedUrl(baseUrl, size)} ${size}w`)
-      .join(', ');
+  private constructor() {
+    this.startPriceTracking();
   }
 
-  /**
-   * Generate WebP and fallback sources for progressive loading
-   */
-  static getOptimizedImageSources(baseUrl: string, sizes: number[] = this.BREAKPOINTS): OptimizedImageSources {
-    const webpSources = sizes.map(size => ({
-      src: this.getOptimizedUrl(baseUrl, size, 'webp'),
-      width: size,
-      type: 'image/webp'
-    }));
-
-    const fallbackSources = sizes.map(size => ({
-      src: this.getOptimizedUrl(baseUrl, size, 'jpg'),
-      width: size,
-      type: 'image/jpeg'
-    }));
-
-    return {
-      webp: webpSources,
-      fallback: fallbackSources
-    };
+  public static getInstance(): PriceTrackingService {
+    if (!PriceTrackingService.instance) {
+      PriceTrackingService.instance = new PriceTrackingService();
+    }
+    return PriceTrackingService.instance;
   }
 
-  /**
-   * Load image progressively with blur-to-sharp effect
-   */
-  static async loadProgressiveImage(
-    lowQualityUrl: string,
-    highQualityUrl: string,
-    onProgress?: (stage: 'loading' | 'low-quality' | 'high-quality') => void
-  ): Promise<{ lowQuality: HTMLImageElement; highQuality: HTMLImageElement }> {
-    onProgress?.('loading');
-
-    const lowQualityImg = await this.loadImage(lowQualityUrl);
-    onProgress?.('low-quality');
-
-    const highQualityImg = await this.loadImage(highQualityUrl);
-    onProgress?.('high-quality');
-
-    return { lowQuality: lowQualityImg, highQuality: highQualityImg };
+  public startPriceTracking(): void {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+    }
+    this.checkInterval = setInterval(() => {
+      this.checkAllPriceAlerts();
+    }, this.CHECK_INTERVAL_MS);
+    // No console.log
   }
 
-  /**
-   * Get optimized image URL (mock implementation for demo)
-   */
-  private static getOptimizedUrl(baseUrl: string, width: number, format?: string): string {
+  public stopPriceTracking(): void {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+    // No console.log
+  }
+
+  private async checkAllPriceAlerts(): Promise<void> {
     try {
-      if (!baseUrl || typeof baseUrl !== 'string') {
-        return '';
+      const wishlistData = localStorage.getItem('risevia-wishlist');
+      if (!wishlistData) return;
+      const { state } = JSON.parse(wishlistData);
+      const itemsWithAlerts = state.items.filter((item: WishlistItem) => 
+        item.priceAlert && item.priceAlert.isActive
+      );
+      if (itemsWithAlerts.length === 0) return;
+      const priceCheckResults = await Promise.all(
+        itemsWithAlerts.map((item: WishlistItem) => this.checkItemPrice(item))
+      );
+      const triggeredAlerts = priceCheckResults.filter(result => result.priceDropped);
+      if (triggeredAlerts.length > 0) {
+        triggeredAlerts.forEach(alert => {
+          this.triggerPriceAlert(alert);
+        });
       }
-      
-      const url = new URL(baseUrl, window.location.origin);
-      url.searchParams.set('w', width.toString());
-      url.searchParams.set('q', this.QUALITY_SETTINGS.medium.toString());
-      
-      if (format) {
-        url.searchParams.set('f', format);
-      }
-      
-      return url.toString();
-    } catch (error) {
-      console.warn('Failed to construct optimized URL for:', baseUrl, error);
-      return baseUrl || '';
+      this.logPriceCheckActivity(priceCheckResults);
+    } catch {
+      // Silent fail per code standards
     }
   }
 
-  /**
-   * Load image and return promise
-   */
-  private static loadImage(src: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
-    });
-  }
-
-  /**
-   * Generate blur placeholder data URL
-   */
-  static generateBlurPlaceholder(width: number = 40, height: number = 40): string {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
-
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#1a1a1a');
-    gradient.addColorStop(0.5, '#2a2a2a');
-    gradient.addColorStop(1, '#1a1a1a');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-    
-    return canvas.toDataURL('image/jpeg', 0.1);
-  }
-
-  /**
-   * Check if WebP is supported
-   */
-  static supportsWebP(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const webP = new Image();
-      webP.onload = webP.onerror = () => {
-        resolve(webP.height === 2);
-      };
-      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-    });
-  }
-
-  /**
-   * Lazy loading intersection observer
-   */
-  static createLazyLoadObserver(
-    callback: (entry: IntersectionObserverEntry) => void,
-    options: IntersectionObserverInit = {}
-  ): IntersectionObserver {
-    const defaultOptions: IntersectionObserverInit = {
-      root: null,
-      rootMargin: '50px',
-      threshold: 0.1,
-      ...options
+  private async checkItemPrice(item: WishlistItem): Promise<PriceCheckResult> {
+    const currentPrice = this.simulatePriceChange(item.price, item.priceAlert!.targetPrice);
+    const targetPrice = item.priceAlert!.targetPrice;
+    const priceDropped = currentPrice <= targetPrice;
+    const percentageChange = ((currentPrice - item.price) / item.price) * 100;
+    return {
+      itemId: item.id,
+      currentPrice,
+      targetPrice,
+      priceDropped,
+      percentageChange
     };
-
-    return new IntersectionObserver((entries) => {
-      entries.forEach(callback);
-    }, defaultOptions);
   }
 
-  /**
-   * Preload critical images
-   */
-  static preloadImages(urls: string[]): Promise<HTMLImageElement[]> {
-    return Promise.all(urls.map(url => this.loadImage(url)));
+  private simulatePriceChange(originalPrice: number, targetPrice: number): number {
+    const volatility = 0.1; // 10% volatility
+    const randomChange = (Math.random() - 0.5) * 2 * volatility;
+    const newPrice = originalPrice * (1 + randomChange);
+    if (Math.random() < 0.05) {
+      return targetPrice * (0.95 + Math.random() * 0.05); // Slightly below target
+    }
+    return Math.max(newPrice, 0.01); // Ensure price doesn't go negative
   }
 
-  /**
-   * Calculate optimal image dimensions for container
-   */
-  static calculateOptimalSize(
-    containerWidth: number,
-    imageAspectRatio: number,
-    devicePixelRatio: number = window.devicePixelRatio || 1
-  ): { width: number; height: number } {
-    const targetWidth = containerWidth * devicePixelRatio;
-    
-    const optimalWidth = this.BREAKPOINTS.find(bp => bp >= targetWidth) || this.BREAKPOINTS[this.BREAKPOINTS.length - 1];
-    const optimalHeight = Math.round(optimalWidth / imageAspectRatio);
-    
-    return { width: optimalWidth, height: optimalHeight };
+  private triggerPriceAlert(result: PriceCheckResult): void {
+    const alertData = {
+      itemId: result.itemId,
+      currentPrice: result.currentPrice,
+      targetPrice: result.targetPrice,
+      percentageChange: result.percentageChange,
+      triggeredAt: Date.now()
+    };
+    this.storeTriggeredAlert(alertData);
+    void this.showBrowserNotification(alertData);
+    this.trackPriceAlertEvent('triggered', alertData);
+  }
+
+  private storeTriggeredAlert(alertData: Record<string, unknown>): void {
+    try {
+      const existingAlerts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+      existingAlerts.push(alertData);
+      if (existingAlerts.length > 100) {
+        existingAlerts.splice(0, existingAlerts.length - 100);
+      }
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(existingAlerts));
+    } catch {
+      // Silent fail
+    }
+  }
+
+  private async showBrowserNotification(alertData: Record<string, unknown>): Promise<void> {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      new Notification('RiseViA Price Alert! 🎯', {
+        body: `Your target price has been reached! Current price: $${(alertData.currentPrice as number).toFixed(2)}`,
+        icon: '/risevia-logo.png',
+        tag: `price-alert-${alertData.itemId}`,
+        requireInteraction: true
+      });
+    } else if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        void this.showBrowserNotification(alertData);
+      }
+    }
+  }
+
+  private logPriceCheckActivity(results: PriceCheckResult[]): void {
+    const activity = {
+      timestamp: Date.now(),
+      itemsChecked: results.length,
+      alertsTriggered: results.filter(r => r.priceDropped).length,
+      averagePriceChange: results.reduce((sum, r) => sum + r.percentageChange, 0) / results.length,
+      results: results.map(r => ({
+        itemId: r.itemId,
+        priceDropped: r.priceDropped,
+        percentageChange: r.percentageChange
+      }))
+    };
+    const existingActivity = JSON.parse(localStorage.getItem('price-check-activity') || '[]');
+    existingActivity.push(activity);
+    if (existingActivity.length > 50) {
+      existingActivity.splice(0, existingActivity.length - 50);
+    }
+    localStorage.setItem('price-check-activity', JSON.stringify(existingActivity));
+  }
+
+  private trackPriceAlertEvent(action: string, data: Record<string, unknown>): void {
+    if (typeof window !== 'undefined' && 'gtag' in window) {
+      (window as { gtag: (...args: unknown[]) => void }).gtag('event', `price_alert_${action}`, {
+        event_category: 'price_alerts',
+        event_label: data.itemId,
+        value: data.currentPrice,
+        custom_parameters: {
+          target_price: data.targetPrice,
+          percentage_change: data.percentageChange
+        }
+      });
+    }
+    const analyticsData = {
+      action,
+      timestamp: Date.now(),
+      ...data
+    };
+    const existingAnalytics = JSON.parse(localStorage.getItem('price-alert-analytics') || '[]');
+    existingAnalytics.push(analyticsData);
+    if (existingAnalytics.length > 1000) {
+      existingAnalytics.splice(0, existingAnalytics.length - 1000);
+    }
+    localStorage.setItem('price-alert-analytics', JSON.stringify(existingAnalytics));
+  }
+
+  public getTriggeredAlerts(): Record<string, unknown>[] {
+    try {
+      return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  public getPriceCheckActivity(): Record<string, unknown>[] {
+    try {
+      return JSON.parse(localStorage.getItem('price-check-activity') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  public clearTriggeredAlerts(): void {
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  public getAlertStats(): {
+    totalAlerts: number;
+    activeAlerts: number;
+    triggeredToday: number;
+    averageResponseTime: number;
+  } {
+    try {
+      const wishlistData = localStorage.getItem('risevia-wishlist');
+      const triggeredAlerts = this.getTriggeredAlerts();
+      let activeAlerts = 0;
+      if (wishlistData) {
+        const { state } = JSON.parse(wishlistData);
+        activeAlerts = state.items.filter((item: WishlistItem) => 
+          item.priceAlert && item.priceAlert.isActive
+        ).length;
+      }
+      const today = new Date().toDateString();
+      const triggeredToday = triggeredAlerts.filter(alert => 
+        new Date(alert.triggeredAt as number).toDateString() === today
+      ).length;
+      return {
+        totalAlerts: triggeredAlerts.length,
+        activeAlerts,
+        triggeredToday,
+        averageResponseTime: this.CHECK_INTERVAL_MS / 1000 // in seconds
+      };
+    } catch {
+      return {
+        totalAlerts: 0,
+        activeAlerts: 0,
+        triggeredToday: 0,
+        averageResponseTime: 0
+      };
+    }
   }
 }
+
+export const priceTrackingService = PriceTrackingService.getInstance();

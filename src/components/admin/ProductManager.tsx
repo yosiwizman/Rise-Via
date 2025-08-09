@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui/checkbox';
 import { ProductEditor } from './ProductEditor';
 import productsData from '../../data/products.json';
-import { Product } from '../../types/product';
+import { productService } from '../../services/productService';
+import type { Product } from '../../types/product';
 
 export const ProductManager: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,15 +20,37 @@ export const ProductManager: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    const loadedProducts = productsData.products.map(product => ({
-      ...product,
-      inventory: Math.floor(Math.random() * 100) + 10,
-      featured: Math.random() > 0.7,
-      description: product.description || 'Premium cannabis product',
-      images: product.images || [],
-      strainType: product.strainType || 'hybrid'
-    }));
-    setProducts(loadedProducts);
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAll();
+        if (data && data.length > 0) {
+          const formattedProducts = data.map(product => ({
+            ...product,
+            id: product.id || Date.now().toString() + Math.random().toString(),
+            active: true,
+            thc: product.thca_percentage?.toString() || '0',
+            type: product.strain_type || '',
+            strainType: product.strain_type,
+            thcaPercentage: product.thca_percentage,
+            inventory: product.inventory || 0
+          }));
+          setProducts(formattedProducts);
+        } else {
+          throw new Error('No products found in database');
+        }
+      } catch (error) {
+        // fallback to static data
+        const loadedProducts = productsData.products.map(product => ({
+          ...product,
+          inventory: Math.floor(Math.random() * 100) + 10,
+          active: true,
+          thc: product.thcaPercentage?.toString() || '0',
+          type: product.strainType || '',
+        }));
+        setProducts(loadedProducts);
+      }
+    };
+    loadProducts();
   }, []);
 
   const filteredProducts = products.filter(product => {
@@ -150,7 +173,7 @@ export const ProductManager: React.FC = () => {
         p.id === editingProduct.id ? { ...product, id: editingProduct.id } : p
       ));
     } else {
-      setProducts(prev => [...prev, product]);
+      setProducts(prev => [...prev, { ...product, id: Date.now().toString() }]);
     }
   };
 

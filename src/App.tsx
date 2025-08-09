@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -6,42 +6,48 @@ import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { LearnPage } from './pages/LearnPage';
-import { LegalPage } from './pages/LegalPage';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { TermsPage } from './pages/TermsPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { OrderTrackingPage } from './pages/OrderTrackingPage';
-import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
-import { TermsOfService } from './pages/legal/TermsOfService';
-import { AgeVerificationModal } from './components/AgeVerificationModal';
-import { ContactPage } from './pages/ContactPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { ShippingPage } from './pages/ShippingPage';
-import { LabResultsPage } from './pages/LabResultsPage';
-import { CareersPage } from './pages/CareersPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { WishlistPage } from './components/wishlist/WishlistPage';
-import { SharedWishlistPage } from './components/wishlist/WishlistShare';
-import { AdminPage } from './pages/AdminPage';
+import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
+import { FloatingChatButton } from './components/FloatingChatButton';
+import MobileCartButton from './components/MobileCartButton';
+import { ToastEventHandler } from './components/ToastEventHandler';
+import { ChatBot } from './components/ChatBot';
+import { Toaster } from './components/ui/sonner';
 import { CustomerProvider } from './contexts/CustomerContext';
-import { AccountPage } from './pages/AccountPage';
-import { LoginPage } from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import { B2BPage } from './pages/B2BPage';
-import { HealthCheck } from './components/HealthCheck';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
-import MobileCartButton from './components/MobileCartButton';
+import RegisterPage from './pages/RegisterPage';
+
+const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+const ShopPage = lazy(() => import('./pages/ShopPage').then(module => ({ default: module.ShopPage })));
+const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
+const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage').then(module => ({ default: module.OrderTrackingPage })));
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService').then(module => ({ default: module.TermsOfService })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));
+const ShippingPage = lazy(() => import('./pages/ShippingPage').then(module => ({ default: module.ShippingPage })));
+const LabResultsPage = lazy(() => import('./pages/LabResultsPage').then(module => ({ default: module.LabResultsPage })));
+const CareersPage = lazy(() => import('./pages/CareersPage').then(module => ({ default: module.CareersPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
+const WishlistPage = lazy(() => import('./components/wishlist/WishlistPage').then(module => ({ default: module.WishlistPage })));
+const SharedWishlistPage = lazy(() => import('./components/wishlist/WishlistShare').then(module => ({ default: module.SharedWishlistPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then(module => ({ default: module.AccountPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
+const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
@@ -78,6 +84,8 @@ function App() {
       setCurrentPage('register');
     } else if (path === '/b2b' || path === '/wholesale') {
       setCurrentPage('b2b');
+    } else if (path === '/checkout') {
+      setCurrentPage('checkout');
     } else if (path === '/health') {
       setCurrentPage('health');
     } else {
@@ -96,9 +104,112 @@ function App() {
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
     script.setAttribute('data-account', 'FREE_ACCOUNT');
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-position', '6');
     script.async = true;
     script.onload = () => {
-      console.log('✅ ADA widget loaded!');
+      const positionWidget = () => {
+        const selectors = [
+          '[aria-label*="Accessibility"]',
+          '[data-uw-feature-tour]',
+          '.uw-s10-bottom-right',
+          '.uw-s10-top-right',
+          '.uw-s10-middle-right',
+          '#uw-widget',
+          '[class*="uw-"]',
+          'iframe[src*="userway"]',
+          'div[style*="position: fixed"]'
+        ];
+        let adaWidget = null;
+        for (const selector of selectors) {
+          adaWidget = document.querySelector(selector);
+          if (adaWidget) {
+            break;
+          }
+        }
+        if (adaWidget) {
+          const element = adaWidget as HTMLElement;
+          element.style.removeProperty('left');
+          element.removeAttribute('offscreen');
+
+          // Mobile and Desktop positioning
+          if (window.innerWidth <= 768) {
+            element.style.top = '50%';
+            element.style.right = '15px';
+            element.style.left = 'auto';
+            element.style.width = '50px';
+            element.style.height = '50px';
+          } else {
+            element.style.top = '50%';
+            element.style.right = '20px';
+            element.style.left = 'auto';
+            element.style.width = '60px';
+            element.style.height = '60px';
+          }
+          element.style.bottom = 'auto';
+          element.style.transform = 'translateY(-50%)';
+          element.style.zIndex = '999999';
+          element.style.position = 'fixed';
+          element.style.display = 'block';
+          element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.borderRadius = '50%';
+          element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          element.style.backgroundColor = '#6366f1';
+          element.style.border = '2px solid #8b5cf6';
+          element.style.margin = '0';
+          element.style.padding = '0';
+
+          // Accessibility: right-click to hide/show
+          let isHidden = false;
+          element.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            isHidden = !isHidden;
+            element.style.opacity = isHidden ? '0.3' : '1';
+            element.style.pointerEvents = isHidden ? 'none' : 'auto';
+          });
+          element.title = 'Right-click to hide/show • Accessibility Widget';
+
+          // Mutation observer to prevent forced left positioning
+          const styleObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                const currentStyle = element.getAttribute('style') || '';
+                if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
+                  element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
+                  element.style.left = 'auto';
+                }
+              }
+            });
+          });
+          styleObserver.observe(element, {
+            attributes: true,
+            attributeFilter: ['style']
+          });
+
+          // Interval to maintain right-side positioning
+          const maintainPosition = () => {
+            const currentStyle = element.getAttribute('style') || '';
+            if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
+              element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
+              element.style.left = 'auto';
+            }
+          };
+          setInterval(maintainPosition, 1000);
+        }
+      };
+
+      setTimeout(positionWidget, 500);
+      setTimeout(positionWidget, 1500);
+      setTimeout(positionWidget, 3000);
+      setTimeout(positionWidget, 5000);
+
+      window.addEventListener('resize', positionWidget);
+
+      const observer = new MutationObserver(() => {
+        positionWidget();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
     };
     document.head.appendChild(script);
 
@@ -143,7 +254,7 @@ function App() {
       case 'careers':
         return <CareersPage />;
       case 'wishlist':
-        return <WishlistPage />;
+        return <WishlistPage onNavigate={setCurrentPage} />;
       case 'wishlist-shared':
         return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
       case 'admin':
@@ -170,20 +281,20 @@ function App() {
       <ErrorBoundary>
         <AnalyticsProvider>
           <div className="min-h-screen bg-risevia-black text-white">
-            <AgeVerificationModal isOpen={showAgeGate} onVerify={verifyAge} />
-            
+            {/* Age gating modal (merged feature: use AgeGate) */}
+            <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
             {showStateBlocker && (
               <StateBlocker onStateVerified={handleStateVerified} />
             )}
-            
             {isAgeVerified && (
               <>
-                <Navigation 
-                  currentPage={currentPage} 
+                <WishlistInitializer />
+                <Navigation
+                  currentPage={currentPage}
                   onNavigate={setCurrentPage}
                   userMenuOpen={userMenuOpen}
                   setUserMenuOpen={setUserMenuOpen}
-                  setSearchOpen={() => {}}
+                  setSearchOpen={setSearchOpen}
                 />
                 <main>
                   {renderCurrentPage()}
@@ -191,11 +302,16 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
+                <FloatingChatButton />
               </>
             )}
           </div>
+          <ToastEventHandler />
+          <Toaster />
+          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
+      <Toaster />
     </CustomerProvider>
   );
 }

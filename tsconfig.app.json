@@ -21,12 +21,18 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting - Enhanced for production readiness */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true
+    /* Temporarily disabled for infrastructure delivery:
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true */
   },
   "include": ["src"]
 }

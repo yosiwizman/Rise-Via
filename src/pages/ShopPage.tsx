@@ -6,8 +6,23 @@ import { SEOHead } from '../components/SEOHead';
 import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { useCart } from '../hooks/useCart';
-import { Product } from '../types/product';
+import { toast } from 'sonner';
 import productsData from '../data/products.json';
+
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  category: string;
+  strainType: string;
+  thcaPercentage: number;
+  description: string;
+  effects: string[];
+  images: string[];
+  featured: boolean;
+  inventory: number;
+}
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
@@ -36,6 +51,7 @@ export const ShopPage = () => {
           <img 
             src={product.images[0]} 
             alt={product.name}
+            loading="lazy"
             className="w-full h-48 object-cover"
           />
           <div className="absolute top-2 right-2">
@@ -78,10 +94,13 @@ export const ShopPage = () => {
                 price: product.price,
                 image: product.images[0],
                 category: product.category,
-                strainType: product.strainType || '',
-                thcaPercentage: product.thcaPercentage || 0
+                strainType: product.strainType,
+                thcaPercentage: parseFloat(String(product.thcaPercentage))
               });
-              console.log('✅ Added to cart:', product.name);
+              toast.success(`${product.name} added to cart!`, {
+                description: `$${product.price} • ${product.thcaPercentage}% THCA`,
+                duration: 3000,
+              });
             }}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
           >

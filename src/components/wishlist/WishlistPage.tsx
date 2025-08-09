@@ -8,13 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Alert, AlertDescription } from '../ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
-import { WishlistItem } from '../../hooks/useWishlistTypes';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../hooks/use-toast';
+import { WishlistItem } from '../../types/wishlist';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
-export const WishlistPage = () => {
+interface WishlistPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
   const {
     items,
     stats,
@@ -26,6 +32,8 @@ export const WishlistPage = () => {
     generateShareLink,
     sortItems
   } = useWishlist();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
 
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'dateAdded' | 'priority'>('dateAdded');
   const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -35,18 +43,18 @@ export const WishlistPage = () => {
   const [alertPrice, setAlertPrice] = useState('');
 
   const filteredAndSortedItems = useMemo(() => {
-    return sortItems().filter(item => 
+    return sortItems(sortBy).filter(item => 
       item && (filterPriority === 'all' || item.priority === filterPriority)
     );
-  }, [filterPriority, sortItems]);
+  }, [filterPriority, sortItems, sortBy]);
 
   const handleShare = async () => {
     try {
       const url = await generateShareLink();
       setShareUrl(url);
       setShowShareDialog(true);
-    } catch (error) {
-      console.error('Failed to generate share link:', error);
+    } catch {
+      // Silently fail per code standards
     }
   };
 
@@ -171,9 +179,23 @@ export const WishlistPage = () => {
 
           <div className="flex space-x-2">
             <Button
-              disabled
+              onClick={() => {
+                addToCart({
+                  productId: item.id,
+                  name: item.name,
+                  price: item.price,
+                  image: item.image,
+                  category: item.category,
+                  strainType: item.category || 'Unknown',
+                  thcaPercentage: 0
+                });
+                toast({
+                  title: "Added to Cart",
+                  description: `${item.name} has been added to your cart.`,
+                });
+              }}
               size="sm"
-              className="flex-1 bg-gray-600 text-gray-400 cursor-not-allowed"
+              className="flex-1 bg-risevia-teal hover:bg-risevia-teal/80 text-white"
             >
               <ShoppingCart size={14} className="mr-1" />
               Add to Cart
@@ -210,7 +232,7 @@ export const WishlistPage = () => {
               Start building your wishlist by browsing our premium THCA strains and saving your favorites.
             </p>
             <Button
-              onClick={() => window.history.back()}
+              onClick={() => onNavigate?.('shop')}
               className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
             >
               Browse Products
@@ -355,7 +377,7 @@ export const WishlistPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item as unknown as WishlistItem} />
+              <WishlistItemCard item={item as WishlistItem} />
             </motion.div>
           ))}
         </motion.div>
@@ -365,6 +387,9 @@ export const WishlistPage = () => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Share Your Wishlist</DialogTitle>
+              <DialogDescription className="sr-only">
+                Generate and share a link to your wishlist with friends
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-risevia-charcoal">
@@ -398,6 +423,9 @@ export const WishlistPage = () => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Set Price Alert</DialogTitle>
+              <DialogDescription className="sr-only">
+                Set a price alert to get notified when {priceAlertItem?.name} reaches your target price
+              </DialogDescription>
             </DialogHeader>
             {priceAlertItem && (
               <div className="space-y-4">

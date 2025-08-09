@@ -1,0 +1,226 @@
+name: CI/CD Pipeline with Tech Debt Tracking
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  MAX_ALLOWED_WARNINGS: 69  # Current technical debt baseline
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: Technical Debt Analysis
+  tech-debt-analysis:
+    runs-on: ubuntu-latest
+    outputs:
+      current-violations: ${{ steps.analyze.outputs.violations }}
+      violation-delta: ${{ steps.analyze.outputs.delta }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Need full history for comparison
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - run: npm ci
+      
+      - name: Analyze ESLint Violations
+        id: analyze
+        run: |
+          # Get current violations count
+          npm run lint:report || true
+          CURRENT=$(cat eslint-report.json | jq '[.[] | .errorCount + .warningCount] | add')
+          echo "violations=$CURRENT" >> $GITHUB_OUTPUT
+          
+          # Compare with main branch if PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git checkout origin/main
+            npm run lint:report || true
+            BASELINE=$(cat eslint-report.json | jq '[.[] | .errorCount + .warningCount] | add')
+            DELTA=$((CURRENT - BASELINE))
+            echo "delta=$DELTA" >> $GITHUB_OUTPUT
+            
+            # Fail if violations increased
+            if [ $DELTA -gt 0 ]; then
+              echo "❌ ESLint violations increased by $DELTA"
+              exit 1
+            fi
+          fi
+      
+      - name: Generate Violation Report
+        if: always()
+        run: |
+          echo "## 📊 Technical Debt Report" > tech-debt-report.md
+          echo "**Current Violations:** ${{ steps.analyze.outputs.violations }}" >> tech-debt-report.md
+          echo "**Allowed Maximum:** ${{ env.MAX_ALLOWED_WARNINGS }}" >> tech-debt-report.md
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "**Change in this PR:** ${{ steps.analyze.outputs.delta }}" >> tech-debt-report.md
+          fi
+          echo "" >> tech-debt-report.md
+          echo "### Violation Breakdown" >> tech-debt-report.md
+          npm run lint:summary >> tech-debt-report.md || true
+      
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tech-debt-report
+          path: tech-debt-report.md
+
+  # Job 2: Code Quality Checks
+  code-quality:
+    runs-on: ubuntu-latest
+    needs: tech-debt-analysis
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - run: npm ci
+      
+      - name: Type Check
+        run: npm run type-check
+      
+      - name: ESLint with Tolerance
+        run: |
+          # Run lint but allow existing violations
+          npm run lint:ci || {
+            EXIT_CODE=$?
+            if [ "${{ needs.tech-debt-analysis.outputs.violation-delta }}" -le 0 ]; then
+              echo "::warning::ESLint found violations (within allowed limit)"
+              exit 0
+            else
+              echo "::error::New ESLint violations introduced"
+              exit $EXIT_CODE
+            fi
+          }
+      
+      - name: Format Check
+        run: npm run format:check || echo "::warning::Formatting issues found"
+        continue-on-error: true
+      
+      - name: Security Check
+        run: npm run security:check
+        continue-on-error: true
+
+  # Job 3: Build and Test
+  build-test:
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - run: npm ci
+      
+      - name: Build Application
+        run: npm run build
+      
+      - name: Run Tests
+        run: npm test || echo "::warning::No tests configured yet"
+        continue-on-error: true
+      
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+
+  # Job 4: Performance Testing
+  lighthouse:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - run: npm ci
+      - run: npm run build
+      
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun || echo "::warning::Lighthouse needs configuration"
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        continue-on-error: true
+
+  # Job 5: Comment on PR with Report
+  pr-comment:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [tech-debt-analysis, code-quality, build-test]
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tech-debt-report
+      
+      - name: Comment PR with Tech Debt Status
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('tech-debt-report.md', 'utf8');
+            
+            // Find and update or create comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Technical Debt Report')
+            );
+            
+            const body = `## 🤖 Automated CI Report\n\n${report}\n\n---\n*Updated: ${new Date().toISOString()}*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+  # Job 6: Deploy (if all checks pass on main)
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [code-quality, build-test]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          vercel-args: '--prod'

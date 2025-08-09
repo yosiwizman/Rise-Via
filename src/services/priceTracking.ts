@@ -1,4 +1,4 @@
-import { WishlistItem } from '../types/wishlist';
+import type { WishlistItem } from '../types/wishlist';
 
 interface PriceCheckResult {
   itemId: string;
@@ -8,9 +8,9 @@ interface PriceCheckResult {
   percentageChange: number;
 }
 
-export class PriceTrackingService {
+class PriceTrackingService {
   private static instance: PriceTrackingService;
-  private checkInterval: NodeJS.Timeout | null = null;
+  private checkInterval: ReturnType<typeof setInterval> | null = null;
   private readonly CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
   private readonly STORAGE_KEY = 'risevia-price-alerts';
 
@@ -29,12 +29,10 @@ export class PriceTrackingService {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
     }
-
     this.checkInterval = setInterval(() => {
       this.checkAllPriceAlerts();
     }, this.CHECK_INTERVAL_MS);
-
-    console.log('🔔 Price tracking service started');
+    // No console.log
   }
 
   public stopPriceTracking(): void {
@@ -42,39 +40,30 @@ export class PriceTrackingService {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
-    console.log('🔕 Price tracking service stopped');
+    // No console.log
   }
 
   private async checkAllPriceAlerts(): Promise<void> {
     try {
       const wishlistData = localStorage.getItem('risevia-wishlist');
       if (!wishlistData) return;
-
       const { state } = JSON.parse(wishlistData);
       const itemsWithAlerts = state.items.filter((item: WishlistItem) => 
         item.priceAlert && item.priceAlert.isActive
       );
-
       if (itemsWithAlerts.length === 0) return;
-
-      console.log(`🔍 Checking prices for ${itemsWithAlerts.length} items with alerts`);
-
       const priceCheckResults = await Promise.all(
         itemsWithAlerts.map((item: WishlistItem) => this.checkItemPrice(item))
       );
-
       const triggeredAlerts = priceCheckResults.filter(result => result.priceDropped);
-
       if (triggeredAlerts.length > 0) {
-        console.log(`🚨 ${triggeredAlerts.length} price alerts triggered!`);
         triggeredAlerts.forEach(alert => {
           this.triggerPriceAlert(alert);
         });
       }
-
       this.logPriceCheckActivity(priceCheckResults);
-    } catch (error) {
-      console.error('Error checking price alerts:', error);
+    } catch {
+      // Silent fail per code standards
     }
   }
 
@@ -83,7 +72,6 @@ export class PriceTrackingService {
     const targetPrice = item.priceAlert!.targetPrice;
     const priceDropped = currentPrice <= targetPrice;
     const percentageChange = ((currentPrice - item.price) / item.price) * 100;
-
     return {
       itemId: item.id,
       currentPrice,
@@ -97,11 +85,9 @@ export class PriceTrackingService {
     const volatility = 0.1; // 10% volatility
     const randomChange = (Math.random() - 0.5) * 2 * volatility;
     const newPrice = originalPrice * (1 + randomChange);
-
     if (Math.random() < 0.05) {
       return targetPrice * (0.95 + Math.random() * 0.05); // Slightly below target
     }
-
     return Math.max(newPrice, 0.01); // Ensure price doesn't go negative
   }
 
@@ -113,13 +99,8 @@ export class PriceTrackingService {
       percentageChange: result.percentageChange,
       triggeredAt: Date.now()
     };
-
     this.storeTriggeredAlert(alertData);
-
-    this.showBrowserNotification(alertData);
-
-    console.log(`🎯 Price Alert Triggered!`, alertData);
-
+    void this.showBrowserNotification(alertData);
     this.trackPriceAlertEvent('triggered', alertData);
   }
 
@@ -127,20 +108,17 @@ export class PriceTrackingService {
     try {
       const existingAlerts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
       existingAlerts.push(alertData);
-      
       if (existingAlerts.length > 100) {
         existingAlerts.splice(0, existingAlerts.length - 100);
       }
-      
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(existingAlerts));
-    } catch (error) {
-      console.error('Error storing triggered alert:', error);
+    } catch {
+      // Silent fail
     }
   }
 
   private async showBrowserNotification(alertData: Record<string, unknown>): Promise<void> {
     if (!('Notification' in window)) return;
-
     if (Notification.permission === 'granted') {
       new Notification('RiseViA Price Alert! 🎯', {
         body: `Your target price has been reached! Current price: $${(alertData.currentPrice as number).toFixed(2)}`,
@@ -151,7 +129,7 @@ export class PriceTrackingService {
     } else if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        this.showBrowserNotification(alertData);
+        void this.showBrowserNotification(alertData);
       }
     }
   }
@@ -168,14 +146,11 @@ export class PriceTrackingService {
         percentageChange: r.percentageChange
       }))
     };
-
     const existingActivity = JSON.parse(localStorage.getItem('price-check-activity') || '[]');
     existingActivity.push(activity);
-    
     if (existingActivity.length > 50) {
       existingActivity.splice(0, existingActivity.length - 50);
     }
-    
     localStorage.setItem('price-check-activity', JSON.stringify(existingActivity));
   }
 
@@ -191,28 +166,23 @@ export class PriceTrackingService {
         }
       });
     }
-
     const analyticsData = {
       action,
       timestamp: Date.now(),
       ...data
     };
-
     const existingAnalytics = JSON.parse(localStorage.getItem('price-alert-analytics') || '[]');
     existingAnalytics.push(analyticsData);
-    
     if (existingAnalytics.length > 1000) {
       existingAnalytics.splice(0, existingAnalytics.length - 1000);
     }
-    
     localStorage.setItem('price-alert-analytics', JSON.stringify(existingAnalytics));
   }
 
   public getTriggeredAlerts(): Record<string, unknown>[] {
     try {
       return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-    } catch (error) {
-      console.error('Error getting triggered alerts:', error);
+    } catch {
       return [];
     }
   }
@@ -220,15 +190,13 @@ export class PriceTrackingService {
   public getPriceCheckActivity(): Record<string, unknown>[] {
     try {
       return JSON.parse(localStorage.getItem('price-check-activity') || '[]');
-    } catch (error) {
-      console.error('Error getting price check activity:', error);
+    } catch {
       return [];
     }
   }
 
   public clearTriggeredAlerts(): void {
     localStorage.removeItem(this.STORAGE_KEY);
-    console.log('🗑️ Cleared all triggered price alerts');
   }
 
   public getAlertStats(): {
@@ -240,7 +208,6 @@ export class PriceTrackingService {
     try {
       const wishlistData = localStorage.getItem('risevia-wishlist');
       const triggeredAlerts = this.getTriggeredAlerts();
-      
       let activeAlerts = 0;
       if (wishlistData) {
         const { state } = JSON.parse(wishlistData);
@@ -248,20 +215,17 @@ export class PriceTrackingService {
           item.priceAlert && item.priceAlert.isActive
         ).length;
       }
-
       const today = new Date().toDateString();
       const triggeredToday = triggeredAlerts.filter(alert => 
-        new Date((alert as { triggeredAt: number }).triggeredAt).toDateString() === today
+        new Date(alert.triggeredAt as number).toDateString() === today
       ).length;
-
       return {
         totalAlerts: triggeredAlerts.length,
         activeAlerts,
         triggeredToday,
         averageResponseTime: this.CHECK_INTERVAL_MS / 1000 // in seconds
       };
-    } catch (error) {
-      console.error('Error getting alert stats:', error);
+    } catch {
       return {
         totalAlerts: 0,
         activeAlerts: 0,
