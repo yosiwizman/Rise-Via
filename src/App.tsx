@@ -14,6 +14,8 @@ import { ToastEventHandler } from './components/ToastEventHandler';
 import { ChatBot } from './components/ChatBot';
 import { Toaster } from './components/ui/sonner';
 
+const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+const ShopPage = lazy(() => import('./pages/ShopPage').then(module => ({ default: module.ShopPage })));
 const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
 const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
 const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));

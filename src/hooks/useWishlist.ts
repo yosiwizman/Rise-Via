@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types/wishlist';
 import { SecurityUtils } from '../utils/security';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
-import { sql, wishlistDb } from '../lib/neon';
+import { sql } from '../lib/neon';
 import { toast } from 'sonner';
 
 interface DbItem {
