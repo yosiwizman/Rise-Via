@@ -56,6 +56,7 @@ interface RegistrationData {
   phone?: string;
 }
 
+
 interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;

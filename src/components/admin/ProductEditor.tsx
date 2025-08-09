@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ProductMediaManager } from './ProductMediaManager';
 
@@ -58,15 +57,15 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const productData = {
-      ...formData,
+    const productData: Product = {
       id: product?.id || Date.now().toString(),
+      name: formData.name,
+      price: parseFloat(String(formData.price)),
+      category: formData.category,
+      thc: String(formData.thcaPercentage || '0'),
+      type: formData.strainType || 'hybrid',
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
-      price: parseFloat(formData.price.toString()),
-      thcaPercentage: parseFloat(formData.thcaPercentage.toString()),
       inventory: parseInt(formData.inventory.toString()),
-      type: formData.strainType,
-      thc: formData.thcaPercentage.toString(),
       active: true
     };
     onSave(productData);
@@ -206,19 +205,6 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="description" className="text-gray-700 font-medium">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  className="w-full border rounded px-3 py-2 text-gray-900 bg-white min-h-[100px]"
-                  placeholder="Enter product description"
-                  rows={4}
-                />
-              </div>
 
               <div>
                 <Label htmlFor="effects" className="text-gray-700 font-medium">
