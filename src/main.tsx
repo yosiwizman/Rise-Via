@@ -5,7 +5,7 @@ import App from './App.tsx'
 import { PerformanceMonitor } from './utils/performance'
 
 if (typeof window !== 'undefined') {
-  (window as any).React = React;
+  (window as typeof window & { React?: typeof React }).React = React;
 }
 
 PerformanceMonitor.init();
