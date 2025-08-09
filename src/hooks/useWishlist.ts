@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types/wishlist';
+import type { WishlistStore, WishlistItem, WishlistStats, PriceAlert } from '../types/wishlist';
 import { SecurityUtils } from '../utils/security';
 import { wishlistAnalytics } from '../analytics/wishlistAnalytics';
-import { sql } from '../lib/neon';
+import { sql, wishlistDb } from '../lib/neon';
+import { toast } from 'sonner';
 
 interface DbItem {
   id: string;
@@ -53,16 +54,14 @@ const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => {
         effects = dbItem.effects;
       }
     }
-  } catch (error) {
-    console.warn('Failed to parse effects, using empty array:', error);
+  } catch {
     effects = [];
   }
 
   let priceAlert;
   try {
     priceAlert = dbItem.price_alert ? JSON.parse(dbItem.price_alert) : undefined;
-  } catch (error) {
-    console.warn('Failed to parse price alert, using undefined:', error);
+  } catch {
     priceAlert = undefined;
   }
 
@@ -85,10 +84,10 @@ function calculateStats(items: WishlistItem[]): WishlistStats {
   const totalItems = items.length;
   const totalValue = items.reduce((sum, item) => sum + item.price, 0);
   const averagePrice = totalItems > 0 ? totalValue / totalItems : 0;
-  
+
   const categoryCounts: Record<string, number> = {};
   const priorityCounts = { low: 0, medium: 0, high: 0 };
-  
+
   items.forEach(item => {
     categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
     priorityCounts[item.priority]++;
@@ -130,11 +129,11 @@ function trackWishlistEvent(
 
   const existingAnalytics = JSON.parse(localStorage.getItem('wishlist_analytics') || '[]');
   existingAnalytics.push(analyticsData);
-  
+
   if (existingAnalytics.length > 1000) {
     existingAnalytics.splice(0, existingAnalytics.length - 1000);
   }
-  
+
   localStorage.setItem('wishlist_analytics', JSON.stringify(existingAnalytics));
 }
 
@@ -154,14 +153,14 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
     try {
       const sessionToken = state.sessionToken;
-      
+
       const sessionData = await sql`SELECT * FROM wishlist_sessions WHERE session_token = ${sessionToken}`;
-      
+
       let finalSessionData = sessionData;
       if (!sessionData || sessionData.length === 0) {
         const newSession = await sql`
-          INSERT INTO wishlist_sessions (session_token, created_at) 
-          VALUES (${sessionToken}, NOW()) 
+          INSERT INTO wishlist_sessions (session_token, created_at)
+          VALUES (${sessionToken}, NOW())
           RETURNING *
         `;
         finalSessionData = newSession;
@@ -171,7 +170,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       if (!sessionId) throw new Error('Failed to get session ID');
 
       const itemsData = await sql`
-        SELECT * FROM wishlist_items 
+        SELECT * FROM wishlist_items
         WHERE session_id = ${sessionId}
         ORDER BY created_at DESC
       `;
@@ -188,24 +187,24 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       await get().migrateFromLocalStorage();
     } catch (error) {
-      console.error('Failed to initialize wishlist session:', error);
-      set({ 
-        isLoading: false, 
-        error: error instanceof Error ? error.message : 'Failed to initialize session' 
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to initialize session'
       });
+      toast.error('Failed to initialize wishlist session');
     }
   },
 
   migrateFromLocalStorage: async () => {
     const localStorageKey = 'risevia-wishlist';
     const localData = localStorage.getItem(localStorageKey);
-    
+
     if (!localData) return;
 
     try {
       const parsedData = JSON.parse(localData);
       const localItems = parsedData?.state?.items || [];
-      
+
       if (localItems.length === 0) {
         localStorage.removeItem(localStorageKey);
         return;
@@ -215,10 +214,10 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       if (!state.sessionId) return;
 
       for (const item of localItems) {
-        const existingItem = state.items.find(dbItem => 
+        const existingItem = state.items.find(dbItem =>
           dbItem.name === item.name && dbItem.category === item.category
         );
-        
+
         if (!existingItem) {
           await sql`
             INSERT INTO wishlist_items (session_id, product_id, name, price, image, category, priority)
@@ -228,7 +227,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       }
 
       const itemsData = await sql`
-        SELECT * FROM wishlist_items 
+        SELECT * FROM wishlist_items
         WHERE session_id = ${state.sessionId}
         ORDER BY created_at DESC
       `;
@@ -242,15 +241,17 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       localStorage.removeItem(localStorageKey);
     } catch (error) {
-      console.error('Failed to migrate localStorage data:', error);
+      set({ error: 'Failed to migrate localStorage data' });
+      toast.error('Failed to migrate localStorage wishlist');
     }
   },
 
   addToWishlist: async (itemData) => {
     const state = get();
-    
+
     if (!SecurityUtils.checkRateLimit('wishlist_add', 20, 60000)) {
       set({ error: 'Too many requests. Please wait before adding more items.' });
+      toast.error('Too many requests. Please wait before adding more items.');
       return;
     }
 
@@ -268,6 +269,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
     if (state.items.some(item => item.name === newItem.name)) {
       set({ error: 'Item already in wishlist' });
+      toast.error('Item already in wishlist');
       return;
     }
 
@@ -278,6 +280,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     const currentState = get();
     if (!currentState.sessionId) {
       set({ error: 'Failed to initialize session' });
+      toast.error('Failed to initialize session');
       return;
     }
 
@@ -286,12 +289,12 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     try {
       await sql`
         INSERT INTO wishlist_items (
-          session_id, product_id, name, price, image, category, 
+          session_id, product_id, name, price, image, category,
           thc_content, cbd_content, effects, priority
         )
         VALUES (
-          ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price}, 
-          ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null}, 
+          ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price},
+          ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null},
           ${newItem.cbdContent || null}, ${JSON.stringify(newItem.effects || [])}, ${newItem.priority}
         )
       `;
@@ -306,27 +309,26 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         error: null
       });
 
-      if (typeof window !== 'undefined' && window.dispatchEvent) {
-        window.dispatchEvent(new CustomEvent('wishlist-item-added', {
-          detail: { name: newItem.name }
-        }));
-      }
-
       trackWishlistEvent('add', newItem);
       wishlistAnalytics.trackWishlistEvent('add', newItem);
-    } catch (error) {
-      console.error('Failed to add item to wishlist:', error);
-      set({ 
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to add item to wishlist' 
+
+      toast.success(`${newItem.name} added to wishlist!`, {
+        description: `$${newItem.price} • ${newItem.category}`,
+        duration: 3000,
       });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to add item to wishlist'
+      });
+      toast.error('Failed to add item to wishlist');
     }
   },
 
   removeFromWishlist: async (itemId) => {
     const state = get();
     const itemToRemove = state.items.find(item => item.id === itemId);
-    
+
     if (!itemToRemove) return;
 
     set({ isLoading: true, error: null });
@@ -344,20 +346,19 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         error: null
       });
 
-      if (typeof window !== 'undefined' && window.dispatchEvent) {
-        window.dispatchEvent(new CustomEvent('wishlist-item-removed', {
-          detail: { name: itemToRemove.name }
-        }));
-      }
-
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
-    } catch (error) {
-      console.error('Failed to remove item from wishlist:', error);
-      set({ 
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to remove item from wishlist' 
+
+      toast.success(`${itemToRemove.name} removed from wishlist`, {
+        description: 'Item successfully removed',
+        duration: 2000,
       });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to remove item from wishlist'
+      });
+      toast.error('Failed to remove item from wishlist');
     }
   },
 
@@ -379,18 +380,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         isLoading: false
       });
     } catch (error) {
-      console.error('Failed to update item priority:', error);
-      
-      const updatedItems = state.items.map(item =>
-        item.id === itemId ? { ...item, priority } : item
-      );
-      const updatedStats = calculateStats(updatedItems);
-
-      set({
-        items: updatedItems,
-        stats: updatedStats,
-        isLoading: false
-      });
+      set({ isLoading: false });
+      toast.error('Failed to update item priority');
     }
   },
 
@@ -413,11 +404,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       trackWishlistEvent('clear');
       wishlistAnalytics.trackWishlistEvent('clear');
     } catch (error) {
-      console.error('Failed to clear wishlist:', error);
-      set({ 
+      set({
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to clear wishlist' 
+        error: error instanceof Error ? error.message : 'Failed to clear wishlist'
       });
+      toast.error('Failed to clear wishlist');
     }
   },
 
@@ -432,7 +423,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
   generateShareLink: async () => {
     const state = get();
-    
+
     if (state.items.length === 0) {
       throw new Error('Cannot share empty wishlist');
     }
@@ -450,10 +441,10 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     localStorage.setItem('wishlist_shares', JSON.stringify(existingShares));
 
     const shareUrl = `${window.location.origin}/wishlist/shared/${shareCode}`;
-    
+
     trackWishlistEvent('share', undefined, { shareCode, itemCount: state.items.length });
     wishlistAnalytics.trackWishlistEvent('share', undefined, { shareCode, itemCount: state.items.length });
-    
+
     return shareUrl;
   },
 
@@ -463,11 +454,15 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       const shareData = existingShares.find((share: { shareCode: string }) => share.shareCode === shareCode);
 
       if (!shareData) {
-        throw new Error('Share code not found');
+        set({ error: 'Share code not found' });
+        toast.error('Share code not found');
+        return false;
       }
 
       if (shareData.expiresAt && Date.now() > shareData.expiresAt) {
-        throw new Error('Share link has expired');
+        set({ error: 'Share link has expired' });
+        toast.error('Share link has expired');
+        return false;
       }
 
       const state = get();
@@ -477,6 +472,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       if (newItems.length === 0) {
         set({ error: 'All items from shared wishlist are already in your wishlist' });
+        toast.error('All items from shared wishlist are already in your wishlist');
         return false;
       }
 
@@ -498,9 +494,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       trackWishlistEvent('import', undefined, { shareCode, importedCount: itemsToAdd.length });
       wishlistAnalytics.trackWishlistEvent('import', undefined, { shareCode, importedCount: itemsToAdd.length });
 
+      toast.success(`Imported ${itemsToAdd.length} items from shared wishlist`);
       return true;
     } catch (error) {
       set({ error: (error as Error).message });
+      toast.error('Failed to import wishlist');
       return false;
     }
   },
@@ -539,28 +537,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         isLoading: false
       });
     } catch (error) {
-      console.error('Failed to set price alert:', error);
-      
-      const updatedItems = state.items.map(item => {
-        if (item.id === itemId) {
-          const fullPriceAlert: PriceAlert = {
-            id: crypto.randomUUID(),
-            itemId,
-            targetPrice,
-            currentPrice: item.price,
-            isActive: true,
-            createdAt: Date.now(),
-            notificationSent: false
-          };
-          return { ...item, priceAlert: fullPriceAlert };
-        }
-        return item;
-      });
-
-      set({
-        items: updatedItems,
-        isLoading: false
-      });
+      set({ isLoading: false });
+      toast.error('Failed to set price alert');
     }
   },
 
@@ -585,21 +563,8 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         isLoading: false
       });
     } catch (error) {
-      console.error('Failed to remove price alert:', error);
-      
-      const updatedItems = state.items.map(item => {
-        if (item.id === itemId) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { priceAlert, ...itemWithoutAlert } = item;
-          return itemWithoutAlert;
-        }
-        return item;
-      });
-
-      set({
-        items: updatedItems,
-        isLoading: false
-      });
+      set({ isLoading: false });
+      toast.error('Failed to remove price alert');
     }
   },
 
@@ -613,7 +578,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
   sortItems: (sortBy) => {
     const items = [...get().items];
-    
+
     switch (sortBy) {
       case 'name': {
         return items.sort((a, b) => a.name.localeCompare(b.name));

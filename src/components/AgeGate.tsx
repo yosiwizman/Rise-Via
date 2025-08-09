@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Dialog, DialogContent } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
@@ -22,6 +22,10 @@ export const AgeGate = ({ isOpen, onVerify }: AgeGateProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-md mx-auto bg-risevia-black border-risevia-purple">
+        <DialogTitle className="sr-only">Age Verification Required</DialogTitle>
+        <DialogDescription className="sr-only">
+          You must be 21 years or older to access this website and purchase cannabis products.
+        </DialogDescription>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

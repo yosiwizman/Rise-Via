@@ -7,9 +7,10 @@ import { WishlistButton } from '../components/wishlist/WishlistButton';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { SearchFilters } from '../components/SearchFilters';
 import { useCart } from '../hooks/useCart';
-import { productService } from '../services/productService';
-import { Product } from '../types/product';
+import { toast } from 'sonner';
 import productsData from '../data/products.json';
+import { productService } from '../services/productService';
+import type { Product } from '../types/product';
 
 interface FilterOptions {
   strainType?: string;
@@ -38,42 +39,32 @@ export const ShopPage = () => {
     try {
       setLoading(true);
       const dbProducts = await productService.getAll();
-      
       if (dbProducts.length > 0) {
         setProducts(dbProducts);
       } else {
         setProducts(productsData.products as Product[]);
       }
-    } catch (error) {
-      console.error('Error loading products:', error);
+    } catch {
       setProducts(productsData.products as Product[]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
-  const handleFilter = (filters: FilterOptions) => {
-    setFilter(filters.strainType || 'all');
-  };
-
-  const handleSort = (sortOption: string) => {
-    setSortBy(sortOption);
-  };
+  const handleSearch = (term: string) => setSearchTerm(term);
+  const handleFilter = (filters: FilterOptions) => setFilter(filters.strainType || 'all');
+  const handleSort = (sortOption: string) => setSortBy(sortOption);
 
   const filteredProducts = useMemo(() => {
     const filtered = products.filter(product => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.effects || []).some((effect: string) => effect.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesType = filter === 'all' || 
+
+      const matchesType = filter === 'all' ||
         (product.strain_type || product.strainType) === filter;
-      
+
       return matchesSearch && matchesType;
     });
 
@@ -116,77 +107,78 @@ export const ShopPage = () => {
     setShowModal(true);
   };
 
-  const ProductCard = ({ product }: { product: Product }) => {
-    return (
-      <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
-        onClick={() => handleProductClick(product)}
-      >
-        <div className="relative">
-          <img 
-            src={product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`} 
-            alt={product.name}
-            loading="lazy"
-            className="w-full h-48 object-cover"
-          />
-          <div className="absolute top-2 right-2">
-            <div onClick={(e) => e.stopPropagation()}>
-              <WishlistButton
-                item={{
-                  id: product.id || '',
-                  name: product.name,
-                  price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-                  image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
-                  category: product.category,
-                  effects: product.effects || []
-                }}
-                size="md"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <h3 className="font-bold text-lg mb-2 text-risevia-black dark:text-gray-100">{product.name}</h3>
-          <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strain_type || product.strainType}</p>
-          <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">{product.description}</p>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-xl font-bold text-risevia-black dark:text-gray-100">
-              ${typeof product.prices === 'object' ? product.prices.gram : product.price}
-            </span>
-            <Badge className="bg-risevia-teal text-white">
-              {product.thca_percentage || product.thcaPercentage}% THCA
-            </Badge>
-          </div>
-          <div className="flex flex-wrap gap-1 mb-4">
-            {(product.effects || []).map((effect: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs border-risevia-purple text-risevia-purple">
-                {effect}
-              </Badge>
-            ))}
-          </div>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart({
-                productId: product.id || '',
+  const ProductCard = ({ product }: { product: Product }) => (
+    <div
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
+      onClick={() => handleProductClick(product)}
+    >
+      <div className="relative">
+        <img
+          src={product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`}
+          alt={product.name}
+          loading="lazy"
+          className="w-full h-48 object-cover"
+        />
+        <div className="absolute top-2 right-2">
+          <div onClick={(e) => e.stopPropagation()}>
+            <WishlistButton
+              item={{
+                id: product.id || '',
                 name: product.name,
                 price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-                image: product.images[0],
+                image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
                 category: product.category,
-                strainType: product.strain_type || product.strainType || '',
-                thcaPercentage: product.thca_percentage || product.thcaPercentage || 0
-              });
-              console.log('✅ Added to cart:', product.name);
-            }}
-            className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
-          >
-            <ShoppingBag className="w-4 h-4 mr-2" />
-            Add to Cart
-          </button>
+                effects: product.effects || [],
+              }}
+              size="md"
+            />
+          </div>
         </div>
       </div>
-    );
-  };
+      <div className="p-4">
+        <h3 className="font-bold text-lg mb-2 text-risevia-black dark:text-gray-100">{product.name}</h3>
+        <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strain_type || product.strainType}</p>
+        <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">{product.description}</p>
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-xl font-bold text-risevia-black dark:text-gray-100">
+            ${typeof product.prices === 'object' ? product.prices.gram : product.price}
+          </span>
+          <Badge className="bg-risevia-teal text-white">
+            {product.thca_percentage || product.thcaPercentage}% THCA
+          </Badge>
+        </div>
+        <div className="flex flex-wrap gap-1 mb-4">
+          {(product.effects || []).map((effect: string, index: number) => (
+            <Badge key={index} variant="outline" className="text-xs border-risevia-purple text-risevia-purple">
+              {effect}
+            </Badge>
+          ))}
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            addToCart({
+              productId: product.id || '',
+              name: product.name,
+              price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+              image: product.images[0],
+              category: product.category,
+              strainType: product.strain_type || product.strainType || '',
+              thcaPercentage: product.thca_percentage || product.thcaPercentage || 0
+            });
+            toast.success(`${product.name} added to cart!`, {
+              description: `$${product.price} • ${product.thcaPercentage}% THCA`,
+              duration: 3000,
+            });
+          }}
+          className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
+        >
+          <ShoppingBag className="w-4 h-4 mr-2" />
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 py-8">
@@ -208,7 +200,7 @@ export const ShopPage = () => {
         </motion.div>
         
         {/* Search and Filters */}
-        <motion.div 
+        <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -228,41 +220,41 @@ export const ShopPage = () => {
           transition={{ delay: 0.2 }}
           className="flex flex-wrap justify-center gap-4 mb-8"
         >
-          <button 
+          <button
             onClick={() => setFilter('all')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              filter === 'all' 
-                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg' 
+              filter === 'all'
+                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg'
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
             All Products ({products.length})
           </button>
-          <button 
+          <button
             onClick={() => setFilter('sativa')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              filter === 'sativa' 
-                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg' 
+              filter === 'sativa'
+                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg'
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
             Sativa ({products.filter(p => (p.strain_type || p.strainType) === 'sativa').length})
           </button>
-          <button 
+          <button
             onClick={() => setFilter('indica')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              filter === 'indica' 
-                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg' 
+              filter === 'indica'
+                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg'
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
             Indica ({products.filter(p => (p.strain_type || p.strainType) === 'indica').length})
           </button>
-          <button 
+          <button
             onClick={() => setFilter('hybrid')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              filter === 'hybrid' 
-                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg' 
+              filter === 'hybrid'
+                ? 'bg-gradient-to-r from-risevia-purple to-risevia-teal text-white shadow-lg'
                 : 'bg-white text-risevia-charcoal hover:bg-gray-50 border border-gray-200'
             }`}
           >
