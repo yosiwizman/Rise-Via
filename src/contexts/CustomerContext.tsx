@@ -3,13 +3,17 @@ import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
 import { wishlistService } from '../services/wishlistService';
+import { listmonkService } from '../services/ListmonkService';
+import { customerSegmentationService } from '../services/CustomerSegmentation';
+import { emailAutomationService } from '../services/EmailAutomation';
 
 interface Customer {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone?: string;
+  created_at: string;
   profile?: {
     membershipTier: string;
     loyaltyPoints: number;
@@ -32,12 +36,32 @@ interface Customer {
   }>;
 }
 
+interface LoginResult {
+  success: boolean;
+  customer?: Customer;
+  message?: string;
+}
+
+interface RegisterResult {
+  success: boolean;
+  customer?: Customer;
+  message?: string;
+}
+
+interface RegistrationData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
+
 interface CustomerContextType {
   customer: Customer | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (data: any) => Promise<any>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  register: (data: RegistrationData) => Promise<RegisterResult>;
   logout: () => void;
   checkAuthStatus: () => Promise<void>;
 }
@@ -64,7 +88,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   useEffect(() => {
     checkAuthStatus();
     
-    const authStateChange = authService.onAuthStateChange((event: string, session: any) => {
+    const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
         setIsAuthenticated(false);
@@ -90,10 +114,10 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === (user as any).email);
+      const customerData = customers.find((c: Customer) => c.email === (user as { email: string }).email);
       
       if (customerData) {
-        setCustomer(customerData as any);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
       } else {
         console.warn('User authenticated but no customer record found');
@@ -121,18 +145,19 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         }
 
         const customers = await customerService.getAll();
-        const customerData = customers.find((c: any) => c.email === email);
+        const customerData = customers.find((c: Customer) => c.email === email);
         
         if (customerData) {
-          setCustomer(customerData as any);
+          setCustomer(customerData as Customer);
           setIsAuthenticated(true);
-          return { success: true, customer: customerData };
+          return { success: true, customer: customerData as Customer };
         } else {
           setCustomer({
             id: data.user.id,
             email: data.user.email!,
-            firstName: '',
-            lastName: ''
+            first_name: '',
+            last_name: '',
+            created_at: new Date().toISOString()
           });
           setIsAuthenticated(true);
           return { success: true };
@@ -140,15 +165,15 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
       
       return { success: false, message: 'Login failed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login failed:', error);
-      return { success: false, message: error.message || 'Login failed' };
+      return { success: false, message: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (registrationData: any) => {
+  const register = async (registrationData: RegistrationData) => {
     try {
       const authResult = await authService.register(
         registrationData.email,
@@ -173,19 +198,45 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             registrationData.email,
             registrationData.firstName
           );
+          
+          await emailAutomationService.triggerWelcomeSeries(
+            registrationData.email,
+            registrationData.firstName
+          );
+          
+          try {
+            const subscriberData = {
+              email: registrationData.email,
+              name: `${registrationData.firstName} ${registrationData.lastName}`,
+              status: 'enabled' as const,
+              attributes: {
+                membershipTier: 'GREEN',
+                loyaltyPoints: 0,
+                lifetimeValue: 0,
+                segment: 'new',
+                isB2B: false
+              },
+              lists: []
+            };
+            
+            await listmonkService.addSubscriber(subscriberData);
+            await customerSegmentationService.addCustomerToSegments(customerData as Customer);
+          } catch (listmonkError) {
+            console.error('Listmonk integration failed:', listmonkError);
+          }
         } catch (emailError) {
           console.error('Welcome email failed:', emailError);
         }
 
-        setCustomer(customerData as any);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData };
+        return { success: true, customer: customerData as Customer };
       }
 
       return { success: false, message: 'Registration failed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed:', error);
-      return { success: false, message: error.message || 'Registration failed' };
+      return { success: false, message: error instanceof Error ? error.message : 'Registration failed' };
     }
   };
 

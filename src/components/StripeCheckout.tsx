@@ -13,7 +13,7 @@ import { CreditCard, Lock, AlertTriangle } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { orderService } from '../services/orderService';
 
-const stripePromise = loadStripe((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51placeholder');
+const stripePromise = loadStripe((import.meta as { env?: { VITE_STRIPE_PUBLISHABLE_KEY?: string } }).env?.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51placeholder');
 
 interface CheckoutFormProps {
   onSuccess: (orderId: string) => void;
@@ -85,7 +85,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     }
   };
 
-  const createOrder = async (customerInfo: any): Promise<string> => {
+  const createOrder = async (customerInfo: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    phone: string;
+  }): Promise<string> => {
     const orderData = {
       customer_id: customerInfo.email, // Use email as customer ID for now
       total: getCartTotal(),

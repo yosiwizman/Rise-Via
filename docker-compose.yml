@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  listmonk-db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: listmonk
+    volumes:
+      - listmonk_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    ports:
+      - "9000:9000"
+    environment:
+      - LISTMONK_app__address=0.0.0.0:9000
+      - LISTMONK_db__host=listmonk-db
+      - LISTMONK_db__port=5432
+      - LISTMONK_db__user=listmonk
+      - LISTMONK_db__password=listmonk
+      - LISTMONK_db__database=listmonk
+    depends_on:
+      - listmonk-db
+    restart: unless-stopped
+
+volumes:
+  listmonk_db_data:

@@ -161,7 +161,7 @@ export const AccountPage = () => {
         <h1 className="text-3xl font-bold">My Account</h1>
         <div className="text-right">
           <div className="text-sm text-gray-600">Welcome back,</div>
-          <div className="font-semibold">{customer?.firstName} {customer?.lastName}</div>
+          <div className="font-semibold">{customer?.first_name} {customer?.last_name}</div>
         </div>
       </div>
 
