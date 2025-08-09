@@ -9,7 +9,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { aiService } from '../../services/aiService';
+import { aiService } from '../../services/AIService';
 import { ComplianceChecker } from './ComplianceChecker';
 
 export const AIContentGenerator = () => {
@@ -44,11 +44,13 @@ export const AIContentGenerator = () => {
 
     setIsGenerating(true);
     try {
-      const result = await aiService.generateProductDescription(
-        productForm.name,
-        productForm.strainType,
-        productForm.effects.split(',').map(e => e.trim())
-      );
+      const result = await aiService.generateProductDescription({
+        name: productForm.name,
+        strainType: productForm.strainType as 'sativa' | 'indica' | 'hybrid',
+        thcaPercentage: parseFloat(productForm.thcaPercentage),
+        effects: productForm.effects.split(',').map(e => e.trim()),
+        category: productForm.category
+      });
       setGeneratedContent(result);
     } catch (error) {
       console.error('Product generation error:', error);
@@ -66,11 +68,13 @@ export const AIContentGenerator = () => {
 
     setIsGenerating(true);
     try {
-      const result = await aiService.generateBlogPost(
-        blogForm.topic,
-        blogForm.keywords.split(',').map(k => k.trim()).filter(k => k)
-      );
-      setGeneratedContent(`# ${result.title}\n\n${result.content}`);
+      const result = await aiService.generateBlogPost({
+        topic: blogForm.topic,
+        keywords: blogForm.keywords.split(',').map(k => k.trim()).filter(k => k),
+        targetLength: parseInt(blogForm.targetLength),
+        tone: blogForm.tone as 'educational' | 'promotional' | 'informative'
+      });
+      setGeneratedContent(result);
     } catch (error) {
       console.error('Blog generation error:', error);
       alert('Failed to generate blog post. Please try again.');

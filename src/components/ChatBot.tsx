@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { aiService } from '../services/aiService';
+import { aiService } from '../services/AIService';
 
 interface ChatMessage {
   id: string;

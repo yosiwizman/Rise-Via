@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-<<<<<<< HEAD
 import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard, Bot } from 'lucide-react';
-||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings } from 'lucide-react';
-=======
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Bot } from 'lucide-react';
->>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,7 +9,6 @@ import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
 import { DashboardMetrics } from '../components/admin/DashboardMetrics';
 import { ProductManager } from '../components/admin/ProductManager';
-<<<<<<< HEAD
 import { ProductMediaManager } from '../components/admin/ProductMediaManager';
 import { BulkProductUpload } from '../components/admin/BulkProductUpload';
 import { OrderManager } from '../components/admin/OrderManager';
@@ -23,10 +16,6 @@ import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
 import { PaymentSettings } from '../components/admin/PaymentSettings';
 import { AIContentGenerator } from '../components/admin/AIContentGenerator';
-||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
-=======
-import { AIContentGenerator } from '../components/admin/AIContentGenerator';
->>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -116,15 +105,10 @@ export const AdminPage = () => {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'orders', label: 'Orders', icon: Package },
     { id: 'products', label: 'Products', icon: Package },
-<<<<<<< HEAD
     { id: 'inventory', label: 'Inventory', icon: Warehouse },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'ai-content', label: 'AI Content', icon: Bot },
-||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
-=======
-    { id: 'ai-content', label: 'AI Content', icon: Bot },
->>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'coi', label: 'COI Documents', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
@@ -143,7 +127,6 @@ export const AdminPage = () => {
       case 'products':
         return <ProductManager />;
       
-<<<<<<< HEAD
       case 'inventory':
         return <InventoryManager />;
       
@@ -158,12 +141,6 @@ export const AdminPage = () => {
       
       case 'ai-content':
         return <AIContentGenerator />;
-||||||| parent of dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
-=======
-      case 'ai-content':
-        return <AIContentGenerator />;
-      
->>>>>>> dfc84dc (feat: implement AI assistant with Flowise and LangChain integration)
       case 'uploads':
         return (
           <div className="space-y-6">

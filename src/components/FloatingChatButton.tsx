@@ -23,10 +23,7 @@ export const FloatingChatButton = () => {
         </Button>
       </motion.div>
 
-      <ChatBot
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-      />
+      {isChatOpen && <ChatBot />}
     </>
   );
 };
