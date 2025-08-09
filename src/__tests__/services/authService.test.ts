@@ -1,133 +1,230 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { authService } from '../../services/authService'
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      signInWithPassword: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signUp: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signOut: vi.fn(() => Promise.resolve({ error: null })),
-      getUser: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      getSession: vi.fn(() => Promise.resolve({ data: { session: { user: { id: 'test-user' } } }, error: null })),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } }
-      })),
-    }
-  },
-  supabaseAdmin: {
-    auth: {
-      admin: {
-        createUser: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-        deleteUser: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-      }
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+      onAuthStateChange: vi.fn()
     }
   }
 }))
 
-import { authService } from '../../services/authService'
-
-const mockLocalStorage = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key]
-    }),
-    clear: vi.fn(() => {
-      store = {}
-    })
-  }
-})()
-
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage
-})
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+}
+Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
 describe('authService', () => {
   beforeEach(() => {
-    mockLocalStorage.clear()
     vi.clearAllMocks()
   })
 
   describe('login', () => {
     it('should handle admin login', async () => {
       const result = await authService.login('admin', 'admin123')
-
+      
       expect(result.success).toBe(true)
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('adminToken', 'admin-token')
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('adminToken', 'admin-token')
     })
 
     it('should handle regular user login', async () => {
-      const result = await authService.login('user@example.com', 'password123')
+      const mockData = { user: { id: '1', email: 'test@example.com' } }
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
+        data: { 
+          user: {
+            ...mockData.user,
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: '2023-01-01T00:00:00Z'
+          } as any, 
+          session: {
+            access_token: 'mock_token',
+            refresh_token: 'mock_refresh',
+            expires_in: 3600,
+            token_type: 'bearer',
+            user: mockData.user
+          } as any
+        },
+        error: null
+      })
 
-      expect(result).toBeDefined()
+      const result = await authService.login('test@example.com', 'password123')
+      
+      expect(result.user.id).toBe(mockData.user.id)
+      expect(result.user.email).toBe(mockData.user.email)
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123'
+      })
     })
 
-    it('should handle invalid credentials', async () => {
-      try {
-        await authService.login('invalid@example.com', 'wrongpassword')
-      } catch (error) {
-        expect(error).toBeDefined()
-      }
+    it('should handle login errors', async () => {
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
+        data: { user: null, session: null },
+        error: {
+          message: 'Invalid credentials',
+          code: 'invalid_credentials',
+          status: 400,
+          __isAuthError: true,
+          name: 'AuthError'
+        } as any
+      })
+
+      await expect(authService.login('test@example.com', 'wrongpassword')).rejects.toThrow('Invalid credentials')
     })
   })
 
   describe('register', () => {
     it('should register new user', async () => {
-      const metadata = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: '1990-01-01'
-      }
+      const mockData = { user: { id: '1', email: 'new@example.com' } }
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.signUp).mockResolvedValue({
+        data: { 
+          user: {
+            ...mockData.user,
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: '2023-01-01T00:00:00Z'
+          } as any, 
+          session: {
+            access_token: 'mock_token',
+            refresh_token: 'mock_refresh',
+            expires_in: 3600,
+            token_type: 'bearer',
+            user: mockData.user
+          } as any
+        },
+        error: null
+      })
 
-      const result = await authService.register('newuser@example.com', 'password123', metadata)
-
-      expect(result).toBeDefined()
+      const metadata = { firstName: 'John', lastName: 'Doe' }
+      const result = await authService.register('new@example.com', 'password123', metadata)
+      
+      expect(result).toBeTruthy()
+      expect(result!.user!.id).toBe(mockData.user.id)
+      expect(result!.user!.email).toBe(mockData.user.email)
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'new@example.com',
+        password: 'password123',
+        options: { data: metadata }
+      })
     })
 
     it('should handle registration errors', async () => {
-      try {
-        await authService.register('invalid-email', 'weak', {})
-      } catch (error) {
-        expect(error).toBeDefined()
-      }
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.signUp).mockResolvedValue({
+        data: { user: null, session: null },
+        error: {
+          message: 'Email already exists',
+          code: 'email_exists',
+          status: 400,
+          __isAuthError: true,
+          name: 'AuthError'
+        } as any
+      })
+
+      await expect(authService.register('existing@example.com', 'password123', {})).rejects.toThrow('Email already exists')
     })
   })
 
   describe('logout', () => {
     it('should logout user and clear admin token', async () => {
-      mockLocalStorage.setItem('adminToken', 'test-token')
+      const { supabase } = await import('../../lib/supabase')
       
-      await authService.logout()
+      vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null })
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('adminToken')
+      await authService.logout()
+      
+      expect(supabase.auth.signOut).toHaveBeenCalled()
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('adminToken')
     })
   })
 
   describe('getCurrentUser', () => {
-    it('should return current user', async () => {
-      const user = await authService.getCurrentUser()
+    it('should get current user', async () => {
+      const mockUser = { id: '1', email: 'current@example.com' }
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { 
+          user: {
+            ...mockUser,
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: '2023-01-01T00:00:00Z'
+          } as any
+        },
+        error: null
+      })
 
-      expect(user).toBeDefined()
+      const result = await authService.getCurrentUser()
+      
+      expect(result).toBeTruthy()
+      expect(result!.id).toBe(mockUser.id)
+      expect(result!.email).toBe(mockUser.email)
     })
   })
 
   describe('getSession', () => {
-    it('should return current session', async () => {
-      const session = await authService.getSession()
+    it('should get current session', async () => {
+      const mockSession = { access_token: 'token', user: { id: '1' } }
+      const { supabase } = await import('../../lib/supabase')
+      
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: { 
+          session: {
+            ...mockSession,
+            refresh_token: 'refresh_token',
+            expires_in: 3600,
+            token_type: 'bearer'
+          } as any
+        },
+        error: null
+      })
 
-      expect(session).toBeDefined()
+      const result = await authService.getSession()
+      
+      expect(result).toBeTruthy()
+      expect(result!.access_token).toBe(mockSession.access_token)
+      expect(result!.user.id).toBe(mockSession.user.id)
     })
   })
 
   describe('onAuthStateChange', () => {
     it('should set up auth state change listener', async () => {
-      const callback = vi.fn()
-      const unsubscribe = await authService.onAuthStateChange(callback)
+      const { supabase } = await import('../../lib/supabase')
+      const mockCallback = vi.fn()
+      
+      vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
+        data: { 
+          subscription: { 
+            id: 'test-subscription',
+            callback: vi.fn(),
+            unsubscribe: vi.fn() 
+          } as any
+        }
+      })
 
-      expect(unsubscribe).toBeDefined()
+      const result = await authService.onAuthStateChange(mockCallback)
+      
+      expect(supabase.auth.onAuthStateChange).toHaveBeenCalledWith(mockCallback)
+      expect(result).toHaveProperty('data')
     })
   })
 })

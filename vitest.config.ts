@@ -8,10 +8,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
-    exclude: ['**/node_modules/**', '**/tests/e2e/**', '**/playwright.config.ts'],
-    coverage: {
-      exclude: ['**/tests/e2e/**', '**/node_modules/**', '**/*.stories.tsx', '**/playwright.config.ts']
-    }
+    exclude: ['**/node_modules/**', '**/tests/**', '**/e2e/**', '**/dist/**'],
   },
   resolve: {
     alias: {

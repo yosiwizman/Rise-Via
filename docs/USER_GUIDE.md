@@ -1,313 +1,212 @@
 # Rise-Via User Guide
 
-## Welcome to Rise-Via
-
-Rise-Via is your premier destination for high-quality THCA cannabis products. This guide will help you navigate our platform and make the most of your shopping experience.
-
 ## Getting Started
 
 ### Age Verification
+All users must verify they are 21+ years old to access the platform.
 
-Before accessing our products, you must verify that you are 21 years of age or older:
+1. Visit the homepage
+2. Click "Yes, I am 21 or older" in the age verification modal
+3. Your verification is stored for 24 hours
 
-1. Visit the Rise-Via website
-2. Enter your birth date when prompted
-3. Complete the age verification process
-4. Your verification will be remembered for future visits
+### State Restrictions
+Rise-Via ships to most US states. Some states have restrictions:
+- Idaho (ID): No shipping available
+- Check state selector for current restrictions
 
-### State Verification
+## Shopping
 
-Cannabis laws vary by state. You'll need to select your state to ensure compliance:
+### Browsing Products
+1. Navigate to the **Shop** page
+2. Use filters to narrow down products:
+   - **All Products**: View entire catalog
+   - **Sativa**: Energizing strains
+   - **Indica**: Relaxing strains
+   - **Hybrid**: Balanced effects
 
-1. Choose your state from the dropdown menu
-2. If your state allows THCA products, you'll gain full access
-3. If your state restricts THCA products, you can still browse educational content
+### Product Information
+Each product displays:
+- **Name**: Strain name
+- **Type**: Sativa, Indica, or Hybrid
+- **THCA %**: Potency level
+- **Price**: Current pricing
+- **Effects**: Expected effects
+- **Description**: Detailed information
 
-## Browsing Products
+### Adding to Cart
+1. Click **Add to Cart** on any product
+2. View cart count in the header
+3. Click cart icon to review items
 
-### Shop Page
+## Cart Management
 
-Navigate to the Shop page to browse our full product catalog:
+### Viewing Cart
+- Click the cart icon in the header
+- Cart sidebar shows all items
+- View quantity, price, and total
 
-- **Search**: Use the search bar to find specific products
-- **Filter by Strain Type**: Choose between Indica, Sativa, or Hybrid
-- **Price Range**: Set minimum and maximum price filters
-- **Sort Options**: Sort by price, popularity, or newest arrivals
+### Updating Quantities
+- Use +/- buttons to adjust quantities
+- Remove items with the trash icon
+- Cart automatically calculates totals
 
-### Product Details
-
-Click on any product to view detailed information:
-
-- High-resolution product images
-- Detailed descriptions and effects
-- Lab test results and potency information
-- Customer reviews and ratings
-- Strain information and terpene profiles
-
-## Shopping Cart
-
-### Adding Items
-
-1. Click "Add to Cart" on any product page
-2. Items are automatically added to your cart
-3. The cart icon shows your current item count
-
-### Managing Your Cart
-
-1. Click the cart icon to open the cart sidebar
-2. **Update Quantities**: Use + and - buttons to adjust quantities
-3. **Remove Items**: Click the remove button to delete items
-4. **View Total**: See your subtotal and estimated taxes
-
-### Cart Persistence
-
-Your cart is automatically saved and will persist:
-- Across browser sessions
-- When you close and reopen your browser
-- When you switch between devices (if logged in)
+### Checkout Process
+1. Click **Proceed to Checkout** in cart
+2. Fill out shipping information
+3. Verify age and state eligibility
+4. Complete payment (when available)
 
 ## Wishlist
 
 ### Adding to Wishlist
-
 1. Click the heart icon on any product
-2. Items are saved to your personal wishlist
-3. Access your wishlist from the navigation menu
+2. Items are saved to your wishlist
+3. Access wishlist from the user menu
 
-### Price Alerts
+### Managing Wishlist
+- View all saved items
+- Remove items you're no longer interested in
+- Share wishlist with friends (when available)
 
-Set up price alerts for wishlist items:
-
-1. Go to your wishlist
-2. Click "Set Price Alert" on any item
-3. Enter your target price
-4. Receive notifications when prices drop
-
-### Managing Your Wishlist
-
-- **Remove Items**: Click the remove button
-- **Move to Cart**: Quickly add wishlist items to your cart
-- **Share Wishlist**: Share your wishlist with friends
-
-## Checkout Process
-
-### Customer Information
-
-1. Click "Checkout" from your cart
-2. Enter your email address
-3. Provide shipping information:
-   - Full name
-   - Address
-   - City, state, and ZIP code
-   - Phone number
-
-### Shipping Options
-
-Choose from available shipping methods:
-- **Standard Shipping**: 5-7 business days
-- **Express Shipping**: 2-3 business days
-- **Overnight Shipping**: Next business day
-
-### Payment
-
-We accept the following payment methods:
-- Credit cards (Visa, MasterCard, American Express)
-- Debit cards
-- Digital wallets (Apple Pay, Google Pay)
-
-### Order Confirmation
-
-After placing your order:
-1. You'll receive an email confirmation
-2. Track your order status in your account
-3. Receive shipping notifications with tracking information
-
-## Account Management
+## Account Features
 
 ### Creating an Account
+1. Click **Account** in the header
+2. Choose **Register** for new accounts
+3. Fill out registration form
+4. Verify email address
 
-1. Click "Sign Up" in the navigation
-2. Provide your email and create a password
-3. Complete your profile information
-4. Verify your email address
+### Account Dashboard
+- View order history
+- Manage shipping addresses
+- Update account information
+- Track loyalty points
 
-### Account Benefits
+## Compliance & Safety
 
-- **Order History**: View all past orders
-- **Saved Addresses**: Store multiple shipping addresses
-- **Loyalty Points**: Earn points with every purchase
-- **Exclusive Offers**: Receive member-only discounts
+### Product Warnings
+- Products have not been evaluated by the FDA
+- Keep out of reach of children and pets
+- Do not drive or operate machinery
+- Not for use by pregnant or nursing women
+- May cause positive drug test results
 
-### Profile Settings
+### Lab Results
+- All products include Certificates of Analysis (COA)
+- QR codes link to third-party lab results
+- Results show potency and safety testing
 
-Manage your account settings:
-- **Personal Information**: Update name, email, phone
-- **Addresses**: Add, edit, or remove addresses
-- **Preferences**: Set strain preferences and communication settings
-- **Password**: Change your account password
+## Support
 
-## Educational Content
-
-### Learn Page
-
-Visit our Learn page for educational content about THCA:
-- **What is THCA**: Understanding the compound
-- **Effects and Benefits**: Potential therapeutic uses
-- **Consumption Methods**: Different ways to use THCA
-- **Legal Information**: Current legal status
-
-### Blog
-
-Stay updated with our blog featuring:
-- Industry news and updates
-- Product spotlights
-- Educational articles
-- Company announcements
-
-## Customer Support
-
-### Contact Methods
-
+### Contact Information
 - **Email**: support@risevia.com
-- **Phone**: 1-800-RISEVIA (1-800-747-3842)
-- **Live Chat**: Available on our website during business hours
-- **Help Center**: Browse our FAQ section
+- **Phone**: 1-800-RISEVIA
+- **Hours**: Monday-Friday 9AM-6PM MST
 
-### Business Hours
+### Frequently Asked Questions
 
-- **Customer Support**: Monday-Friday, 9 AM - 6 PM PST
-- **Order Processing**: Monday-Friday, 9 AM - 5 PM PST
-- **Shipping**: Monday-Friday (no weekend shipping)
+#### Shipping
+- **How long does shipping take?** 3-5 business days
+- **What states do you ship to?** Most US states (see restrictions)
+- **How much does shipping cost?** Free shipping on orders over $75
 
-### Common Questions
+#### Returns
+- **Can I return products?** 30-day return policy for unopened items
+- **How do I start a return?** Contact customer service
+- **Who pays for return shipping?** Customer pays unless product is defective
 
-**Q: How long does shipping take?**
-A: Standard shipping takes 5-7 business days. Express options are available.
+#### Payment
+- **What payment methods do you accept?** Credit cards and bank transfers
+- **Is my payment information secure?** Yes, we use encrypted payment processing
+- **Can I save payment methods?** Yes, in your account dashboard
 
-**Q: Can I modify my order after placing it?**
-A: Orders can be modified within 1 hour of placement. Contact support immediately.
+#### Products
+- **Are your products lab tested?** Yes, all products include COA
+- **What's the difference between THCA and THC?** THCA converts to THC when heated
+- **How should I store products?** Cool, dry place away from light
 
-**Q: What if my state doesn't allow THCA products?**
-A: You can still access our educational content and learn about THCA.
-
-**Q: Are your products lab tested?**
-A: Yes, all products undergo third-party lab testing for potency and purity.
-
-**Q: Do you offer returns or refunds?**
-A: Due to the nature of cannabis products, all sales are final. Contact support for quality issues.
+#### Account
+- **How do I reset my password?** Use the "Forgot Password" link on login page
+- **Can I change my email address?** Yes, in account settings
+- **How do I delete my account?** Contact customer service
 
 ## Mobile App
 
 ### Features
-
-Our mobile app offers:
-- Full shopping experience
-- Push notifications for order updates
-- Exclusive mobile-only deals
-- Barcode scanning for quick reorders
+- Browse products on mobile
+- Add items to cart and wishlist
+- Track orders
+- Receive push notifications
 
 ### Download
-
-- **iOS**: Available on the App Store
-- **Android**: Available on Google Play Store
-
-## Privacy and Security
-
-### Data Protection
-
-We protect your information through:
-- SSL encryption for all transactions
-- Secure payment processing
-- Limited data sharing
-- Regular security audits
-
-### Privacy Policy
-
-Read our full privacy policy for details on:
-- What information we collect
-- How we use your data
-- Your privacy rights
-- Data retention policies
-
-## Compliance and Legal
-
-### Age Requirements
-
-- Must be 21+ to purchase
-- Valid ID may be required for delivery
-- Age verification is mandatory
-
-### State Restrictions
-
-THCA products are not available in all states. Current restrictions apply to:
-- Idaho, South Dakota, Mississippi, Oregon, Alaska
-- Arkansas, Colorado, Delaware, Hawaii, Indiana
-- Iowa, Kansas, Kentucky, Louisiana, Maryland
-- Montana, New Hampshire, New York, North Carolina
-- Rhode Island, Utah, Vermont, Virginia
-
-### Product Information
-
-- All products contain less than 0.3% Delta-9 THC
-- THCA converts to THC when heated
-- Products have not been evaluated by the FDA
-- Keep away from children and pets
+- Available on iOS App Store
+- Available on Google Play Store
+- Progressive Web App (PWA) available
 
 ## Loyalty Program
 
 ### Earning Points
-
-Earn points through:
-- **Purchases**: 1 point per $1 spent
-- **Reviews**: 25 points per product review
-- **Referrals**: 100 points per successful referral
-- **Birthday Bonus**: 50 points annually
+- 1 point per $1 spent
+- Bonus points for reviews
+- Birthday bonuses
+- Referral rewards
 
 ### Redeeming Points
+- 100 points = $5 off
+- Exclusive member discounts
+- Early access to new products
+- Free shipping perks
 
-- 100 points = $5 discount
-- 500 points = $30 discount
-- 1000 points = $75 discount
-- Special member-only products
+## Privacy & Security
 
-### Tier Benefits
+### Data Protection
+- Your personal information is encrypted
+- We never sell your data to third parties
+- GDPR compliant for international users
+- Regular security audits
 
-- **Bronze** (0-499 points): Standard benefits
-- **Silver** (500-999 points): 5% bonus points, early sale access
-- **Gold** (1000+ points): 10% bonus points, free express shipping
+### Account Security
+- Use strong, unique passwords
+- Enable two-factor authentication
+- Monitor account activity
+- Report suspicious activity immediately
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Website not loading properly:**
-- Clear your browser cache
-- Disable ad blockers
+#### Can't Access Website
+- Check your internet connection
+- Clear browser cache and cookies
 - Try a different browser
+- Disable ad blockers temporarily
 
-**Can't add items to cart:**
-- Ensure you've completed age verification
-- Check if your state allows THCA products
-- Refresh the page and try again
-
-**Payment issues:**
-- Verify your billing information
-- Check your card's expiration date
-- Contact your bank if payment is declined
-
-**Account access problems:**
-- Use the "Forgot Password" feature
-- Check your email for verification links
+#### Age Verification Problems
+- Ensure you're 21 or older
+- Clear browser data
+- Try incognito/private browsing
 - Contact support if issues persist
 
-### Technical Support
+#### Cart Issues
+- Refresh the page
+- Clear browser cache
+- Check if items are still in stock
+- Try adding items one at a time
 
-For technical issues:
-1. Try the troubleshooting steps above
-2. Contact our technical support team
-3. Provide details about your browser and device
-4. Include screenshots if helpful
+#### Payment Problems
+- Verify card information is correct
+- Check if card is expired
+- Ensure sufficient funds
+- Try a different payment method
 
----
+#### Shipping Issues
+- Verify shipping address is correct
+- Check if your state allows shipping
+- Review order confirmation email
+- Track package with provided tracking number
 
-*This guide is regularly updated. For the most current information, visit our website or contact customer support.*
+### Getting Help
+- **Live Chat**: Available during business hours
+- **Email Support**: Response within 24 hours
+- **Phone Support**: 1-800-RISEVIA
+- **Help Center**: Comprehensive FAQ section
