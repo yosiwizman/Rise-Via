@@ -45,7 +45,7 @@ export const PasswordResetPage = ({ onNavigate }: PasswordResetPageProps) => {
     try {
       await authService.requestPasswordReset(email);
       setSuccess('Password reset email sent! Check your inbox for the reset link.');
-    } catch (error) {
+    } catch {
       setError('Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ export const PasswordResetPage = ({ onNavigate }: PasswordResetPageProps) => {
       setTimeout(() => {
         onNavigate('login');
       }, 2000);
-    } catch (error) {
+    } catch {
       setError('Failed to reset password. The link may have expired.');
     } finally {
       setLoading(false);
