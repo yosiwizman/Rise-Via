@@ -15,7 +15,6 @@ import { ChatBot } from './components/ChatBot';
 import { Toaster } from './components/ui/sonner';
 import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
-import { AgeGate } from './components/AgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
 import RegisterPage from './pages/RegisterPage';

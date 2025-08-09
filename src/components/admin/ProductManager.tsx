@@ -410,7 +410,14 @@ export const ProductManager: React.FC = () => {
       <ProductEditor
         isOpen={isProductEditorOpen}
         onClose={() => setIsProductEditorOpen(false)}
-        onSave={handleSaveProduct}
+        onSave={(product) => handleSaveProduct({ 
+          ...product, 
+          id: editingProduct?.id || crypto.randomUUID(),
+          images: product.images || [],
+          description: product.description || '',
+          effects: product.effects || [],
+          active: product.active ?? true
+        })}
         product={editingProduct ? {
           id: editingProduct.id || '',
           name: editingProduct.name,
@@ -425,7 +432,6 @@ export const ProductManager: React.FC = () => {
           images: editingProduct.images || [],
           strainType: editingProduct.strain_type || editingProduct.strainType,
           thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
-          images: editingProduct.images || []
         } : undefined}
       />
     </div>
