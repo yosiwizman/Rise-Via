@@ -3,7 +3,18 @@ import { ProductDetailModal } from './ProductDetailModal';
 interface ProductQuickViewProps {
   isOpen: boolean;
   onClose: () => void;
-  product: any;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    images: string[];
+    thcaPercentage?: number;
+    category: string;
+    effects?: string[];
+    strainType?: string;
+    description: string;
+    [key: string]: unknown;
+  };
 }
 
 export const ProductQuickView = ({ isOpen, onClose, product }: ProductQuickViewProps) => {

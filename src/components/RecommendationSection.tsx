@@ -2,15 +2,26 @@ import { RecommendationEngine } from '../services/RecommendationEngine';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 
+interface Product {
+  id: string;
+  name: string;
+  strainType: string;
+  thcaPercentage: number;
+  effects: string[];
+  category: string;
+  price: number;
+  images: string[];
+}
+
 interface RecommendationSectionProps {
-  currentProduct: any;
-  onProductClick?: (product: any) => void;
+  currentProduct: Product;
+  onProductClick?: (product: Product) => void;
 }
 
 export const RecommendationSection = ({ currentProduct, onProductClick }: RecommendationSectionProps) => {
   const recommendations = RecommendationEngine.getRecommendations(currentProduct);
 
-  const ProductCard = ({ product }: { product: any }) => (
+  const ProductCard = ({ product }: { product: Product }) => (
     <Card 
       className="cursor-pointer hover:border-risevia-purple transition-colors"
       onClick={() => onProductClick?.(product)}
@@ -38,7 +49,7 @@ export const RecommendationSection = ({ currentProduct, onProductClick }: Recomm
         <div>
           <h3 className="text-xl font-bold text-risevia-black mb-4">Similar Effects</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {recommendations.similar.map((product: any) => (
+            {recommendations.similar.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -49,7 +60,7 @@ export const RecommendationSection = ({ currentProduct, onProductClick }: Recomm
         <div>
           <h3 className="text-xl font-bold text-risevia-black mb-4">Frequently Bought Together</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {recommendations.pairs_well.map((product: any) => (
+            {recommendations.pairs_well.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -60,7 +71,7 @@ export const RecommendationSection = ({ currentProduct, onProductClick }: Recomm
         <div>
           <h3 className="text-xl font-bold text-risevia-black mb-4">Similar Potency</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {recommendations.potency_match.map((product: any) => (
+            {recommendations.potency_match.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

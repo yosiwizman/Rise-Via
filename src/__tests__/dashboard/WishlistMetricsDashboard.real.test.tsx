@@ -42,7 +42,7 @@ vi.mock('../../services/priceTracking', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>
+    div: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => <div {...props}>{children}</div>
   }
 }))
 
@@ -177,7 +177,7 @@ describe('WishlistMetricsDashboard - Real Component', () => {
       totalValue: 0,
       averagePrice: 0,
       categoryBreakdown: {}
-    } as any)
+    } as unknown as ReturnType<typeof wishlistAnalytics.getMetrics>)
 
     render(<WishlistMetricsDashboard />)
     
@@ -200,7 +200,7 @@ describe('WishlistMetricsDashboard - Real Component', () => {
       totalValue: 100,
       averagePrice: 10,
       categoryBreakdown: {}
-    } as any)
+    } as unknown as ReturnType<typeof wishlistAnalytics.getMetrics>)
 
     render(<WishlistMetricsDashboard />)
     

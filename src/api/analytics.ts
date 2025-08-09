@@ -111,7 +111,7 @@ export const analyticsAPI = {
       LIMIT 10
     `;
 
-    const topProducts = wishlistItems?.map((item: any) => ({
+    const topProducts = (wishlistItems as { product_id: string; popularity: number }[])?.map((item) => ({
       name: `Product ${item.product_id}`,
       sales: item.popularity,
       revenue: item.popularity * 50
@@ -125,7 +125,7 @@ export const analyticsAPI = {
       SELECT 'concentrates' as category, COUNT(*) as sales FROM wishlist_items
     `;
 
-    const categoryPerformance = categoryData?.map((cat: any) => ({
+    const categoryPerformance = (categoryData as { category: string; sales: number }[])?.map((cat) => ({
       category: cat.category,
       sales: cat.sales
     })) || [];
