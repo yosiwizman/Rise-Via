@@ -169,17 +169,7 @@ export const ProductManager: React.FC = () => {
     setIsProductEditorOpen(true);
   };
 
-  const handleSaveProduct = async (productData: {
-    name: string;
-    category: string;
-    description?: string;
-    price: number;
-    type: string;
-    thc: string;
-    inventory: number;
-    effects?: string[];
-    active?: boolean;
-  }) => {
+  const handleSaveProduct = async (productData: Product) => {
     try {
       if (editingProduct && 'sample_id' in editingProduct) {
         await productService.update(editingProduct.id!, productData);
@@ -190,7 +180,7 @@ export const ProductManager: React.FC = () => {
           description: productData.description || '',
           price: productData.price,
           strain_type: productData.type,
-          thca_percentage: parseFloat(productData.thc) || 0,
+          thca_percentage: parseFloat(productData.thc || '0') || 0,
           effects: productData.effects || [],
           inventory: productData.inventory,
           images: []
@@ -433,7 +423,8 @@ export const ProductManager: React.FC = () => {
           effects: editingProduct.effects || [],
           description: editingProduct.description || '',
           strainType: editingProduct.strain_type || editingProduct.strainType,
-          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage
+          thcaPercentage: editingProduct.thca_percentage || editingProduct.thcaPercentage,
+          images: editingProduct.images || []
         } : undefined}
       />
     </div>

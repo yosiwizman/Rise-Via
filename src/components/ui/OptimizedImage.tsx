@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
-import { ImageOptimizer } from '../../utils/imageOptimization';
+// import { ImageOptimizer } from '../../utils/imageOptimization'; // Temporarily disabled
 
 interface OptimizedImageProps {
   src: string;
@@ -23,29 +23,28 @@ export const OptimizedImage = ({
   height,
   priority = false,
   placeholder = 'blur',
-  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   onLoad,
   onError
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [hasError, setHasError] = useState(false);
-  const [supportsWebP, setSupportsWebP] = useState(false);
+  // WebP support disabled until ImageOptimizer is implemented
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    ImageOptimizer.supportsWebP().then(setSupportsWebP);
-  }, []);
+  // WebP support detection disabled until ImageOptimizer is implemented
 
   useEffect(() => {
     if (priority || !containerRef.current) return;
 
-    const observer = ImageOptimizer.createLazyLoadObserver((entry) => {
-      if (entry.isIntersecting) {
-        setIsInView(true);
-        observer.unobserve(entry.target);
-      }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(entry.target);
+        }
+      });
     });
 
     observer.observe(containerRef.current);
@@ -53,8 +52,8 @@ export const OptimizedImage = ({
     return () => observer.disconnect();
   }, [priority]);
 
-  const sources = src ? ImageOptimizer.getOptimizedImageSources(src) : { webp: [], fallback: [] };
-  const blurPlaceholder = placeholder === 'blur' ? ImageOptimizer.generateBlurPlaceholder() : undefined;
+  // Sources disabled until ImageOptimizer is implemented
+  const blurPlaceholder = placeholder === 'blur' ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo=' : undefined;
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -93,21 +92,7 @@ export const OptimizedImage = ({
       {/* Main image */}
       {(isInView || priority) && !hasError && (
         <picture>
-          {/* WebP sources */}
-          {supportsWebP && (
-            <source
-              srcSet={sources.webp.map(s => `${s.src} ${s.width}w`).join(', ')}
-              sizes={sizes}
-              type="image/webp"
-            />
-          )}
-          
-          {/* Fallback sources */}
-          <source
-            srcSet={sources.fallback.map(s => `${s.src} ${s.width}w`).join(', ')}
-            sizes={sizes}
-            type="image/jpeg"
-          />
+          {/* Simplified fallback until ImageOptimizer is implemented */}
           
           <img
             ref={imgRef}

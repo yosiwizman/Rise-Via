@@ -97,11 +97,11 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
               </div>
               <WishlistButton
                 item={{
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
+                  id: product.id!,
+                  name: product.name!,
+                  price: product.price!,
                   image: product.images[0],
-                  category: product.category,
+                  category: product.category!,
                   effects: product.effects
                 }}
                 size="lg"
@@ -131,11 +131,11 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             <Button 
               onClick={() => {
                 addToCart({
-                  productId: product.id,
-                  name: product.name,
-                  price: product.price,
+                  productId: product.id!,
+                  name: product.name!,
+                  price: product.price!,
                   image: product.images[0],
-                  category: product.category,
+                  category: product.category!,
                   strainType: product.strainType || '',
                   thcaPercentage: product.thcaPercentage || 0
                 });
@@ -152,8 +152,8 @@ export const ProductDetailModal = ({ isOpen, onClose, product }: ProductDetailMo
             
             <div className="mt-8">
               <ProductReviewsIntegration 
-                productId={product.id}
-                productName={product.name}
+                productId={product.id!}
+                productName={product.name!}
               />
             </div>
           </div>

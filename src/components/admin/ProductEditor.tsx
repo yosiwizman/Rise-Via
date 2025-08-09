@@ -48,7 +48,9 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
       type: formData.strainType || 'hybrid',
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
       inventory: parseInt(formData.inventory.toString()),
-      active: true
+      active: true,
+      images: formData.images || [],
+      description: formData.description || ''
     };
     onSave(productData);
     onClose();

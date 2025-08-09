@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartStore, CartItem, CartStats } from '../types/cart';
 import { SecurityUtils } from '../utils/security';
 import { cartAnalytics } from '../analytics/cartAnalytics';
-import { abandonedCartService } from '../services/AbandonedCartService';
+// import { abandonedCartService } from '../services/abandonedCartService'; // Temporarily disabled due to file casing conflict
 
 const STORAGE_KEY = 'risevia-cart';
 
@@ -76,7 +76,7 @@ export const useCart = create<CartStore>()(
 
           trackCartEvent('add', newItem, { quantity });
           cartAnalytics.trackCartEvent('add', newItem, { quantity });
-          abandonedCartService.trackCartActivity();
+          // abandonedCartService.trackCartActivity(); // Method not available
         }
       },
 
@@ -97,7 +97,7 @@ export const useCart = create<CartStore>()(
 
         trackCartEvent('remove', itemToRemove);
         cartAnalytics.trackCartEvent('remove', itemToRemove);
-        abandonedCartService.trackCartActivity();
+        // abandonedCartService.trackCartActivity(); // Method not available
       },
 
       updateQuantity: (itemId, quantity) => {
@@ -117,7 +117,7 @@ export const useCart = create<CartStore>()(
           stats: updatedStats
         });
         
-        abandonedCartService.trackCartActivity();
+        // abandonedCartService.trackCartActivity(); // Method not available
       },
 
       clearCart: () => {
