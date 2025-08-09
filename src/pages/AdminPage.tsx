@@ -130,6 +130,9 @@ export const AdminPage = () => {
       case 'activity':
         return <ActivityLogs />;
       
+      case 'products':
+        return <ProductManager />;
+      
       case 'uploads':
         return (
           <Card>
