@@ -198,7 +198,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
             };
             
             await listmonkService.addSubscriber(subscriberData);
-            await customerSegmentationService.addCustomerToSegments(customerData);
+            await customerSegmentationService.addCustomerToSegments(customerData as any);
           } catch (listmonkError) {
             console.error('Listmonk integration failed:', listmonkError);
           }

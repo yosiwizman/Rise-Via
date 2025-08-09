@@ -85,30 +85,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     }
   };
 
-  const createOrder = async (paymentMethodId: string, customerInfo: any): Promise<string> => {
+  const createOrder = async (_paymentMethodId: string, _customerInfo: any): Promise<string> => {
     const orderData = {
-      payment_method_id: paymentMethodId,
-      customer_email: customerInfo.email,
-      customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-      shipping_address: {
-        line1: customerInfo.address,
-        city: customerInfo.city,
-        state: customerInfo.state,
-        postal_code: customerInfo.zipCode,
-      },
-      phone: customerInfo.phone,
-      total_amount: getCartTotal(),
-      status: 'confirmed' as const,
+      customer_id: 'temp-customer-id',
+      total: getCartTotal(),
       items: items.map(item => ({
         product_id: item.productId,
-        name: item.name,
         quantity: item.quantity,
-        price: item.price,
-        total: item.price * item.quantity
+        price: item.price
       }))
     };
 
-    return await orderService.createOrder(orderData);
+    const order = await orderService.createOrder(orderData);
+    if (!order) {
+      throw new Error('Failed to create order');
+    }
+    return order.id;
   };
 
   return (
