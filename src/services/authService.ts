@@ -1,4 +1,5 @@
 import { sql } from '../lib/neon';
+import { hashPassword } from '../lib/database';
 
 export interface User {
   id: string;
@@ -20,16 +21,16 @@ export const authService = {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };
     }
+    const passwordHash = await hashPassword(password);
     const users = await sql`
-      SELECT id, email, password_hash, created_at 
+      SELECT id, email, created_at 
       FROM users 
-      WHERE email = ${email}
+      WHERE email = ${email} AND password_hash = ${passwordHash}
     `;
     if (users.length === 0) {
       throw new Error('Invalid email or password');
     }
     const user = users[0] as User;
-    // NOTE: Passwords should be hashed and verified securely in production
     const sessionUser: User = {
       id: user.id,
       email: user.email,
@@ -46,8 +47,7 @@ export const authService = {
     if (existingUsers.length > 0) {
       throw new Error('User already exists with this email');
     }
-    // WARNING: Password should be hashed before storing in production
-    const passwordHash = password;
+    const passwordHash = await hashPassword(password);
     const newUsers = await sql`
       INSERT INTO users (email, password_hash)
       VALUES (${email}, ${passwordHash})
