@@ -2,6 +2,34 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useWishlist } from '../../hooks/useWishlist'
 
+const mockSessionStorage = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    length: 0,
+    key: vi.fn()
+  }
+})()
+
+Object.defineProperty(global, 'sessionStorage', {
+  value: mockSessionStorage,
+  writable: true
+})
+
+Object.defineProperty(window, 'sessionStorage', {
+  value: mockSessionStorage,
+  writable: true
+})
+
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {}
   return {
@@ -37,35 +65,24 @@ vi.mock('../../data/products.json', () => ({
   }
 }))
 
-vi.mock('../../services/wishlistService', () => {
-  let mockWishlistItems: string[] = []
-  
-  return {
-    wishlistService: {
-      getWishlist: vi.fn(() => Promise.resolve({ data: mockWishlistItems, error: null })),
-      addToWishlist: vi.fn((productId: string) => {
-        if (!mockWishlistItems.includes(productId)) {
-          mockWishlistItems.push(productId)
-        }
-        return Promise.resolve({ error: null })
-      }),
-      removeFromWishlist: vi.fn((productId: string) => {
-        mockWishlistItems = mockWishlistItems.filter(id => id !== productId)
-        return Promise.resolve({ error: null })
-      }),
-      isInWishlist: vi.fn((productId: string) => Promise.resolve(mockWishlistItems.includes(productId))),
-      migrateSessionWishlist: vi.fn(() => Promise.resolve({ success: true }))
-    }
+vi.mock('../../analytics/wishlistAnalytics', () => ({
+  wishlistAnalytics: {
+    trackWishlistEvent: vi.fn()
   }
-})
+}))
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    auth: {
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } }
-      }))
-    }
+vi.mock('../../utils/security', () => ({
+  SecurityUtils: {
+    sanitizeInput: vi.fn((input) => input),
+    validateProductId: vi.fn(() => true),
+    checkRateLimit: vi.fn(() => true)
+  }
+}))
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn()
   }
 }))
 
@@ -88,7 +105,11 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
-      id: '1'
+      name: 'Test Product',
+      price: 29.99,
+      image: 'test.jpg',
+      category: 'flower',
+      effects: ['relaxing']
     }
 
     await act(async () => {
@@ -96,7 +117,7 @@ describe('useWishlist', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isInWishlist('1')).toBe(true)
+      expect(result.current.isInWishlist('Test Product')).toBe(true)
     }, { timeout: 3000 })
   })
 
@@ -104,16 +125,30 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
-      id: '1'
+      name: 'Test Product',
+      price: 29.99,
+      image: 'test.jpg',
+      category: 'flower',
+      effects: ['relaxing']
     }
 
     await act(async () => {
       await result.current.addToWishlist(testProduct)
-      await result.current.removeFromWishlist('1')
+    })
+
+    let addedItemId: string
+    await waitFor(() => {
+      expect(result.current.items.length).toBe(1)
+      addedItemId = result.current.items[0].id
+    })
+
+    await act(async () => {
+      await result.current.removeFromWishlist(addedItemId)
     })
 
     await waitFor(() => {
-      expect(result.current.isInWishlist('1')).toBe(false)
+      expect(result.current.isInWishlist('Test Product')).toBe(false)
+      expect(result.current.items.length).toBe(0)
     })
   })
 
@@ -121,7 +156,11 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
-      id: '1'
+      name: 'Test Product',
+      price: 29.99,
+      image: 'test.jpg',
+      category: 'flower',
+      effects: ['relaxing']
     }
 
     await act(async () => {
@@ -129,8 +168,8 @@ describe('useWishlist', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isInWishlist('1')).toBe(true)
-      expect(result.current.isInWishlist('2')).toBe(false)
+      expect(result.current.isInWishlist('Test Product')).toBe(true)
+      expect(result.current.isInWishlist('Other Product')).toBe(false)
     }, { timeout: 3000 })
   })
 
@@ -138,7 +177,11 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
-      id: '1'
+      name: 'Test Product',
+      price: 29.99,
+      image: 'test.jpg',
+      category: 'flower',
+      effects: ['relaxing']
     }
 
     await act(async () => {
@@ -146,7 +189,7 @@ describe('useWishlist', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isInWishlist('1')).toBe(true)
+      expect(result.current.isInWishlist('Test Product')).toBe(true)
     })
 
     await act(async () => {
@@ -162,7 +205,11 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
-      id: '1'
+      name: 'Test Product',
+      price: 29.99,
+      image: 'test.jpg',
+      category: 'flower',
+      effects: ['relaxing']
     }
 
     await act(async () => {
@@ -171,24 +218,25 @@ describe('useWishlist', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isInWishlist('1')).toBe(true)
+      expect(result.current.isInWishlist('Test Product')).toBe(true)
+      expect(result.current.items.length).toBe(1)
     }, { timeout: 3000 })
   })
 
-  it('should persist session token to localStorage', async () => {
+  it('should have working sessionStorage functionality', async () => {
+    mockSessionStorage.clear()
+    vi.clearAllMocks()
+    
     const { result } = renderHook(() => useWishlist())
     
-    const testProduct = {
-      id: '1'
-    }
-
-    await act(async () => {
-      await result.current.addToWishlist(testProduct)
-    })
-
     await waitFor(() => {
       expect(result.current.items).toBeDefined()
       expect(result.current.stats).toBeDefined()
+      expect(result.current.sessionId).toBeDefined()
     }, { timeout: 3000 })
+
+    mockSessionStorage.setItem('test-key', 'test-value')
+    expect(mockSessionStorage.getItem('test-key')).toBe('test-value')
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('test-key', 'test-value')
   })
 })

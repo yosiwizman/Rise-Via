@@ -1,56 +1,45 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-vi.mock('../../lib/supabase', () => {
-  const createQueryChain = (): any => ({
-    select: vi.fn(() => createQueryChain()),
-    order: vi.fn(() => Promise.resolve({
-      data: [
-        { id: '1', first_name: 'John', last_name: 'Doe', email: 'john@example.com', created_at: '2024-01-01' },
-        { id: '2', first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com', created_at: '2024-01-02' }
-      ],
-      error: null
-    })),
-    or: vi.fn(() => ({
-      ...createQueryChain(),
-      order: vi.fn(() => Promise.resolve({
-        data: [
-          { id: '1', first_name: 'John', last_name: 'Doe', email: 'john@example.com' }
-        ],
-        error: null
-      }))
-    })),
-    eq: vi.fn(() => createQueryChain()),
-    single: vi.fn(() => Promise.resolve({
-      data: { id: '3', first_name: 'New', last_name: 'Customer', email: 'new@example.com' },
-      error: null
-    }))
-  })
-
-  return {
-    supabase: {
-      from: vi.fn(() => ({
-        select: vi.fn(() => createQueryChain()),
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { id: '3', first_name: 'New', last_name: 'Customer', email: 'new@example.com' },
-              error: null
-            }))
-          }))
-        })),
-        update: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: '1', first_name: 'Updated', last_name: 'Customer' },
-                error: null
-              }))
-            }))
-          }))
-        }))
-      }))
+vi.mock('../../lib/neon', () => {
+  const mockSql = vi.fn()
+  
+  mockSql.mockImplementation((query) => {
+    const queryStr = Array.isArray(query) ? query.join('') : String(query)
+    
+    if (queryStr.includes('SELECT c.*') && queryStr.includes('json_agg(cp.*)') && queryStr.includes('GROUP BY c.id')) {
+      if (queryStr.includes('WHERE')) {
+        return Promise.resolve([
+          { id: 1, first_name: 'John', last_name: 'Doe', email: 'john@example.com', customer_profiles: [{}] }
+        ])
+      }
+      return Promise.resolve([
+        { id: 1, first_name: 'John', last_name: 'Doe', email: 'john@example.com', customer_profiles: [{}] },
+        { id: 2, first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com', customer_profiles: [{}] }
+      ])
     }
-  }
+    
+    if (queryStr.includes('INSERT INTO customers')) {
+      return Promise.resolve([
+        { id: 3, first_name: 'New', last_name: 'Customer', email: 'new@example.com' }
+      ])
+    }
+    
+    if (queryStr.includes('INSERT INTO customer_profiles') && queryStr.includes('customer_id')) {
+      return Promise.resolve([
+        { id: 1, customer_id: 3 }
+      ])
+    }
+    
+    if (queryStr.includes('UPDATE customers')) {
+      return Promise.resolve([
+        { id: 1, first_name: 'Updated', last_name: 'Customer', email: 'john@example.com' }
+      ])
+    }
+    
+    return Promise.resolve([])
+  })
+  
+  return { sql: mockSql }
 })
 
 import { customerService } from '../../services/customerService'
@@ -79,7 +68,7 @@ describe('CustomerService - Comprehensive', () => {
       
       const result = await customerService.create(customerData)
       
-      expect(result).toHaveProperty('id', '3')
+      expect(result).toHaveProperty('id', 3)
       expect(result).toHaveProperty('first_name', 'New')
     })
 
@@ -88,7 +77,7 @@ describe('CustomerService - Comprehensive', () => {
       
       const result = await customerService.update('1', updateData)
       
-      expect(result).toHaveProperty('id', '1')
+      expect(result).toHaveProperty('id', 1)
       expect(result).toHaveProperty('first_name', 'Updated')
     })
   })

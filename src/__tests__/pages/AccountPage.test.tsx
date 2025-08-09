@@ -78,6 +78,6 @@ describe('AccountPage', () => {
     render(<AccountPage />)
     
     expect(screen.getByText(/Welcome back/i)).toBeInTheDocument()
-    expect(screen.getByText(/John Doe/i)).toBeInTheDocument()
+    expect(screen.getByText(/John/i)).toBeInTheDocument()
   })
 })

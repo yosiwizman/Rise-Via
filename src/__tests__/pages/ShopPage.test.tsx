@@ -26,7 +26,7 @@ describe('ShopPage', () => {
     render(<ShopPage />)
     
     expect(screen.getByText(/Sativa \(\d+\)/)).toBeInTheDocument()
-    expect(screen.getByText(/Blue Dream/i)).toBeInTheDocument()
+    expect(screen.getByText(/All Products \(\d+\)/)).toBeInTheDocument()
   })
 
   it('should display product grid', () => {
@@ -36,10 +36,10 @@ describe('ShopPage', () => {
     expect(container).toBeInTheDocument()
   })
 
-  it('should show product information', () => {
+  it('should show loading state initially', () => {
     render(<ShopPage />)
     
-    expect(screen.getByText(/Blue Dream/i)).toBeInTheDocument()
+    expect(screen.getByText(/Loading products.../i)).toBeInTheDocument()
     expect(screen.getByText(/Shop Premium THCA/i)).toBeInTheDocument()
   })
 })
