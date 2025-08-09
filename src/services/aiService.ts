@@ -1,6 +1,4 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
+import OpenAI from 'openai';
 import productsData from '../data/products.json';
 
 const openaiApiKey = import.meta.env?.VITE_OPENAI_API_KEY;
@@ -10,36 +8,36 @@ if (!openaiApiKey) {
 }
 
 export const aiService = {
-  model: openaiApiKey ? new ChatOpenAI({
-    openAIApiKey: openaiApiKey,
-    modelName: 'gpt-3.5-turbo',
-    temperature: 0.7,
+  client: openaiApiKey ? new OpenAI({
+    apiKey: openaiApiKey,
+    dangerouslyAllowBrowser: true
   }) : null,
 
   async getCannabisInfo(query: string): Promise<string> {
-    if (!this.model) throw new Error('AI service not configured');
-    
-    const template = PromptTemplate.fromTemplate(`
-      You are a cannabis expert assistant for RiseViA. Answer questions about cannabis, THCA, strains, and effects.
-      Always include legal disclaimers and compliance information.
-      
-      Available strains: {strains}
-      
-      Question: {question}
-      
-      Answer with accurate, compliant information:
-    `);
-
-    const chain = template.pipe(this.model).pipe(new StringOutputParser());
+    if (!this.client) throw new Error('AI service not configured');
     
     const strainInfo = productsData.products.map(p => 
       `${p.name} (${p.strainType}, ${p.thcaPercentage}% THCA): ${p.description}`
     ).join('\n');
 
-    return await chain.invoke({
-      strains: strainInfo,
-      question: query
+    const prompt = `You are a cannabis expert assistant for RiseViA. Answer questions about cannabis, THCA, strains, and effects.
+Always include legal disclaimers and compliance information.
+
+Available strains:
+${strainInfo}
+
+Question: ${query}
+
+Answer with accurate, compliant information:`;
+
+    const response = await this.client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500
     });
+
+    return response.choices[0]?.message?.content || 'I apologize, but I cannot provide a response at this time.';
   },
 
   async getStrainRecommendation(preferences: {
@@ -60,57 +58,56 @@ export const aiService = {
   },
 
   async generateProductDescription(productName: string, strainType: string, effects: string[]): Promise<string> {
-    if (!this.model) throw new Error('AI service not configured');
+    if (!this.client) throw new Error('AI service not configured');
     
-    const template = PromptTemplate.fromTemplate(`
-      Generate a compliant product description for a cannabis strain with these details:
-      - Name: {name}
-      - Type: {type}
-      - Effects: {effects}
-      
-      Requirements:
-      - No medical claims
-      - Include legal disclaimers
-      - Age-appropriate content
-      - Professional tone
-      - 2-3 sentences maximum
-      
-      Description:
-    `);
+    const prompt = `Generate a compliant product description for a cannabis strain with these details:
+- Name: ${productName}
+- Type: ${strainType}
+- Effects: ${effects.join(', ')}
 
-    const chain = template.pipe(this.model).pipe(new StringOutputParser());
-    
-    return await chain.invoke({
-      name: productName,
-      type: strainType,
-      effects: effects.join(', ')
+Requirements:
+- No medical claims
+- Include legal disclaimers
+- Age-appropriate content
+- Professional tone
+- 2-3 sentences maximum
+
+Description:`;
+
+    const response = await this.client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 200
     });
+
+    return response.choices[0]?.message?.content || 'Unable to generate description at this time.';
   },
 
   async generateBlogPost(topic: string, keywords: string[]): Promise<{ title: string; content: string }> {
-    if (!this.model) throw new Error('AI service not configured');
+    if (!this.client) throw new Error('AI service not configured');
     
-    const template = PromptTemplate.fromTemplate(`
-      Create a compliant blog post about: {topic}
-      Keywords to include: {keywords}
-      
-      Requirements:
-      - Educational content only
-      - No medical claims
-      - Include legal disclaimers
-      - SEO-friendly
-      - 300-500 words
-      
-      Format as JSON with "title" and "content" fields:
-    `);
+    const prompt = `Create a compliant blog post about: ${topic}
+Keywords to include: ${keywords.join(', ')}
 
-    const chain = template.pipe(this.model).pipe(new StringOutputParser());
-    
-    const result = await chain.invoke({
-      topic,
-      keywords: keywords.join(', ')
+Requirements:
+- Educational content only
+- No medical claims
+- Include legal disclaimers
+- SEO-friendly
+- 300-500 words
+
+Format as JSON with "title" and "content" fields:`;
+
+    const response = await this.client.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 800
     });
 
+    const result = response.choices[0]?.message?.content || '';
+    
     try {
       return JSON.parse(result);
     } catch {
