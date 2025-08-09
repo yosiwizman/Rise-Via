@@ -4,6 +4,20 @@ import { HomePage } from '../pages/HomePage'
 import { ShopPage } from '../pages/ShopPage'
 import { AdminPage } from '../pages/AdminPage'
 
+vi.mock('embla-carousel-react', () => ({
+  default: vi.fn(() => [
+    vi.fn(), // carouselRef
+    {
+      canScrollPrev: vi.fn(() => false),
+      canScrollNext: vi.fn(() => false),
+      scrollPrev: vi.fn(),
+      scrollNext: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn()
+    }
+  ])
+}))
+
 vi.mock('../utils/imageOptimization', () => ({
   ImageOptimizer: {
     getOptimizedImageSources: vi.fn(() => ({ webp: [], fallback: [] })),
@@ -38,7 +52,8 @@ describe('Critical Routes', () => {
 
   it('HomePage contains expected content', () => {
     render(<HomePage onNavigate={mockNavigate} />)
-    expect(screen.getByText(/RiseViA/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/RiseViA/i)).toHaveLength(2)
+    expect(screen.getByText('Premium THCA Cannabis Products')).toBeInTheDocument()
   })
 
   it('ShopPage contains shop-related content', () => {

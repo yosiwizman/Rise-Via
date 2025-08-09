@@ -13,16 +13,36 @@ vi.mock('./lib/supabase', () => ({
       getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
       signInWithPassword: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
       signOut: vi.fn(() => Promise.resolve({ error: null })),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } }
+      })),
     },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        eq: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+          order: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        })),
+        order: vi.fn(() => Promise.resolve({ data: [], error: null })),
       })),
-      insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      update: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      delete: vi.fn(() => Promise.resolve({ data: null, error: null })),
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+      })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+          })),
+        })),
+      })),
+      delete: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: null, error: null })),
+      })),
     })),
   },
+  supabaseAdmin: null,
 }))
 
 Object.defineProperty(import.meta, 'env', {
