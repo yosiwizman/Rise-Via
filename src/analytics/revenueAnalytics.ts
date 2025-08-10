@@ -84,8 +84,13 @@ export class RevenueAnalyticsService {
     }
   }
 
-  public getRevenueMetrics(): RevenueMetrics {
+  public async getRevenueMetrics(): Promise<RevenueMetrics> {
     try {
+      const realMetrics = await this.getRealRevenueMetrics();
+      if (realMetrics) {
+        return realMetrics;
+      }
+
       const stored = localStorage.getItem(this.REVENUE_METRICS_KEY);
       if (stored) {
         return JSON.parse(stored);
@@ -95,6 +100,15 @@ export class RevenueAnalyticsService {
     }
 
     return this.calculateDefaultMetrics();
+  }
+
+  private async getRealRevenueMetrics(): Promise<RevenueMetrics | null> {
+    try {
+      return null;
+    } catch (error) {
+      console.error('Error getting real revenue metrics:', error);
+      return null;
+    }
   }
 
   private calculateDefaultMetrics(): RevenueMetrics {
@@ -365,8 +379,8 @@ export class RevenueAnalyticsService {
     console.log('🗑️ Cleared all revenue analytics data');
   }
 
-  public exportRevenueReport(): string {
-    const metrics = this.getRevenueMetrics();
+  public async exportRevenueReport(): Promise<string> {
+    const metrics = await this.getRevenueMetrics();
     const transactions = this.getTransactions();
     
     return JSON.stringify({

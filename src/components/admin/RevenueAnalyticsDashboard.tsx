@@ -92,7 +92,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
   const loadMetrics = async () => {
     setLoading(true);
     try {
-      const revenueMetrics = revenueAnalytics.getRevenueMetrics();
+      const revenueMetrics = await revenueAnalytics.getRevenueMetrics();
       setMetrics(revenueMetrics);
       setLastUpdated(new Date());
     } catch (error) {
@@ -102,9 +102,9 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
     }
   };
 
-  const handleExportReport = () => {
+  const handleExportReport = async () => {
     try {
-      const report = revenueAnalytics.exportRevenueReport();
+      const report = await revenueAnalytics.exportRevenueReport();
       const blob = new Blob([report], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

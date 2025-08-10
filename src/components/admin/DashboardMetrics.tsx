@@ -75,7 +75,7 @@ export const DashboardMetrics: React.FC = () => {
       
       const transactions = JSON.parse(localStorage.getItem('risevia_transactions') || '[]');
       
-      const revenueMetrics = revenueAnalytics.getRevenueMetrics();
+      const revenueMetrics = await revenueAnalytics.getRevenueMetrics();
       const customerAnalytics = customerIntelligence.getCustomerIntelligenceAnalytics(transactions);
       const inventoryAnalytics = inventoryManagement.getInventoryAnalytics(transactions);
       
