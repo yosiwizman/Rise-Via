@@ -12,8 +12,10 @@ export type MainTabParamList = {
   Home: undefined;
   Shop: { productId?: string } | undefined;
   Cart: undefined;
+  Wishlist: undefined;
   Account: undefined;
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  ProductDetail: { productId: string };
 };
 
 export type AuthStackParamList = {

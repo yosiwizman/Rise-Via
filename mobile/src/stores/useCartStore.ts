@@ -1,175 +1,228 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CartState, CartItem, Product, ApiResponse } from '../types/shared';
+import type { Product, CartItem } from '../types/shared';
 import { api } from '../services/api';
 
-const asyncStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    try {
-      return await AsyncStorage.getItem(name);
-    } catch (error) {
-      console.error('AsyncStorage error:', error);
-      return null;
-    }
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    try {
-      await AsyncStorage.setItem(name, value);
-    } catch (error) {
-      console.error('AsyncStorage error:', error);
-    }
-  },
-  removeItem: async (name: string): Promise<void> => {
-    try {
-      await AsyncStorage.removeItem(name);
-    } catch (error) {
-      console.error('AsyncStorage error:', error);
-    }
-  },
-};
+interface CartState {
+  items: CartItem[];
+  isLoading: boolean;
+  error: string | null;
+  itemCount: number;
+  totalPrice: number;
+  addItem: (product: Product, quantity: number) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  loadCart: () => Promise<void>;
+  syncWithServer: () => Promise<void>;
+  updateTotals: () => void;
+  getCartTotal: () => number;
+}
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      total: 0,
+      isLoading: false,
+      error: null,
       itemCount: 0,
+      totalPrice: 0,
 
-      addItem: async (product: Product, quantity: number = 1) => {
-        const currentItems = get().items;
-        const existingItem = currentItems.find(item => item.product.id === product.id);
-
-        if (existingItem) {
-          await get().updateQuantity(product.id, existingItem.quantity + quantity);
-        } else {
-          const newItem: CartItem = {
-            id: `${product.id}-${Date.now()}`,
-            product,
-            quantity,
-            added_at: new Date().toISOString(),
-          };
-
-          const newItems = [...currentItems, newItem];
-          const newTotal = calculateTotal(newItems);
-          const newItemCount = calculateItemCount(newItems);
-
-          set({
-            items: newItems,
-            total: newTotal,
-            itemCount: newItemCount,
-          });
-
-          try {
-            await api.addToCart(product.id, quantity);
-          } catch (error) {
-            console.error('Failed to sync cart with server:', error);
+      addItem: async (product: Product, quantity: number) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await api.addToCart(product.id, quantity);
+          if (response.success) {
+            const existingItem = get().items.find(item => item.product.id === product.id);
+            
+            if (existingItem) {
+              set(state => ({
+                items: state.items.map(item =>
+                  item.product.id === product.id
+                    ? { ...item, quantity: item.quantity + quantity }
+                    : item
+                ),
+                isLoading: false
+              }));
+            } else {
+              const newItem: CartItem = {
+                id: `${product.id}-${Date.now()}`,
+                product,
+                quantity,
+                added_at: new Date().toISOString()
+              };
+              
+              set(state => ({
+                items: [...state.items, newItem],
+                isLoading: false
+              }));
+            }
+            
+            get().updateTotals();
+          } else {
+            throw new Error('Failed to add to cart');
           }
+        } catch (error) {
+          set({ 
+            error: 'Failed to add item to cart',
+            isLoading: false 
+          });
+          throw error;
         }
       },
 
-      removeItem: async (productId: string) => {
-        const currentItems = get().items;
-        const newItems = currentItems.filter(item => item.product.id !== productId);
-        const newTotal = calculateTotal(newItems);
-        const newItemCount = calculateItemCount(newItems);
-
-        set({
-          items: newItems,
-          total: newTotal,
-          itemCount: newItemCount,
-        });
-
+      removeItem: async (itemId: string) => {
         try {
-          await api.removeFromCart(productId);
+          set({ isLoading: true, error: null });
+          
+          const response = await api.removeFromCart(itemId);
+          if (response.success) {
+            set(state => ({
+              items: state.items.filter(item => item.id !== itemId),
+              isLoading: false
+            }));
+            get().updateTotals();
+          } else {
+            throw new Error('Failed to remove from cart');
+          }
         } catch (error) {
-          console.error('Failed to sync cart with server:', error);
+          set({ 
+            error: 'Failed to remove item from cart',
+            isLoading: false 
+          });
+          throw error;
         }
       },
 
-      updateQuantity: async (productId: string, quantity: number) => {
-        if (quantity <= 0) {
-          await get().removeItem(productId);
-          return;
-        }
-
-        const currentItems = get().items;
-        const newItems = currentItems.map(item =>
-          item.product.id === productId
-            ? { ...item, quantity }
-            : item
-        );
-        const newTotal = calculateTotal(newItems);
-        const newItemCount = calculateItemCount(newItems);
-
-        set({
-          items: newItems,
-          total: newTotal,
-          itemCount: newItemCount,
-        });
-
+      updateQuantity: async (itemId: string, quantity: number) => {
         try {
-          await api.updateCartItem(productId, quantity);
+          set({ isLoading: true, error: null });
+          
+          if (quantity <= 0) {
+            await get().removeItem(itemId);
+            return;
+          }
+          
+          const response = await api.updateCartItem(itemId, quantity);
+          if (response.success) {
+            set(state => ({
+              items: state.items.map(item =>
+                item.id === itemId ? { ...item, quantity } : item
+              ),
+              isLoading: false
+            }));
+            get().updateTotals();
+          } else {
+            throw new Error('Failed to update cart item');
+          }
         } catch (error) {
-          console.error('Failed to sync cart with server:', error);
+          set({ 
+            error: 'Failed to update cart item',
+            isLoading: false 
+          });
+          throw error;
         }
       },
 
       clearCart: async () => {
-        set({
-          items: [],
-          total: 0,
-          itemCount: 0,
-        });
-
         try {
-          await api.clearCart();
+          set({ isLoading: true, error: null });
+          
+          const response = await api.clearCart();
+          if (response.success) {
+            set({ 
+              items: [], 
+              itemCount: 0, 
+              totalPrice: 0, 
+              isLoading: false 
+            });
+          } else {
+            throw new Error('Failed to clear cart');
+          }
         } catch (error) {
-          console.error('Failed to sync cart with server:', error);
+          set({ 
+            error: 'Failed to clear cart',
+            isLoading: false 
+          });
+          throw error;
         }
       },
 
-      getCartTotal: () => {
-        return get().total;
+      loadCart: async () => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await api.getCart();
+          if (response.success && response.data) {
+            set({ 
+              items: response.data,
+              isLoading: false 
+            });
+            get().updateTotals();
+          } else {
+            throw new Error('Failed to load cart');
+          }
+        } catch {
+          set({ 
+            error: 'Failed to load cart',
+            isLoading: false 
+          });
+        }
       },
+
+      syncWithServer: async () => {
+        try {
+          const response = await api.getCart();
+          
+          if (response.success && response.data) {
+            set({ items: response.data });
+            get().updateTotals();
+          }
+        } catch {
+          // Handle error silently
+        }
+      },
+
+      updateTotals: () => {
+        const { items } = get();
+        const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+        
+        set({ itemCount, totalPrice });
+      },
+
+      getCartTotal: () => {
+        return get().totalPrice;
+      }
     }),
     {
       name: 'cart-storage',
-      storage: createJSONStorage(() => asyncStorage),
-      partialize: (state) => ({
-        items: state.items,
-        total: state.total,
-        itemCount: state.itemCount,
-      }),
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ items: state.items }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.updateTotals();
+        }
+      },
     }
   )
 );
 
-function calculateTotal(items: CartItem[]): number {
-  return items.reduce((total, item) => {
-    return total + (item.product.price * item.quantity);
-  }, 0);
-}
-
-function calculateItemCount(items: CartItem[]): number {
-  return items.reduce((count, item) => count + item.quantity, 0);
-}
-
 export const syncCartWithServer = async () => {
   try {
-    const response = await api.getCart() as ApiResponse<{ items: CartItem[] }>;
+    const response = await api.getCart();
+    
     if (response.success && response.data) {
-      const serverItems = response.data.items || [];
-      const total = calculateTotal(serverItems);
-      const itemCount = calculateItemCount(serverItems);
-
-      useCartStore.setState({
-        items: serverItems,
-        total,
-        itemCount,
+      const cartStore = useCartStore.getState();
+      cartStore.clearCart();
+      
+      response.data.forEach((item: CartItem) => {
+        cartStore.addItem(item.product, item.quantity);
       });
     }
-  } catch (error) {
-    console.error('Failed to sync cart with server:', error);
+  } catch {
+    // Handle error silently
   }
 };

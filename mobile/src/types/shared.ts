@@ -1,19 +1,37 @@
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  date_of_birth: string;
+  created_at: string;
+  updated_at: string;
+  membership_tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  loyalty_points: number;
+  is_verified: boolean;
+  preferences: {
+    newsletter: boolean;
+    sms_notifications: boolean;
+    product_recommendations: boolean;
+  };
+}
 
 export interface Product {
   id: string;
   name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  category: string;
   strain: string;
   type: 'indica' | 'sativa' | 'hybrid';
   thca_percentage: number;
-  cbd_percentage: number;
-  price: number;
-  image_url: string;
-  description: string;
+  cbd_percentage?: number;
   effects: string[];
   flavors: string[];
-  lab_results?: LabResult;
+  inventory_status: 'in_stock' | 'low_stock' | 'out_of_stock';
   inventory_count: number;
-  is_featured: boolean;
+  lab_results: LabResult[];
   created_at: string;
   updated_at: string;
 }
@@ -21,9 +39,9 @@ export interface Product {
 export interface LabResult {
   id: string;
   product_id: string;
+  batch_number: string;
   test_date: string;
   lab_name: string;
-  batch_number: string;
   cannabinoids: {
     thca: number;
     thc: number;
@@ -36,11 +54,13 @@ export interface LabResult {
     percentage: number;
   }[];
   contaminants: {
-    pesticides: 'pass' | 'fail';
-    heavy_metals: 'pass' | 'fail';
-    microbials: 'pass' | 'fail';
-    residual_solvents: 'pass' | 'fail';
+    pesticides: boolean;
+    heavy_metals: boolean;
+    microbials: boolean;
+    residual_solvents: boolean;
   };
+  potency_verified: boolean;
+  safety_verified: boolean;
   certificate_url: string;
 }
 
@@ -51,128 +71,23 @@ export interface CartItem {
   added_at: string;
 }
 
-export interface Customer {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  date_of_birth: string;
-  state: string;
-  is_verified: boolean;
-  membership_tier: 'bronze' | 'silver' | 'gold' | 'platinum';
-  loyalty_points: number;
-  total_spent: number;
-  referral_code: string;
-  referred_by?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Order {
-  id: string;
-  customer_id: string;
-  order_number: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  items: OrderItem[];
-  subtotal: number;
-  tax: number;
-  shipping: number;
-  total: number;
-  payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
-  shipping_address: Address;
-  billing_address: Address;
-  tracking_number?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OrderItem {
+export interface Review {
   id: string;
   product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
+  user_id: string;
+  user_name: string;
+  rating: number;
+  title: string;
+  comment: string;
+  created_at: string;
+  verified_purchase: boolean;
 }
 
-export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  country: string;
-}
-
-export interface WishlistItem {
-  id: string;
-  customer_id: string;
-  product_id: string;
-  product: Product;
-  added_at: string;
-}
-
-export interface PaymentMethod {
-  id: string;
-  name: string;
-  type: 'posabit' | 'aeropay' | 'hypur' | 'crypto' | 'ach';
-  description: string;
-  fees: {
-    percentage: number;
-    fixed: number;
-  };
-  processing_time: string;
-  is_available: boolean;
-  cannabis_compliant: boolean;
-}
-
-export interface ComplianceCheck {
-  age_verified: boolean;
-  state_allowed: boolean;
-  purchase_limits: {
-    daily_limit: number;
-    monthly_limit: number;
-    current_usage: number;
-  };
-  warnings: string[];
-  restrictions: string[];
-}
-
-export interface AIResponse {
-  message: string;
-  type: 'chat' | 'recommendation' | 'product_info' | 'compliance';
-  products?: Product[];
-  confidence: number;
-  sources?: string[];
-}
-
-export interface ApiResponse<T> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-  };
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  is_verified: boolean;
-  membership_tier: string;
-  loyalty_points: number;
 }
 
 export interface LoginCredentials {
@@ -183,22 +98,24 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  first_name: string;
-  last_name: string;
+  name: string;
   phone?: string;
-  date_of_birth?: string;
-  state?: string;
-  referral_code?: string;
+  date_of_birth: string;
 }
 
 export interface CartState {
   items: CartItem[];
-  total: number;
+  isLoading: boolean;
+  error: string | null;
   itemCount: number;
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
+  totalPrice: number;
+  addItem: (product: Product, quantity: number) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  loadCart: () => Promise<void>;
+  syncWithServer: () => Promise<void>;
+  updateTotals: () => void;
   getCartTotal: () => number;
 }
 
@@ -206,45 +123,28 @@ export interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  loadUser: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateProfile: (userData: Partial<AuthUser>) => Promise<void>;
 }
 
-export interface AppState {
-  isAgeVerified: boolean;
-  selectedState: string;
-  complianceData: ComplianceCheck | null;
-  setAgeVerified: (verified: boolean) => void;
-  setSelectedState: (state: string) => void;
-  setComplianceData: (data: ComplianceCheck) => void;
-  checkCompliance: (state: string) => Promise<void>;
-}
-
-export interface StrainEffect {
-  name: string;
-  intensity: 'low' | 'medium' | 'high';
-  description: string;
-}
-
-export interface TerpeneProfile {
-  name: string;
-  percentage: number;
-  effects: string[];
-  aroma: string;
-}
-
-export interface CannabisState {
-  name: string;
-  code: string;
+export interface StateCompliance {
+  state: string;
   is_legal: boolean;
   medical_only: boolean;
-  purchase_limits: {
-    flower: number; // grams
-    concentrates: number; // grams
-    edibles: number; // mg THC
-  };
+  recreational_legal: boolean;
+  possession_limit: string;
+  purchase_limit: string;
   age_requirement: number;
   home_cultivation: boolean;
+}
+
+export interface AgeVerification {
+  is_verified: boolean;
+  verification_date: string;
+  state: string;
 }

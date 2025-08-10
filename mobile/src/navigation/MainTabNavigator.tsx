@@ -1,15 +1,36 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-
 import HomeScreen from '../screens/HomeScreen';
 import ShopScreen from '../screens/ShopScreen';
 import CartScreen from '../screens/CartScreen';
+import WishlistScreen from '../screens/WishlistScreen';
 import AccountScreen from '../screens/AccountScreen';
-
+import ProductDetailScreen from '../screens/ProductDetailScreen';
+import type { MainTabParamList } from '../types/navigation';
 import { useCartStore } from '../stores/useCartStore';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const Stack = createStackNavigator<MainTabParamList>();
+
+function ShopStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Shop" component={ShopScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function WishlistStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+    </Stack.Navigator>
+  );
+}
 
 export default function MainTabNavigator() {
   const { itemCount } = useCartStore();
@@ -26,6 +47,8 @@ export default function MainTabNavigator() {
             iconName = focused ? 'storefront' : 'storefront-outline';
           } else if (route.name === 'Cart') {
             iconName = focused ? 'bag' : 'bag-outline';
+          } else if (route.name === 'Wishlist') {
+            iconName = focused ? 'heart' : 'heart-outline';
           } else if (route.name === 'Account') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -37,15 +60,14 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: '#10b981',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarStyle: {
-          backgroundColor: '#1a1a1a',
-          borderTopColor: '#374151',
-          borderTopWidth: 1,
+          backgroundColor: '#374151',
+          borderTopColor: '#4b5563',
         },
         headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shop" component={ShopScreen} />
+      <Tab.Screen name="Shop" component={ShopStack} />
       <Tab.Screen 
         name="Cart" 
         component={CartScreen}
@@ -57,6 +79,7 @@ export default function MainTabNavigator() {
           },
         }}
       />
+      <Tab.Screen name="Wishlist" component={WishlistStack} />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );

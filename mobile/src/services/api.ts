@@ -1,251 +1,309 @@
+import * as SecureStore from 'expo-secure-store';
+import type { AuthUser, Product, Review, CartItem, ApiResponse, RegisterData } from '../types/shared';
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:5173/api' 
   : 'https://rise-via.vercel.app/api';
 
-export class ApiClient {
+class ApiClient {
   private baseURL: string;
   private authToken: string | null = null;
 
-  constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    this.loadAuthToken();
+  }
+
+  private async loadAuthToken() {
+    try {
+      this.authToken = await SecureStore.getItemAsync('auth_token');
+    } catch {
+      // Handle error silently
+    }
   }
 
   setAuthToken(token: string | null) {
     this.authToken = token;
   }
 
+  private async getHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (!this.authToken) {
+      try {
+        this.authToken = await SecureStore.getItemAsync('auth_token');
+      } catch {
+        // Handle error silently
+      }
+    }
+
+    if (this.authToken) {
+      headers.Authorization = `Bearer ${this.authToken}`;
+    }
+
+    return headers;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
-    }
-
+  ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(url, {
+      const headers = await this.getHeaders();
+      
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
-        headers,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
+        return {
+          success: false,
+          error: data.message || data.error || 'Request failed',
+        };
       }
 
-      return await response.json();
+      return {
+        success: true,
+        data,
+      };
     } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error',
+      };
     }
   }
 
-  async login(email: string, password: string): Promise<unknown> {
-    return this.request('/auth/login', {
+  async login(email: string, password: string): Promise<ApiResponse<{ user: AuthUser; token: string }>> {
+    const response = await this.request<{ user: AuthUser; token: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+
+    if (response.success && response.data) {
+      this.authToken = response.data.token;
+      await SecureStore.setItemAsync('auth_token', response.data.token);
+    }
+
+    return response;
   }
 
-  async register(userData: unknown): Promise<unknown> {
-    return this.request('/auth/register', {
+  async register(userData: RegisterData): Promise<ApiResponse<{ user: AuthUser; token: string }>> {
+    const response = await this.request<{ user: AuthUser; token: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
+
+    if (response.success && response.data) {
+      this.authToken = response.data.token;
+      await SecureStore.setItemAsync('auth_token', response.data.token);
+    }
+
+    return response;
   }
 
-  async logout(): Promise<unknown> {
-    return this.request('/auth/logout', {
+  async logout(): Promise<ApiResponse<void>> {
+    const response = await this.request<void>('/auth/logout', {
       method: 'POST',
     });
+
+    this.authToken = null;
+    await SecureStore.deleteItemAsync('auth_token');
+
+    return response;
   }
 
-  async refreshToken(): Promise<unknown> {
-    return this.request('/auth/refresh', {
-      method: 'POST',
-    });
+  async getProfile(): Promise<ApiResponse<AuthUser>> {
+    return this.request<AuthUser>('/auth/profile');
   }
 
-  async getMe(): Promise<unknown> {
-    return this.request('/auth/me');
+  async getMe(): Promise<ApiResponse<AuthUser>> {
+    return this.request<AuthUser>('/auth/me');
   }
 
-  async getProducts(params?: {
-    page?: number;
-    limit?: number;
+  async getProducts(filters?: {
+    category?: string;
     strain?: string;
     type?: string;
+    minPrice?: number;
+    maxPrice?: number;
     search?: string;
-  }) {
-    const queryString = params 
-      ? '?' + new URLSearchParams(params as Record<string, string>).toString()
-      : '';
+  }): Promise<ApiResponse<Product[]>> {
+    const params = new URLSearchParams();
     
-    return this.request(`/products${queryString}`);
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/products?${queryString}` : '/products';
+    
+    return this.request<Product[]>(endpoint);
   }
 
-  async getProduct(id: string) {
-    return this.request(`/products/${id}`);
+  async getProductDetails(productId: string): Promise<ApiResponse<Product>> {
+    return this.request<Product>(`/products/${productId}`);
   }
 
-  async getFeaturedProducts() {
-    return this.request('/products/featured');
+  async getProduct(id: string): Promise<ApiResponse<Product>> {
+    return this.request<Product>(`/products/${id}`);
   }
 
-  async getCart() {
-    return this.request('/cart');
+  async getProductReviews(productId: string): Promise<ApiResponse<Review[]>> {
+    return this.request<Review[]>(`/products/${productId}/reviews`);
   }
 
-  async addToCart(productId: string, quantity: number) {
-    return this.request('/cart/add', {
+  async getReviews(productId: string): Promise<ApiResponse<Review[]>> {
+    return this.request<Review[]>(`/products/${productId}/reviews`);
+  }
+
+  async addToCart(productId: string, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>('/cart/add', {
       method: 'POST',
       body: JSON.stringify({ productId, quantity }),
     });
   }
 
-  async updateCartItem(productId: string, quantity: number) {
-    return this.request('/cart/update', {
+  async getCart(): Promise<ApiResponse<CartItem[]>> {
+    return this.request<CartItem[]>('/cart');
+  }
+
+  async updateCartItem(itemId: string, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>(`/cart/${itemId}`, {
       method: 'PUT',
-      body: JSON.stringify({ productId, quantity }),
+      body: JSON.stringify({ quantity }),
     });
   }
 
-  async removeFromCart(productId: string) {
-    return this.request(`/cart/remove/${productId}`, {
+  async removeFromCart(itemId: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/cart/${itemId}`, {
       method: 'DELETE',
     });
   }
 
-  async clearCart() {
-    return this.request('/cart/clear', {
+  async clearCart(): Promise<ApiResponse<void>> {
+    return this.request<void>('/cart', {
       method: 'DELETE',
     });
   }
 
-  async getOrders() {
-    return this.request('/orders');
-  }
-
-  async getOrder(id: string) {
-    return this.request(`/orders/${id}`);
-  }
-
-  async createOrder(orderData: unknown) {
-    return this.request('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
-  }
-
-  async getWishlist() {
-    return this.request('/wishlist');
-  }
-
-  async addToWishlist(productId: string) {
-    return this.request('/wishlist/add', {
+  async addToWishlist(productId: string): Promise<ApiResponse<void>> {
+    return this.request<void>('/wishlist/add', {
       method: 'POST',
       body: JSON.stringify({ productId }),
     });
   }
 
-  async removeFromWishlist(productId: string) {
-    return this.request(`/wishlist/remove/${productId}`, {
+  async getWishlist(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/wishlist');
+  }
+
+  async removeFromWishlist(productId: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/wishlist/${productId}`, {
       method: 'DELETE',
     });
   }
 
-  async chatWithAI(message: string, context?: unknown) {
-    return this.request('/ai-chat', {
+  async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/products/featured');
+  }
+
+  async getCategories(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/products/categories');
+  }
+
+  async getStrains(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/products/strains');
+  }
+
+  async verifyAge(dateOfBirth: string, state: string): Promise<ApiResponse<{ verified: boolean }>> {
+    return this.request<{ verified: boolean }>('/compliance/verify-age', {
       method: 'POST',
-      body: JSON.stringify({ message, context }),
+      body: JSON.stringify({ dateOfBirth, state }),
     });
   }
 
-  async getStrainRecommendations(preferences: unknown) {
-    return this.request('/ai/recommendations', {
+  async checkStateCompliance(state: string): Promise<ApiResponse<{ allowed: boolean; restrictions?: string[] }>> {
+    return this.request<{ allowed: boolean; restrictions?: string[] }>(`/compliance/state/${state}`);
+  }
+
+  async getRecommendations(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/recommendations');
+  }
+
+  async searchProducts(query: string): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>(`/search?q=${encodeURIComponent(query)}`);
+  }
+
+  async getOrderHistory(): Promise<ApiResponse<unknown[]>> {
+    return this.request<unknown[]>('/orders');
+  }
+
+  async getOrder(orderId: string): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>(`/orders/${orderId}`);
+  }
+
+  async createOrder(orderData: unknown): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>('/orders', {
       method: 'POST',
-      body: JSON.stringify(preferences),
+      body: JSON.stringify(orderData),
     });
   }
 
-  async verifyAge(dateOfBirth: string) {
-    return this.request('/compliance/verify-age', {
-      method: 'POST',
-      body: JSON.stringify({ dateOfBirth }),
-    });
+  async getPaymentMethods(): Promise<ApiResponse<Array<{
+    id: string;
+    name: string;
+    type: string;
+    available: boolean;
+  }>>> {
+    return this.request<Array<{
+      id: string;
+      name: string;
+      type: string;
+      available: boolean;
+    }>>('/payment/methods');
   }
 
-  async checkStateCompliance(state: string) {
-    return this.request(`/compliance/state/${state}`);
-  }
-
-  async getPurchaseLimits(customerId: string) {
-    return this.request(`/compliance/limits/${customerId}`);
-  }
-
-  async getPaymentMethods() {
-    return this.request('/payments/methods');
-  }
-
-  async processPayment(paymentData: unknown) {
-    return this.request('/payments/process', {
+  async processPayment(paymentData: unknown): Promise<ApiResponse<{
+    success: boolean;
+    transactionId?: string;
+    redirectUrl?: string;
+    error?: string;
+  }>> {
+    return this.request<{
+      success: boolean;
+      transactionId?: string;
+      redirectUrl?: string;
+      error?: string;
+    }>('/payment/process', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
   }
 
-  async getPaymentStatus(transactionId: string) {
-    return this.request(`/payments/status/${transactionId}`);
+  async getPaymentStatus(transactionId: string): Promise<ApiResponse<{
+    status: 'pending' | 'completed' | 'failed' | 'cancelled';
+    amount?: number;
+    orderId?: string;
+  }>> {
+    return this.request<{
+      status: 'pending' | 'completed' | 'failed' | 'cancelled';
+      amount?: number;
+      orderId?: string;
+    }>(`/payment/status/${transactionId}`);
   }
 }
 
-// Export singleton instance
-export const apiClient = new ApiClient();
-
-export const api = {
-  login: (email: string, password: string) => apiClient.login(email, password),
-  register: (userData: unknown) => apiClient.register(userData),
-  logout: () => apiClient.logout(),
-  
-  getProducts: (params?: { page?: number; limit?: number; strain?: string; type?: string; search?: string }) => apiClient.getProducts(params),
-  getProduct: (id: string) => apiClient.getProduct(id),
-  getFeaturedProducts: () => apiClient.getFeaturedProducts(),
-  
-  getCart: () => apiClient.getCart(),
-  addToCart: (productId: string, quantity: number) => 
-    apiClient.addToCart(productId, quantity),
-  updateCartItem: (productId: string, quantity: number) => 
-    apiClient.updateCartItem(productId, quantity),
-  removeFromCart: (productId: string) => apiClient.removeFromCart(productId),
-  clearCart: () => apiClient.clearCart(),
-  
-  getOrders: () => apiClient.getOrders(),
-  getOrder: (id: string) => apiClient.getOrder(id),
-  createOrder: (orderData: unknown) => apiClient.createOrder(orderData),
-  
-  getWishlist: () => apiClient.getWishlist(),
-  addToWishlist: (productId: string) => apiClient.addToWishlist(productId),
-  removeFromWishlist: (productId: string) => apiClient.removeFromWishlist(productId),
-  
-  chatWithAI: (message: string, context?: unknown) => 
-    apiClient.chatWithAI(message, context),
-  getStrainRecommendations: (preferences: unknown) => 
-    apiClient.getStrainRecommendations(preferences),
-  
-  verifyAge: (dateOfBirth: string) => apiClient.verifyAge(dateOfBirth),
-  checkStateCompliance: (state: string) => apiClient.checkStateCompliance(state),
-  getPurchaseLimits: (customerId: string) => apiClient.getPurchaseLimits(customerId),
-  
-  getPaymentMethods: () => apiClient.getPaymentMethods(),
-  processPayment: (paymentData: unknown) => apiClient.processPayment(paymentData),
-  getPaymentStatus: (transactionId: string) => 
-    apiClient.getPaymentStatus(transactionId),
-};
+export const api = new ApiClient();
