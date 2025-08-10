@@ -19,14 +19,18 @@ export class AeropayProvider implements PaymentProvider {
         };
       }
 
-      const response = await fetch(`${this.apiUrl}/v1/payments`, {
+      const authToken = this.generateAuthToken();
+      
+      const response = await fetch(`${this.apiUrl}/v1/transaction`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'authorizationToken': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          amount: amount,
+          amount: Math.round(amount * 100),
+          merchantId: import.meta.env.VITE_AEROPAY_MERCHANT_ID || 'default',
+          uuid: crypto.randomUUID(),
           customer_email: customer.email,
           customer_name: customer.name,
           payment_type: 'bank_transfer',
@@ -54,6 +58,16 @@ export class AeropayProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  }
+
+  private generateAuthToken(): string {
+    const payload = {
+      api_key: this.apiKey,
+      timestamp: Date.now(),
+      exp: Math.floor(Date.now() / 1000) + 3600
+    };
+    
+    return Buffer.from(JSON.stringify(payload)).toString('base64');
   }
 
   async refund(transactionId: string): Promise<RefundResult> {

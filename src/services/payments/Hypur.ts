@@ -7,7 +7,7 @@ export class HypurProvider implements PaymentProvider {
 
   constructor(apiKey: string, testMode = false) {
     this.apiKey = apiKey;
-    this.apiUrl = testMode ? 'https://sandbox.hypur.com/api' : 'https://api.hypur.com';
+    this.apiUrl = testMode ? 'https://sandbox-api.hypur.com' : 'https://api.hypur.com';
   }
 
   async processPayment(amount: number, customer: Customer): Promise<PaymentResult> {
