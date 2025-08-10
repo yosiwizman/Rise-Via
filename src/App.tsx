@@ -39,7 +39,7 @@ function App() {
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
-    const path = window.location.pathname;
+    const path = window.location.pathname.toLowerCase();
     if (path === '/admin') {
       setCurrentPage('admin');
     } else if (path === '/shop') {
