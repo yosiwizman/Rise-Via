@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import QRCode from 'react-qr-code';
 import { Button } from './ui/button';
 import { Download, ExternalLink } from 'lucide-react';
@@ -21,6 +21,9 @@ export const QRCodeModal = ({ isOpen, onClose, coaUrl, batchId, strainName }: QR
           <DialogTitle className="text-xl gradient-text">
             Certificate of Analysis
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            View and download the Certificate of Analysis for {strainName} batch {batchId}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 text-center">
           <div>

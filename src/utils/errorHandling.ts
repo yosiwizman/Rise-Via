@@ -24,7 +24,7 @@ export class ErrorHandler {
   static handleError(
     error: Error,
     errorInfo?: ErrorInfo,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): void {
     const errorDetails: ErrorDetails = {
       message: error.message,
@@ -36,7 +36,7 @@ export class ErrorHandler {
       ...context
     };
 
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('Error caught by ErrorHandler:', error);
       console.error('Error details:', errorDetails);
       if (errorInfo?.componentStack) {
@@ -206,7 +206,7 @@ export class ErrorHandler {
     error: Error,
     endpoint: string,
     statusCode?: number,
-    responseData?: any
+    responseData?: Record<string, unknown>
   ): void {
     this.handleError(error, undefined, {
       type: 'api_error',

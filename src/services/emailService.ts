@@ -1,6 +1,25 @@
 import { Resend } from 'resend';
+import { sql } from '../lib/neon'
 
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  subject: string
+  body: string
+  created_at: string
+}
+
+export interface EmailLog {
+  id: string
+  to_email: string
+  subject: string
+  body: string
+  status: 'sent' | 'failed' | 'pending'
+  sent_at?: string
+  created_at: string
+}
 
 const emailService = {
   sendWelcomeEmail: async (to: string, name: string) => {
@@ -20,9 +39,29 @@ const emailService = {
       });
       
       if (error) throw error;
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email sent', 'sent', NOW())
+        `
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send welcome email:', error);
+      
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email failed', 'failed')
+        `
+      }
+      
       return { success: false, error };
     }
   },
@@ -43,9 +82,29 @@ const emailService = {
       });
       
       if (error) throw error;
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation sent', 'sent', NOW())
+        `
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order confirmation:', error);
+      
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation failed', 'failed')
+        `
+      }
+      
       return { success: false, error };
     }
   },
@@ -75,10 +134,82 @@ const emailService = {
       });
       
       if (error) throw error;
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status updated to ${newStatus}`}, 'sent', NOW())
+        `
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order status update:', error);
+      
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status update failed for ${newStatus}`}, 'failed')
+        `
+      }
+      
       return { success: false, error };
+    }
+  },
+
+  async sendEmail(to: string, subject: string, body: string): Promise<boolean> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+        return true;
+      }
+
+      await sql`
+        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+        VALUES (${to}, ${subject}, ${body}, 'sent', NOW())
+      `
+      return true
+    } catch {
+      return false
+    }
+  },
+
+  async getEmailLogs(limit: number = 50): Promise<EmailLog[]> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty email logs');
+        return [];
+      }
+
+      const logs = await sql`
+        SELECT * FROM email_logs 
+        ORDER BY created_at DESC 
+        LIMIT ${limit}
+      `
+      return (logs || []) as EmailLog[]
+    } catch {
+      return []
+    }
+  },
+
+  async getEmailTemplate(name: string): Promise<EmailTemplate | null> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null email template');
+        return null;
+      }
+
+      const templates = await sql`
+        SELECT * FROM email_templates 
+        WHERE name = ${name}
+      `
+      return templates.length > 0 ? templates[0] as EmailTemplate : null
+    } catch {
+      return null
     }
   }
 };

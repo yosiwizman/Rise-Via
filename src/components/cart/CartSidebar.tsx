@@ -14,7 +14,11 @@ interface CartSidebarProps {
 }
 
 export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) => {
-  const { items, getCartTotal, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { items, removeFromCart, updateQuantity, clearCart, stats } = useCart();
+  
+  if (!stats) {
+    return null;
+  }
 
   const CartItemComponent = ({ item }: { item: CartItem }) => {
     const [isUpdating, setIsUpdating] = useState(false);
@@ -43,10 +47,31 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
             <Badge className="bg-risevia-teal text-white text-xs">
               {item.thcaPercentage}% THCA
             </Badge>
+            {item.originalPrice && item.originalPrice !== item.price && (
+              <Badge className="bg-green-500 text-white text-xs">
+                {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
+              </Badge>
+            )}
             <span className="text-sm font-medium text-risevia-black dark:text-gray-100">
-              ${item.price.toFixed(2)}
+              ${(typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0).toFixed(2)}
             </span>
           </div>
+          
+          {item.quantityBreaks && item.quantityBreaks.length > 0 && (
+            <div className="mt-2 text-xs text-risevia-teal">
+              {item.quantityBreaks.map((qb, idx) => (
+                <div key={idx}>
+                  Buy {qb.minQuantity}+ for ${(typeof qb.discountedPrice === 'number' ? qb.discountedPrice : parseFloat(qb.discountedPrice) || 0).toFixed(2)} each
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {item.bundleSuggestions && item.bundleSuggestions.length > 0 && (
+            <div className="mt-2 text-xs text-risevia-purple">
+              {item.bundleSuggestions[0].message}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-end space-y-2">
           <div className="flex items-center space-x-2">
@@ -150,16 +175,45 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
 
         {items.length > 0 && (
           <div className="border-t p-4 bg-white dark:bg-gray-900 flex-shrink-0 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-risevia-black dark:text-gray-100">
-                Total:
-              </span>
-              <span className="text-xl font-bold gradient-text">
-                ${getCartTotal().toFixed(2)}
-              </span>
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress to free delivery</span>
+                <span>${(stats?.subtotal || 0).toFixed(2)} / $75.00</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-risevia-purple to-risevia-teal h-2 rounded-full transition-all"
+                  style={{ width: `${Math.min(((stats?.subtotal || 0) / 75) * 100, 100)}%` }}
+                />
+              </div>
             </div>
+            
+            {/* Tax and Total Breakdown */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal:</span>
+                <span>${(stats?.subtotal || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Tax (8%):</span>
+                <span>${(stats?.tax || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center border-t pt-2">
+                <span className="text-lg font-semibold text-risevia-black dark:text-gray-100">
+                  Total:
+                </span>
+                <span className="text-xl font-bold gradient-text">
+                  ${(stats?.totalValue || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="text-xs text-risevia-charcoal">
+                Estimated delivery: {stats?.estimatedDelivery || 'Next business day'}
+              </div>
+            </div>
+            
             <Button
-              className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg"
+              className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg touch-optimized"
               onClick={() => {
                 console.log('🚀 Proceeding to checkout...');
                 if (onNavigate) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Mail, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -51,51 +51,51 @@ export const OrderManager: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const mockOrders: Order[] = [
-    {
-      id: '1',
-      orderNumber: 'RV-2024-001',
-      customerEmail: 'john@example.com',
-      customerName: 'John Doe',
-      totalAmount: 89.99,
-      status: 'pending',
-      paymentStatus: 'paid',
-      createdAt: new Date().toISOString(),
-      items: [
-        { id: '1', productName: 'Blue Dream 3.5g', quantity: 1, price: 45.00, total: 45.00 },
-        { id: '2', productName: 'OG Kush 1g', quantity: 2, price: 22.50, total: 45.00 }
-      ]
-    },
-    {
-      id: '2',
-      orderNumber: 'RV-2024-002',
-      customerEmail: 'jane@example.com',
-      customerName: 'Jane Smith',
-      totalAmount: 125.50,
-      status: 'processing',
-      paymentStatus: 'paid',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      items: [
-        { id: '3', productName: 'Purple Haze 7g', quantity: 1, price: 125.50, total: 125.50 }
-      ]
-    },
-    {
-      id: '3',
-      orderNumber: 'RV-2024-003',
-      customerEmail: 'mike@example.com',
-      customerName: 'Mike Johnson',
-      totalAmount: 67.25,
-      status: 'shipped',
-      paymentStatus: 'paid',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      items: [
-        { id: '4', productName: 'Sour Diesel 3.5g', quantity: 1, price: 42.00, total: 42.00 },
-        { id: '5', productName: 'Green Crack 1g', quantity: 1, price: 25.25, total: 25.25 }
-      ]
-    }
-  ];
+  const loadOrders = useCallback(async () => {
+    const mockOrders: Order[] = [
+      {
+        id: '1',
+        orderNumber: 'RV-2024-001',
+        customerEmail: 'john@example.com',
+        customerName: 'John Doe',
+        totalAmount: 89.99,
+        status: 'pending',
+        paymentStatus: 'paid',
+        createdAt: new Date().toISOString(),
+        items: [
+          { id: '1', productName: 'Blue Dream 3.5g', quantity: 1, price: 45.00, total: 45.00 },
+          { id: '2', productName: 'OG Kush 1g', quantity: 2, price: 22.50, total: 45.00 }
+        ]
+      },
+      {
+        id: '2',
+        orderNumber: 'RV-2024-002',
+        customerEmail: 'jane@example.com',
+        customerName: 'Jane Smith',
+        totalAmount: 125.50,
+        status: 'processing',
+        paymentStatus: 'paid',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        items: [
+          { id: '3', productName: 'Purple Haze 7g', quantity: 1, price: 125.50, total: 125.50 }
+        ]
+      },
+      {
+        id: '3',
+        orderNumber: 'RV-2024-003',
+        customerEmail: 'mike@example.com',
+        customerName: 'Mike Johnson',
+        totalAmount: 67.25,
+        status: 'shipped',
+        paymentStatus: 'paid',
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        items: [
+          { id: '4', productName: 'Sour Diesel 3.5g', quantity: 1, price: 42.00, total: 42.00 },
+          { id: '5', productName: 'Green Crack 1g', quantity: 1, price: 25.25, total: 25.25 }
+        ]
+      }
+    ];
 
-  const loadOrders = async () => {
     try {
       setLoading(true);
       
@@ -106,11 +106,11 @@ export const OrderManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [loadOrders]);
 
   useEffect(() => {
     let filtered = orders;
@@ -246,7 +246,7 @@ export const OrderManager: React.FC = () => {
                         <div className="text-sm text-gray-600">{order.customerEmail}</div>
                       </div>
                     </td>
-                    <td className="p-3 font-semibold">${order.totalAmount.toFixed(2)}</td>
+                    <td className="p-3 font-semibold">${(typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount) || 0).toFixed(2)}</td>
                     <td className="p-3">
                       <Select
                         value={order.status}
@@ -344,7 +344,7 @@ export const OrderManager: React.FC = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Total</label>
-                  <p className="text-lg font-semibold">${selectedOrder.totalAmount.toFixed(2)}</p>
+                  <p className="text-lg font-semibold">${(typeof selectedOrder.totalAmount === 'number' ? selectedOrder.totalAmount : parseFloat(selectedOrder.totalAmount) || 0).toFixed(2)}</p>
                 </div>
               </div>
               
@@ -357,7 +357,7 @@ export const OrderManager: React.FC = () => {
                         <p className="font-medium">{item.productName}</p>
                         <p className="text-sm text-gray-600">Qty: {item.quantity} × ${item.price}</p>
                       </div>
-                      <p className="font-semibold">${item.total.toFixed(2)}</p>
+                      <p className="font-semibold">${(typeof item.total === 'number' ? item.total : parseFloat(item.total) || 0).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>

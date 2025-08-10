@@ -18,7 +18,8 @@ export const LoginPage = () => {
     lastName: '',
     phone: '',
     dateOfBirth: '',
-    referredBy: ''
+    referredBy: '',
+    rememberMe: false
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,6 +35,10 @@ export const LoginPage = () => {
       }
 
       if (result.success) {
+        if (isLogin && formData.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+          localStorage.setItem('rememberedEmail', formData.email);
+        }
         window.location.href = '/account';
       } else {
         alert(result.message || 'Authentication failed');
@@ -155,6 +160,28 @@ export const LoginPage = () => {
                 required
               />
             </div>
+
+            {isLogin && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.rememberMe || false}
+                    onChange={(e) => handleInputChange('rememberMe', e.target.checked.toString())}
+                    className="h-4 w-4 text-risevia-purple focus:ring-risevia-purple border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => window.location.href = '/?page=password-reset'}
+                  className="text-sm text-risevia-purple hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
             
             <Button 
               type="submit" 

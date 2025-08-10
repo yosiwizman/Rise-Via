@@ -1,12 +1,15 @@
 import React, { ReactElement } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
-import { CustomerProvider } from './contexts/CustomerContext'
+
+const MockCustomerProvider = ({ children }: { children: React.ReactNode }) => {
+  return <div data-testid="mock-customer-provider">{children}</div>
+}
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <CustomerProvider>
+    <MockCustomerProvider>
       {children}
-    </CustomerProvider>
+    </MockCustomerProvider>
   )
 }
 

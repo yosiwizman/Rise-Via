@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
+import { User, Star, Gift, ShoppingBag, Crown, Copy, Bell, Trash2 } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-import { supabase } from '../lib/supabase';
+import { orderService } from '../services/orderService';
+import { customerService } from '../services/customerService';
+import { membershipService, MEMBERSHIP_TIERS } from '../services/membershipService';
+import { priceAlertsService, PriceAlert } from '../services/priceAlertsService';
+import { safeToFixed } from '../utils/formatters';
 
 interface Order {
   id: string;
-  orderNumber: string;
+  orderNumber?: string;
   total: number;
   status: string;
-  createdAt: string;
-  items: Array<{
+  created_at: string;
+  items?: Array<{
     product: {
       name: string;
       images: string[];
@@ -29,65 +33,55 @@ interface LoyaltyTransaction {
   type: string;
   points: number;
   description: string;
-  createdAt: string;
+  created_at: string;
+}
+
+interface MembershipTier {
+  name: string;
+  benefits: string[];
 }
 
 export const AccountPage = () => {
   const { customer, isAuthenticated, loading } = useCustomer();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
-  const [membershipTier, setMembershipTier] = useState<any>(null);
+  const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCustomerData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchCustomerData = async () => {
+  const fetchCustomerData = useCallback(async () => {
     try {
       if (!customer?.id) return;
 
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
+      const ordersData = await orderService.getOrdersByCustomer(customer.id);
+      const transactionsData = await customerService.getLoyaltyTransactions(customer.id);
+      const alertsData = await priceAlertsService.getCustomerAlerts(customer.id);
 
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('loyalty_transactions')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
-
-      if (!ordersError && ordersData) {
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
-
-      if (!transactionsError && transactionsData) {
-        setLoyaltyTransactions(transactionsData);
-      } else {
-        setLoyaltyTransactions([]);
-      }
+      setOrders(ordersData || []);
+      setLoyaltyTransactions(transactionsData || []);
+      setPriceAlerts(alertsData || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
-      const mockMembershipTier = {
-        name: `${tierName} Member`,
-        benefits: [
-          '15% discount on all products',
-          'Free shipping on orders over $75',
-          'Priority customer support',
-          'Early access to new products'
-        ]
-      };
-      setMembershipTier(mockMembershipTier);
-    } catch (error) {
-      console.error('Failed to fetch customer data:', error);
+      const tierInfo = membershipService.getTierInfo(tierName);
+      
+      if (tierInfo) {
+        setMembershipTier({
+          name: `${tierInfo.name} Member`,
+          benefits: tierInfo.benefits
+        });
+      }
+    } catch {
+      // Silent fail per code standards
     }
-  };
+  }, [customer?.id, customer?.customer_profiles]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      startTransition(() => {
+        fetchCustomerData();
+      });
+    }
+  }, [isAuthenticated, fetchCustomerData]);
 
   const handleRedeemPoints = async () => {
     try {
@@ -103,32 +97,27 @@ export const AccountPage = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('customer_profiles')
-        .update({ 
-          loyalty_points: currentPoints - points 
-        })
-        .eq('customer_id', customer?.id);
+      const discountAmount = points / 20; // 100 points = $5
+      const updatedProfile = await customerService.updateCustomerProfile(customer!.id!, { 
+        loyalty_points: currentPoints - points 
+      });
 
-      if (error) {
+      if (!updatedProfile) {
         alert('Failed to redeem points');
         return;
       }
 
-      await supabase
-        .from('loyalty_transactions')
-        .insert([{
-          customer_id: customer?.id,
-          type: 'REDEEMED',
-          points: -points,
-          description: `Redeemed ${points} points for $${points / 20} discount`
-        }]);
+      await customerService.addLoyaltyTransaction({
+        customer_id: customer!.id!,
+        type: 'REDEEMED',
+        points: -points,
+        description: `Redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount`
+      });
 
-      alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
+      alert(`Successfully redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount! Use code LOYALTY${points} at checkout.`);
       setRedeemPoints('');
       fetchCustomerData();
-    } catch (error) {
-      console.error('Failed to redeem points:', error);
+    } catch {
       alert('Failed to redeem points');
     }
   };
@@ -138,6 +127,20 @@ export const AccountPage = () => {
     if (referralCode) {
       navigator.clipboard.writeText(referralCode);
       alert('Referral code copied to clipboard!');
+    }
+  };
+
+  const handleDeleteAlert = async (alertId: string) => {
+    try {
+      const success = await priceAlertsService.deleteAlert(alertId);
+      if (success) {
+        setPriceAlerts(prev => prev.filter(alert => alert.id !== alertId));
+        window.alert('Price alert removed successfully!');
+      } else {
+        window.alert('Failed to remove price alert');
+      }
+    } catch {
+      window.alert('Failed to remove price alert');
     }
   };
 
@@ -183,7 +186,7 @@ export const AccountPage = () => {
         <h1 className="text-3xl font-bold">My Account</h1>
         <div className="text-right">
           <div className="text-sm text-gray-600">Welcome back,</div>
-          <div className="font-semibold">{customer?.firstName} {customer?.lastName}</div>
+          <div className="font-semibold">{customer?.first_name} {customer?.last_name}</div>
         </div>
       </div>
 
@@ -199,11 +202,45 @@ export const AccountPage = () => {
                 {membershipTier?.name || 'Green Member'}
               </Badge>
               <div className="text-sm text-gray-600">
-                Lifetime Value: ${(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0).toFixed(2)}
+                Lifetime Value: ${safeToFixed(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0)}
               </div>
               <div className="text-sm text-gray-600">
                 Total Orders: {customer?.customer_profiles?.[0]?.total_orders || customer?.profile?.totalOrders || 0}
               </div>
+              
+              {/* Tier Progress */}
+              <div className="mt-3">
+                <div className="text-xs font-medium text-gray-700 mb-1">Next Tier Progress:</div>
+                {(() => {
+                  const currentValue = customer?.customer_profiles?.[0]?.lifetime_value || 0;
+                  const currentTierName = customer?.customer_profiles?.[0]?.membership_tier || 'GREEN';
+                  const currentTierIndex = MEMBERSHIP_TIERS.findIndex(t => t.name === currentTierName);
+                  const nextTier = MEMBERSHIP_TIERS[currentTierIndex + 1];
+                  
+                  if (!nextTier) {
+                    return <div className="text-xs text-purple-600 font-medium">🎉 Maximum tier achieved!</div>;
+                  }
+                  
+                  const progress = (currentValue / nextTier.threshold) * 100;
+                  const remaining = nextTier.threshold - currentValue;
+                  
+                  return (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>{nextTier.name}</span>
+                        <span>${safeToFixed(remaining, 0)} to go</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-risevia-purple to-risevia-teal h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {membershipTier?.benefits && (
                 <div className="mt-2">
                   <div className="text-xs font-medium text-gray-700 mb-1">Benefits:</div>
@@ -241,14 +278,14 @@ export const AccountPage = () => {
                 <Button 
                   onClick={handleRedeemPoints}
                   size="sm"
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
                   disabled={!redeemPoints || parseInt(redeemPoints) < 100}
                 >
-                  Redeem for ${parseInt(redeemPoints || '0') / 20} off
+                  Redeem for ${safeToFixed(parseInt(redeemPoints || '0') / 20)} off
                 </Button>
               </div>
               <div className="text-xs text-gray-500">
-                100 points = $5 discount
+                100 points = $5 discount • {customer?.customer_profiles?.[0]?.membership_tier === 'PLATINUM' ? 'Double points on purchases!' : 'Earn 1 point per $1 spent'}
               </div>
             </div>
           </CardContent>
@@ -281,7 +318,7 @@ export const AccountPage = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -300,16 +337,16 @@ export const AccountPage = () => {
                   <div key={order.id} className="border-b pb-3 last:border-b-0">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-medium">Order #{order.orderNumber}</div>
+                        <div className="font-medium">Order #{order.orderNumber || order.id}</div>
                         <div className="text-sm text-gray-600">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.created_at).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {order.items.length} item(s)
+                          {order.items?.length || 0} item(s)
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${order.total.toFixed(2)}</div>
+                        <div className="font-medium">${safeToFixed(order.total)}</div>
                         <Badge variant="outline">{order.status}</Badge>
                       </div>
                     </div>
@@ -339,7 +376,7 @@ export const AccountPage = () => {
                     <div>
                       <div className="text-sm font-medium">{transaction.description}</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
+                        {new Date(transaction.created_at).toLocaleDateString()}
                       </div>
                     </div>
                     <div className={`font-medium ${
@@ -350,6 +387,46 @@ export const AccountPage = () => {
                       {transaction.type === 'EARNED' || transaction.type === 'BONUS' ? '+' : ''}
                       {transaction.points}
                     </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bell className="w-5 h-5 mr-2" />
+              Price Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {priceAlerts.length === 0 ? (
+                <div className="text-center text-gray-500 py-4">
+                  No price alerts set. Visit product pages to set alerts when prices drop!
+                </div>
+              ) : (
+                priceAlerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{alert.product_name}</div>
+                      <div className="text-xs text-gray-600">
+                        Alert when price drops to ${safeToFixed(alert.target_price)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Current: ${safeToFixed(alert.current_price)}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteAlert(alert.id)}
+                      className="ml-2"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 ))
               )}

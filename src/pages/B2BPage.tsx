@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
-import { supabase } from '../lib/supabase';
 
 export const B2BPage = () => {
   const [formData, setFormData] = useState({
@@ -35,16 +34,19 @@ export const B2BPage = () => {
       });
 
       if (customerData) {
-        await supabase
-          .from('customer_profiles')
-          .update({
-            is_b2b: true,
-            business_name: formData.businessName,
-            business_license: formData.businessLicense,
-            membership_tier: 'SILVER',
-            segment: 'B2B'
-          })
-          .eq('customer_id', customerData.id);
+        await customerService.updateCustomerProfile(customerData.id, {
+          is_b2b: true,
+          business_name: formData.businessName,
+          business_license: formData.businessLicense,
+          membership_tier: 'SILVER',
+          segment: 'B2B'
+        } as {
+          is_b2b: boolean;
+          business_name: string;
+          business_license: string;
+          membership_tier: string;
+          segment: string;
+        });
       }
 
       if (customerData) {

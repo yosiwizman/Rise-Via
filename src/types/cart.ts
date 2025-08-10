@@ -1,14 +1,38 @@
+export interface QuantityBreak {
+  minQuantity: number;
+  discountPercentage: number;
+  discountedPrice: number;
+}
+
+export interface BundleSuggestion {
+  productId: string;
+  name: string;
+  additionalQuantity: number;
+  discountPercentage: number;
+  message: string;
+}
+
+export interface CartProgress {
+  current: number;
+  target: number;
+  benefit: string;
+  percentage: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
   name: string;
   price: number;
+  originalPrice: number;
   image: string;
   category: string;
   strainType: string;
   thcaPercentage: number;
   quantity: number;
   dateAdded: number;
+  quantityBreaks?: QuantityBreak[];
+  bundleSuggestions?: BundleSuggestion[];
 }
 
 export interface CartStats {
@@ -17,6 +41,10 @@ export interface CartStats {
   itemCount: number;
   dateCreated: number;
   lastUpdated: number;
+  subtotal: number;
+  tax: number;
+  estimatedDelivery: string;
+  progress: CartProgress;
 }
 
 export interface CartState {
@@ -28,7 +56,7 @@ export interface CartState {
 }
 
 export interface CartActions {
-  addToCart: (item: Omit<CartItem, 'id' | 'dateAdded' | 'quantity'>, quantity?: number) => void;
+  addToCart: (item: Omit<CartItem, 'id' | 'dateAdded' | 'quantity' | 'quantityBreaks' | 'bundleSuggestions'>, quantity?: number) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
