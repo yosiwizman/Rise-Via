@@ -139,7 +139,15 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
         items: cartItems
       };
       
-      const result = await paymentService.processPayment(paymentData, selectedMethod);
+      const result = await paymentService.processPayment(paymentData, selectedMethod, {
+        name: `${customerData.firstName} ${customerData.lastName}`,
+        address: {
+          street: customerData.address,
+          city: customerData.city,
+          state: customerData.state,
+          zipCode: customerData.zipCode
+        }
+      });
 
       if (result.success) {
         await orderService.updateOrderStatus(order.id, 'completed');

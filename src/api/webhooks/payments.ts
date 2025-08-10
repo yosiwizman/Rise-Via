@@ -1,6 +1,7 @@
 import { emailService } from '../../services/emailService';
+import crypto from 'crypto';
 
-interface WebhookPayload {
+interface WebhookPayload extends Record<string, unknown> {
   provider: string;
   event_type: string;
   transaction_id: string;
@@ -9,6 +10,7 @@ interface WebhookPayload {
   customer_email: string;
   order_number?: string;
   metadata?: Record<string, unknown>;
+  timestamp?: string;
 }
 
 export async function handlePaymentWebhook(payload: WebhookPayload) {
@@ -135,12 +137,19 @@ function updateOrderStatus(orderId: string, status: string, metadata: Record<str
 }
 
 export function createWebhookRoute() {
-  return async (req: { body: WebhookPayload }, res: { status: (code: number) => { json: (data: Record<string, unknown>) => void } }) => {
+  return async (req: { body: WebhookPayload; headers: Record<string, string> }, res: { status: (code: number) => { json: (data: Record<string, unknown>) => void } }) => {
     try {
       const payload = req.body as WebhookPayload;
       
       if (!payload.provider || !payload.event_type || !payload.transaction_id) {
         return res.status(400).json({ error: 'Invalid webhook payload' });
+      }
+
+      const signature = req.headers['x-signature'] || req.headers['signature'] || '';
+      const isValidSignature = validateWebhookSignature(payload.provider, payload, signature);
+      if (!isValidSignature) {
+        console.error('Invalid webhook signature for provider:', payload.provider);
+        return res.status(401).json({ error: 'Invalid signature' });
       }
 
       const result = await handlePaymentWebhook(payload);
@@ -154,18 +163,52 @@ export function createWebhookRoute() {
 }
 
 export function validateWebhookSignature(provider: string, payload: Record<string, unknown>, signature: string): boolean {
-  console.log('Validating webhook signature for', provider, 'with payload:', payload, 'and signature:', signature);
-  
-  switch (provider) {
-    case 'posabit':
-      return true;
-    case 'aeropay':
-      return true;
-    case 'hypur':
-      return true;
-    case 'stripe':
-      return true;
-    default:
-      return false;
+  try {
+    switch (provider) {
+      case 'posabit': {
+        const posSecret = process.env.VITE_POSABIT_SECRET || '';
+        if (!posSecret) return false;
+        
+        const posExpectedSignature = crypto
+          .createHmac('sha256', posSecret)
+          .update(JSON.stringify(payload))
+          .digest('hex');
+        return signature === `sha256=${posExpectedSignature}`;
+      }
+
+      case 'aeropay': {
+        const aeroSecret = process.env.VITE_AEROPAY_SECRET || '';
+        if (!aeroSecret) return false;
+        
+        const timestamp = payload.timestamp as string;
+        const aeroPayload = `${timestamp}.${JSON.stringify(payload)}`;
+        const aeroExpectedSignature = crypto
+          .createHmac('sha256', aeroSecret)
+          .update(aeroPayload)
+          .digest('hex');
+        return signature === aeroExpectedSignature;
+      }
+
+      case 'hypur': {
+        const hypSecret = process.env.VITE_HYPUR_SECRET || '';
+        if (!hypSecret) return false;
+        
+        const hypExpectedSignature = crypto
+          .createHmac('sha256', hypSecret)
+          .update(JSON.stringify(payload))
+          .digest('base64');
+        return signature === hypExpectedSignature;
+      }
+
+      case 'stripe':
+        return true;
+
+      default:
+        console.warn('Unknown payment provider for webhook validation:', provider);
+        return false;
+    }
+  } catch (error) {
+    console.error('Webhook signature validation error:', error);
+    return false;
   }
 }
