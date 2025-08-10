@@ -50,6 +50,35 @@ export interface AuditLog {
   complianceFlags: string[];
 }
 
+interface StateComplianceRow {
+  state: string;
+  is_legal: boolean;
+  age_requirement: number;
+  max_possession: string;
+  home_grow_allowed: boolean;
+  public_consumption: boolean;
+  driving_limit: string;
+  retail_sales_allowed: boolean;
+  delivery_allowed: boolean;
+  online_ordering_allowed: boolean;
+  tax_rate: string;
+  license_required: boolean;
+  last_updated: Date;
+}
+
+interface ComplianceAlertRow {
+  id: string;
+  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action_required: boolean;
+  deadline: Date | null;
+  affected_states: string;
+  created_at: Date;
+  resolved_at: Date | null;
+}
+
 interface ComplianceEvent {
   id?: string;
   event_type: 'age_verification' | 'state_block' | 'purchase_limit' | 'id_verification' | 'metrc_sync';
@@ -138,7 +167,7 @@ class ComplianceService {
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = result.map((row: any) => ({
+      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -151,7 +180,7 @@ class ComplianceService {
         onlineOrderingAllowed: row.online_ordering_allowed,
         taxRate: parseFloat(row.tax_rate),
         licenseRequired: row.license_required,
-        lastUpdated: row.last_updated
+        lastUpdated: row.last_updated.toISOString()
       }));
 
       this.complianceCache.clear();
@@ -293,17 +322,17 @@ class ComplianceService {
 
       const result = await query;
 
-      return result.map((row: any) => ({
+      return (result as ComplianceAlertRow[]).map((row) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
         title: row.title,
         description: row.description,
         actionRequired: row.action_required,
-        deadline: row.deadline,
+        deadline: row.deadline?.toISOString(),
         affectedStates: JSON.parse(row.affected_states || '[]'),
-        createdAt: row.created_at,
-        resolvedAt: row.resolved_at
+        createdAt: row.created_at.toISOString(),
+        resolvedAt: row.resolved_at?.toISOString()
       }));
     } catch (error) {
       console.error('Error fetching compliance alerts:', error);
