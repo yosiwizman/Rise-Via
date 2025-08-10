@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -8,6 +8,7 @@ import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
 import { orderService } from '../services/orderService';
 import { customerService } from '../services/customerService';
+import { membershipService, MEMBERSHIP_TIERS } from '../services/membershipService';
 
 interface Order {
   id: string;
@@ -56,16 +57,14 @@ export const AccountPage = () => {
       setLoyaltyTransactions(transactionsData || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
-      const mockMembershipTier = {
-        name: `${tierName} Member`,
-        benefits: [
-          '15% discount on all products',
-          'Free shipping on orders over $75',
-          'Priority customer support',
-          'Early access to new products'
-        ]
-      };
-      setMembershipTier(mockMembershipTier);
+      const tierInfo = membershipService.getTierInfo(tierName);
+      
+      if (tierInfo) {
+        setMembershipTier({
+          name: `${tierInfo.name} Member`,
+          benefits: tierInfo.benefits
+        });
+      }
     } catch {
       // Silent fail per code standards
     }
@@ -73,7 +72,9 @@ export const AccountPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCustomerData();
+      startTransition(() => {
+        fetchCustomerData();
+      });
     }
   }, [isAuthenticated, fetchCustomerData]);
 
@@ -91,6 +92,7 @@ export const AccountPage = () => {
         return;
       }
 
+      const discountAmount = points / 20; // 100 points = $5
       const updatedProfile = await customerService.updateCustomerProfile(customer!.id!, { 
         loyalty_points: currentPoints - points 
       });
@@ -104,10 +106,10 @@ export const AccountPage = () => {
         customer_id: customer!.id!,
         type: 'REDEEMED',
         points: -points,
-        description: `Redeemed ${points} points for $${points / 20} discount`
+        description: `Redeemed ${points} points for $${discountAmount.toFixed(2)} discount`
       });
 
-      alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
+      alert(`Successfully redeemed ${points} points for $${discountAmount.toFixed(2)} discount! Use code LOYALTY${points} at checkout.`);
       setRedeemPoints('');
       fetchCustomerData();
     } catch {
@@ -186,6 +188,40 @@ export const AccountPage = () => {
               <div className="text-sm text-gray-600">
                 Total Orders: {customer?.customer_profiles?.[0]?.total_orders || customer?.profile?.totalOrders || 0}
               </div>
+              
+              {/* Tier Progress */}
+              <div className="mt-3">
+                <div className="text-xs font-medium text-gray-700 mb-1">Next Tier Progress:</div>
+                {(() => {
+                  const currentValue = customer?.customer_profiles?.[0]?.lifetime_value || 0;
+                  const currentTierName = customer?.customer_profiles?.[0]?.membership_tier || 'GREEN';
+                  const currentTierIndex = MEMBERSHIP_TIERS.findIndex(t => t.name === currentTierName);
+                  const nextTier = MEMBERSHIP_TIERS[currentTierIndex + 1];
+                  
+                  if (!nextTier) {
+                    return <div className="text-xs text-purple-600 font-medium">🎉 Maximum tier achieved!</div>;
+                  }
+                  
+                  const progress = (currentValue / nextTier.threshold) * 100;
+                  const remaining = nextTier.threshold - currentValue;
+                  
+                  return (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>{nextTier.name}</span>
+                        <span>${remaining.toFixed(0)} to go</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-risevia-purple to-risevia-teal h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {membershipTier?.benefits && (
                 <div className="mt-2">
                   <div className="text-xs font-medium text-gray-700 mb-1">Benefits:</div>
@@ -223,14 +259,14 @@ export const AccountPage = () => {
                 <Button 
                   onClick={handleRedeemPoints}
                   size="sm"
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
                   disabled={!redeemPoints || parseInt(redeemPoints) < 100}
                 >
-                  Redeem for ${parseInt(redeemPoints || '0') / 20} off
+                  Redeem for ${(parseInt(redeemPoints || '0') / 20).toFixed(2)} off
                 </Button>
               </div>
               <div className="text-xs text-gray-500">
-                100 points = $5 discount
+                100 points = $5 discount • {customer?.customer_profiles?.[0]?.membership_tier === 'PLATINUM' ? 'Double points on purchases!' : 'Earn 1 point per $1 spent'}
               </div>
             </div>
           </CardContent>

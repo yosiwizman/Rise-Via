@@ -1,16 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
-import { Badge } from '../components/ui/badge';
 import { SEOHead } from '../components/SEOHead';
-import { WishlistButton } from '../components/wishlist/WishlistButton';
-import { ProductDetailModal } from '../components/ProductDetailModal';
+import { ProductCard } from '../components/ProductCard';
 import { SearchFilters } from '../components/SearchFilters';
 import { useCart } from '../hooks/useCart';
+import { useWishlist } from '../hooks/useWishlist';
 import { toast } from 'sonner';
 import productsData from '../data/products.json';
 import { productService } from '../services/productService';
-import type { Product } from '../types/product';
+import type { Product as ProductType } from '../types/product';
 
 interface FilterOptions {
   strainType?: string;
@@ -23,13 +21,12 @@ interface FilterOptions {
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   useEffect(() => {
     loadProducts();
@@ -40,12 +37,12 @@ export const ShopPage = () => {
       setLoading(true);
       const dbProducts = await productService.getAll();
       if (dbProducts.length > 0) {
-        setProducts(dbProducts as Product[]);
+        setProducts(dbProducts as ProductType[]);
       } else {
-        setProducts(productsData.products as Product[]);
+        setProducts(productsData.products as ProductType[]);
       }
     } catch {
-      setProducts(productsData.products as Product[]);
+      setProducts(productsData.products as ProductType[]);
     } finally {
       setLoading(false);
     }
@@ -90,96 +87,41 @@ export const ShopPage = () => {
     });
   }, [products, filter, searchTerm, sortBy]);
 
-  const handleProductClick = (product: Product) => {
-    const modalProduct = {
-      id: product.id || '',
-      name: product.name,
-      price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-      images: product.images,
-      strainType: product.strain_type || product.strainType || '',
-      category: product.category,
-      thcaPercentage: product.thca_percentage || product.thcaPercentage || 0,
-      description: product.description || '',
-      effects: product.effects || [],
-      inventory: product.inventory || product.volume_available || 0
-    };
-    setSelectedProduct(modalProduct as Product);
-    setShowModal(true);
+  const handleToggleWishlist = (productId: string) => {
+    if (isInWishlist(productId)) {
+      removeFromWishlist(productId);
+    } else {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        addToWishlist({
+          name: product.name,
+          price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+          image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
+          category: product.category || '',
+          effects: product.effects || []
+        });
+      }
+    }
   };
 
-  const ProductCard = ({ product }: { product: Product }) => (
-    <div
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform relative cursor-pointer"
-      onClick={() => handleProductClick(product)}
-    >
-      <div className="relative">
-        <img
-          src={product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`}
-          alt={product.name}
-          loading="lazy"
-          className="w-full h-48 object-cover"
-        />
-        <div className="absolute top-2 right-2">
-          <div onClick={(e) => e.stopPropagation()}>
-            <WishlistButton
-              item={{
-                id: product.id || '',
-                name: product.name,
-                price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-                image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
-                category: product.category,
-                effects: product.effects || [],
-              }}
-              size="md"
-            />
-          </div>
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 text-risevia-black dark:text-gray-100">{product.name}</h3>
-        <p className="text-risevia-charcoal dark:text-gray-400 text-sm mb-2 capitalize">{product.strain_type || product.strainType}</p>
-        <p className="text-risevia-charcoal dark:text-gray-300 text-sm mb-4 line-clamp-2">{product.description}</p>
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-xl font-bold text-risevia-black dark:text-gray-100">
-            ${typeof product.prices === 'object' ? product.prices.gram : product.price}
-          </span>
-          <Badge className="bg-risevia-teal text-white">
-            {product.thca_percentage || product.thcaPercentage}% THCA
-          </Badge>
-        </div>
-        <div className="flex flex-wrap gap-1 mb-4">
-          {(product.effects || []).map((effect: string, index: number) => (
-            <Badge key={index} variant="outline" className="text-xs border-risevia-purple text-risevia-purple">
-              {effect}
-            </Badge>
-          ))}
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart({
-              productId: product.id || '',
-              name: product.name,
-              price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-              originalPrice: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-              image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
-              category: product.category,
-              strainType: product.strain_type || product.strainType || '',
-              thcaPercentage: product.thca_percentage || product.thcaPercentage || 0
-            });
-            toast.success(`${product.name} added to cart!`, {
-              description: `$${product.price} • ${product.thcaPercentage}% THCA`,
-              duration: 3000,
-            });
-          }}
-          className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-2 rounded hover:opacity-90 transition-opacity flex items-center justify-center"
-        >
-          <ShoppingBag className="w-4 h-4 mr-2" />
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  );
+  const handleAddToCart = (product: ProductType) => {
+    const productData = {
+      productId: product.id || '',
+      name: product.name,
+      price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+      originalPrice: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+      image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
+      category: product.category,
+      strainType: product.strain_type || product.strainType || '',
+      thcaPercentage: product.thca_percentage || product.thcaPercentage || 0
+    };
+    
+    addToCart(productData);
+    toast.success(`${product.name} added to cart!`, {
+      description: `$${productData.price} • ${productData.thcaPercentage}% THCA`,
+      duration: 3000,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 py-8">
@@ -283,7 +225,22 @@ export const ShopPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <ProductCard product={product} />
+                <ProductCard 
+                  product={{
+                    id: product.id || '',
+                    name: product.name,
+                    price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
+                    images: product.images || [],
+                    category: product.category || '',
+                    strain_type: product.strain_type || product.strainType,
+                    thc_percentage: product.thca_percentage || product.thcaPercentage,
+                    cbd_percentage: undefined,
+                    description: product.description || ''
+                  }}
+                  onAddToCart={handleAddToCart}
+                  onToggleWishlist={handleToggleWishlist}
+                  isInWishlist={isInWishlist(product.id || '')}
+                />
               </motion.div>
             ))}
           </motion.div>
@@ -306,22 +263,6 @@ export const ShopPage = () => {
         )}
       </div>
 
-      <ProductDetailModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        product={selectedProduct ? {
-          id: selectedProduct.id || '',
-          name: selectedProduct.name,
-          price: selectedProduct.price || 0,
-          images: selectedProduct.images,
-          strainType: selectedProduct.strainType || selectedProduct.strain_type || '',
-          category: selectedProduct.category,
-          thcaPercentage: selectedProduct.thcaPercentage || selectedProduct.thca_percentage || 0,
-          description: selectedProduct.description,
-          effects: selectedProduct.effects || [],
-          inventory: selectedProduct.inventory || selectedProduct.volume_available || 0
-        } : null}
-      />
     </div>
   );
 };

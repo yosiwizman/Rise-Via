@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, ShoppingBag, User, Search, Heart, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -36,8 +36,10 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
   ];
 
   const handleNavigation = (page: string) => {
-    onNavigate(page);
-    setIsMobileMenuOpen(false);
+    startTransition(() => {
+      onNavigate(page);
+      setIsMobileMenuOpen(false);
+    });
   };
 
   return (

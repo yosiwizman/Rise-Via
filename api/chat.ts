@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     let response;
     
     switch (type) {
-      case 'chat':
+      case 'chat': {
         const completion = await openai.chat.completions.create({
           model: 'gpt-4',
           messages: [
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
         });
         response = completion.choices[0]?.message?.content;
         break;
+      }
         
       case 'recommendation':
         // Handle product recommendations

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy } from 'react';
+import { useState, useEffect, lazy, startTransition } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -42,6 +42,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ defau
 const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
+const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -52,46 +53,53 @@ function App() {
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/admin') {
-      setCurrentPage('admin');
-    } else if (path === '/shop') {
-      setCurrentPage('shop');
-    } else if (path === '/learn') {
-      setCurrentPage('learn');
-    } else if (path === '/legal') {
-      setCurrentPage('legal');
-    } else if (path === '/privacy') {
-      setCurrentPage('privacy');
-    } else if (path === '/legal/privacy') {
-      setCurrentPage('legal-privacy');
-    } else if (path === '/terms') {
-      setCurrentPage('terms');
-    } else if (path === '/legal/terms') {
-      setCurrentPage('legal-terms');
-    } else if (path === '/reset-password') {
-      setCurrentPage('reset-password');
-    } else if (path === '/orders' || path === '/account/orders') {
-      setCurrentPage('orders');
-    } else if (path === '/contact') {
-      setCurrentPage('contact');
-    } else if (path === '/wishlist') {
-      setCurrentPage('wishlist');
-    } else if (path === '/account') {
-      setCurrentPage('account');
-    } else if (path === '/login') {
-      setCurrentPage('login');
-    } else if (path === '/register') {
-      setCurrentPage('register');
-    } else if (path === '/b2b' || path === '/wholesale') {
-      setCurrentPage('b2b');
-    } else if (path === '/checkout') {
-      setCurrentPage('checkout');
-    } else if (path === '/health') {
-      setCurrentPage('health');
-    } else {
-      setCurrentPage('home');
-    }
+    startTransition(() => {
+      const path = window.location.pathname;
+      const urlParams = new URLSearchParams(window.location.search);
+      const page = urlParams.get('page');
+      
+      if (page === 'password-reset') {
+        setCurrentPage('password-reset');
+      } else if (path === '/admin') {
+        setCurrentPage('admin');
+      } else if (path === '/shop') {
+        setCurrentPage('shop');
+      } else if (path === '/learn') {
+        setCurrentPage('learn');
+      } else if (path === '/legal') {
+        setCurrentPage('legal');
+      } else if (path === '/privacy') {
+        setCurrentPage('privacy');
+      } else if (path === '/legal/privacy') {
+        setCurrentPage('legal-privacy');
+      } else if (path === '/terms') {
+        setCurrentPage('terms');
+      } else if (path === '/legal/terms') {
+        setCurrentPage('legal-terms');
+      } else if (path === '/reset-password') {
+        setCurrentPage('reset-password');
+      } else if (path === '/orders' || path === '/account/orders') {
+        setCurrentPage('orders');
+      } else if (path === '/contact') {
+        setCurrentPage('contact');
+      } else if (path === '/wishlist') {
+        setCurrentPage('wishlist');
+      } else if (path === '/account') {
+        setCurrentPage('account');
+      } else if (path === '/login') {
+        setCurrentPage('login');
+      } else if (path === '/register') {
+        setCurrentPage('register');
+      } else if (path === '/b2b' || path === '/wholesale') {
+        setCurrentPage('b2b');
+      } else if (path === '/checkout') {
+        setCurrentPage('checkout');
+      } else if (path === '/health') {
+        setCurrentPage('health');
+      } else {
+        setCurrentPage('home');
+      }
+    });
 
     const savedState = getUserState();
     if (savedState) {
@@ -244,6 +252,8 @@ function App() {
         return <TermsOfService />;
       case 'reset-password':
         return <ResetPasswordPage />;
+      case 'password-reset':
+        return <PasswordResetPage onNavigate={setCurrentPage} />;
       case 'orders':
         return <OrderTrackingPage />;
       case 'contact':
