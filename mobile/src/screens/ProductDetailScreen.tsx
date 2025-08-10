@@ -38,11 +38,6 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
   const { addItem } = useCartStore();
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlistStore();
 
-  useEffect(() => {
-    loadProductDetails();
-    loadProductReviews();
-  }, [productId]);
-
   const loadProductDetails = async () => {
     try {
       const response = await api.getProductDetails(productId);
@@ -67,6 +62,11 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
       console.error('Failed to load reviews:', error);
     }
   };
+
+  useEffect(() => {
+    loadProductDetails();
+    loadProductReviews();
+  }, [productId, loadProductDetails, loadProductReviews]);
 
   const handleAddToCart = async () => {
     if (!product) return;

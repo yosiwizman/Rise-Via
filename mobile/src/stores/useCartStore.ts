@@ -178,7 +178,6 @@ export const useCartStore = create<CartState>()(
 
       syncWithServer: async () => {
         try {
-          const { items } = get();
           const response = await api.getCart();
           
           if (response.success && response.data) {

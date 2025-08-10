@@ -20,7 +20,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
 
   useEffect(() => {
     loadCart();
-  }, []);
+  }, [loadCart]);
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
     try {

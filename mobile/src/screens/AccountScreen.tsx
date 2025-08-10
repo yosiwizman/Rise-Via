@@ -20,7 +20,7 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
     if (isAuthenticated) {
       loadUser();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadUser]);
 
   const handleLogout = async () => {
     Alert.alert(

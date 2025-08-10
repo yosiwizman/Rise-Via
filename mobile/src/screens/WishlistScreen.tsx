@@ -22,7 +22,7 @@ export default function WishlistScreen({ navigation }: { navigation: NavigationP
 
   useEffect(() => {
     loadWishlist();
-  }, []);
+  }, [loadWishlist]);
 
   const handleRemoveFromWishlist = async (productId: string) => {
     try {
