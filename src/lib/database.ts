@@ -104,6 +104,15 @@ export async function initializeTables() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_id UUID REFERENCES wishlist_sessions(id) ON DELETE CASCADE,
         product_id VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        image VARCHAR(500),
+        category VARCHAR(100),
+        thc_content VARCHAR(50),
+        cbd_content VARCHAR(50),
+        effects TEXT,
+        priority VARCHAR(20) DEFAULT 'medium',
+        price_alert TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;
@@ -183,6 +192,21 @@ export async function initializeTables() {
       )
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS price_alerts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        product_id VARCHAR(255) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        target_price DECIMAL(10,2) NOT NULL,
+        current_price DECIMAL(10,2) NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        triggered_at TIMESTAMP,
+        notification_sent BOOLEAN DEFAULT false
+      )
+    `;
+
     // Create indexes for better performance
     await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)`;
@@ -190,6 +214,8 @@ export async function initializeTables() {
     await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
 
     console.log('All tables initialized successfully');
     return true;

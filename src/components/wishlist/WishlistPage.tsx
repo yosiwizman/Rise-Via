@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Trash2, ShoppingCart, Share2, Filter, SortAsc, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -30,10 +30,15 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
     setPriceAlert,
     removePriceAlert,
     generateShareLink,
-    sortItems
+    sortItems,
+    initializeSession
   } = useWishlist();
   const { addToCart } = useCart();
   const { toast } = useToast();
+
+  useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
 
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'dateAdded' | 'priority'>('dateAdded');
   const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');

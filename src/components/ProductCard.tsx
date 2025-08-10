@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, ShoppingCart, Bell, Eye } from 'lucide-react';
 import { TierBadge } from './TierBadge';
 import { membershipService } from '../services/membershipService';
 import { useCustomer } from '../contexts/CustomerContext';
+import { PriceAlertModal } from './PriceAlertModal';
+import { ProductDetailModal } from './ProductDetailModal';
+import { useWishlist } from '../hooks/useWishlist';
+import { useCart } from '../hooks/useCart';
 
 interface Product {
   id: string;
@@ -33,11 +37,62 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isInWishlist = false
 }) => {
   const { customer } = useCustomer();
+  const [showPriceAlert, setShowPriceAlert] = useState(false);
+  const [showProductDetail, setShowProductDetail] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { addToWishlist, isInWishlist: checkWishlist } = useWishlist();
+  const { addToCart } = useCart();
   
   const customerTier = customer?.customer_profiles?.[0]?.membership_tier || 'GREEN';
   const tierDiscount = membershipService.calculateDiscount(product.price, customerTier);
   const discountedPrice = product.price - tierDiscount;
   const discountPercentage = tierDiscount > 0 ? (tierDiscount / product.price) * 100 : 0;
+  
+  const inWishlist = isInWishlist || checkWishlist(product.id);
+
+  const handleAddToCart = async () => {
+    setIsAddingToCart(true);
+    try {
+      if (onAddToCart) {
+        onAddToCart(product);
+      } else {
+        await addToCart({
+          productId: product.id,
+          name: product.name,
+          price: discountedPrice,
+          originalPrice: product.price,
+          image: product.images[0] || '/placeholder-product.jpg',
+          category: product.category,
+          strainType: product.strain_type || '',
+          thcaPercentage: product.thc_percentage || 0
+        });
+      }
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    try {
+      if (onToggleWishlist) {
+        onToggleWishlist(product.id);
+      } else {
+        await addToWishlist({
+          name: product.name,
+          price: product.price,
+          image: product.images[0] || '/placeholder-product.jpg',
+          category: product.category,
+          thcContent: product.thc_percentage?.toString(),
+          cbdContent: product.cbd_percentage?.toString(),
+          effects: []
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle wishlist:', error);
+    }
+  };
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -57,15 +112,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Wishlist Button */}
-        <button
-          onClick={() => onToggleWishlist?.(product.id)}
-          className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
-        >
-          <Heart 
-            className={`w-4 h-4 ${isInWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-          />
-        </button>
+        {/* Action Buttons */}
+        <div className="absolute top-2 right-2 flex gap-1">
+          <button
+            onClick={handleToggleWishlist}
+            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+          >
+            <Heart 
+              className={`w-4 h-4 ${inWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+            />
+          </button>
+          <button
+            onClick={() => setShowPriceAlert(true)}
+            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            title="Set price alert"
+          >
+            <Bell className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
 
         {/* Strain Type Badge */}
         {product.strain_type && (
@@ -134,16 +198,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Add to Cart Button */}
-          <Button
-            onClick={() => onAddToCart?.(product)}
-            className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal hover:opacity-90 transition-opacity"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Add to Cart
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleAddToCart}
+              disabled={isAddingToCart}
+              className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal hover:opacity-90 transition-opacity"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+            </Button>
+            <Button
+              onClick={() => setShowProductDetail(true)}
+              variant="outline"
+              size="sm"
+              className="px-3"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
+      
+      <PriceAlertModal
+        isOpen={showPriceAlert}
+        onClose={() => setShowPriceAlert(false)}
+        productId={product.id}
+        productName={product.name}
+        currentPrice={product.price}
+      />
+      
+      <ProductDetailModal
+        isOpen={showProductDetail}
+        onClose={() => setShowProductDetail(false)}
+        product={product}
+      />
     </Card>
   );
 };

@@ -187,11 +187,32 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
       await get().migrateFromLocalStorage();
     } catch (error) {
+      console.error('Database failed, falling back to localStorage:', error);
+      
+      const localStorageKey = 'risevia-wishlist-fallback';
+      const localData = localStorage.getItem(localStorageKey);
+      let localItems: WishlistItem[] = [];
+      
+      if (localData) {
+        try {
+          localItems = JSON.parse(localData);
+        } catch {
+          localItems = [];
+        }
+      }
+
       set({
+        sessionId: 'localStorage-fallback',
+        items: localItems,
+        stats: calculateStats(localItems),
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to initialize session'
+        error: null
       });
-      toast.error('Failed to initialize wishlist session');
+
+      toast.success('Wishlist loaded (offline mode)', {
+        description: 'Your wishlist will sync when database is available',
+        duration: 3000,
+      });
     }
   },
 
@@ -287,35 +308,56 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`
-        INSERT INTO wishlist_items (
-          session_id, product_id, name, price, image, category,
-          thc_content, cbd_content, effects, priority
-        )
-        VALUES (
-          ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price},
-          ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null},
-          ${newItem.cbdContent || null}, ${JSON.stringify(newItem.effects || [])}, ${newItem.priority}
-        )
-      `;
+      if (currentState.sessionId === 'localStorage-fallback') {
+        // localStorage fallback mode
+        const updatedItems = [...currentState.items, newItem];
+        const updatedStats = calculateStats(updatedItems);
+        
+        localStorage.setItem('risevia-wishlist-fallback', JSON.stringify(updatedItems));
 
-      const updatedItems = [...currentState.items, newItem];
-      const updatedStats = calculateStats(updatedItems);
+        set({
+          items: updatedItems,
+          stats: updatedStats,
+          isLoading: false,
+          error: null
+        });
 
-      set({
-        items: updatedItems,
-        stats: updatedStats,
-        isLoading: false,
-        error: null
-      });
+        toast.success(`${newItem.name} added to wishlist!`, {
+          description: `$${newItem.price} • ${newItem.category} (offline mode)`,
+          duration: 3000,
+        });
+      } else {
+        await sql`
+          INSERT INTO wishlist_items (
+            session_id, product_id, name, price, image, category,
+            thc_content, cbd_content, effects, priority
+          )
+          VALUES (
+            ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price},
+            ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null},
+            ${newItem.cbdContent || null}, ${JSON.stringify(newItem.effects || [])}, ${newItem.priority}
+          )
+        `;
+
+        const updatedItems = [...currentState.items, newItem];
+        const updatedStats = calculateStats(updatedItems);
+
+        set({
+          items: updatedItems,
+          stats: updatedStats,
+          isLoading: false,
+          error: null
+        });
+
+        toast.success(`${newItem.name} added to wishlist!`, {
+          description: `$${newItem.price} • ${newItem.category}`,
+          duration: 3000,
+        });
+      }
 
       trackWishlistEvent('add', newItem);
       wishlistAnalytics.trackWishlistEvent('add', newItem);
 
-      toast.success(`${newItem.name} added to wishlist!`, {
-        description: `$${newItem.price} • ${newItem.category}`,
-        duration: 3000,
-      });
     } catch (error) {
       set({
         isLoading: false,
@@ -334,17 +376,32 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`DELETE FROM wishlist_items WHERE id = ${itemId}`;
+      if (state.sessionId === 'localStorage-fallback') {
+        // localStorage fallback mode
+        const updatedItems = state.items.filter(item => item.id !== itemId);
+        const updatedStats = calculateStats(updatedItems);
+        
+        localStorage.setItem('risevia-wishlist-fallback', JSON.stringify(updatedItems));
 
-      const updatedItems = state.items.filter(item => item.id !== itemId);
-      const updatedStats = calculateStats(updatedItems);
+        set({
+          items: updatedItems,
+          stats: updatedStats,
+          isLoading: false,
+          error: null
+        });
+      } else {
+        await sql`DELETE FROM wishlist_items WHERE id = ${itemId}`;
 
-      set({
-        items: updatedItems,
-        stats: updatedStats,
-        isLoading: false,
-        error: null
-      });
+        const updatedItems = state.items.filter(item => item.id !== itemId);
+        const updatedStats = calculateStats(updatedItems);
+
+        set({
+          items: updatedItems,
+          stats: updatedStats,
+          isLoading: false,
+          error: null
+        });
+      }
 
       trackWishlistEvent('remove', itemToRemove);
       wishlistAnalytics.trackWishlistEvent('remove', itemToRemove);
