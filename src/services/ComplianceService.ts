@@ -38,6 +38,35 @@ export interface ComplianceAlert {
   resolvedAt?: string;
 }
 
+interface StateComplianceRow {
+  state: string;
+  is_legal: boolean;
+  age_requirement: number;
+  max_possession: string;
+  home_grow_allowed: boolean;
+  public_consumption: boolean;
+  driving_limit: string;
+  retail_sales_allowed: boolean;
+  delivery_allowed: boolean;
+  online_ordering_allowed: boolean;
+  tax_rate: string;
+  license_required: boolean;
+  last_updated: Date;
+}
+
+interface ComplianceAlertRow {
+  id: string;
+  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action_required: boolean;
+  deadline: Date | null;
+  affected_states: string;
+  created_at: Date;
+  resolved_at: Date | null;
+}
+
 export interface AuditLog {
   id: string;
   userId: string;
@@ -167,7 +196,7 @@ class ComplianceService {
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row) => ({
+      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row: StateComplianceRow) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -322,7 +351,7 @@ class ComplianceService {
 
       const result = await query;
 
-      return (result as ComplianceAlertRow[]).map((row) => ({
+      return (result as ComplianceAlertRow[]).map((row: ComplianceAlertRow) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
