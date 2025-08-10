@@ -44,9 +44,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { addToCart } = useCart();
   
   const customerTier = customer?.customer_profiles?.[0]?.membership_tier || 'GREEN';
-  const tierDiscount = membershipService.calculateDiscount(product.price, customerTier);
-  const discountedPrice = product.price - tierDiscount;
-  const discountPercentage = tierDiscount > 0 ? (tierDiscount / product.price) * 100 : 0;
+  const numericPrice = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+  const tierDiscount = membershipService.calculateDiscount(numericPrice, customerTier);
+  const discountedPrice = numericPrice - tierDiscount;
+  const discountPercentage = tierDiscount > 0 ? (tierDiscount / numericPrice) * 100 : 0;
   
   const inWishlist = isInWishlist || checkWishlist(product.id);
 
@@ -60,7 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           productId: product.id,
           name: product.name,
           price: discountedPrice,
-          originalPrice: product.price,
+          originalPrice: numericPrice,
           image: product.images[0] || '/placeholder-product.jpg',
           category: product.category,
           strainType: product.strain_type || '',
@@ -81,7 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       } else {
         await addToWishlist({
           name: product.name,
-          price: product.price,
+          price: numericPrice,
           image: product.images[0] || '/placeholder-product.jpg',
           category: product.category,
           thcContent: product.thc_percentage?.toString(),
@@ -107,7 +108,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {tierDiscount > 0 && (
           <div className="absolute top-2 left-2">
             <Badge className="bg-gradient-to-r from-risevia-purple to-risevia-teal text-white font-bold">
-              {discountPercentage.toFixed(0)}% OFF
+              {(typeof discountPercentage === 'number' ? discountPercentage : parseFloat(discountPercentage) || 0).toFixed(0)}% OFF
             </Badge>
           </div>
         )}
@@ -169,14 +170,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {tierDiscount > 0 ? (
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-risevia-purple">
-                      ${discountedPrice.toFixed(2)}
+                      ${(typeof discountedPrice === 'number' ? discountedPrice : parseFloat(discountedPrice) || 0).toFixed(2)}
                     </span>
                     <span className="text-sm text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
+                      ${(typeof numericPrice === 'number' ? numericPrice : parseFloat(numericPrice) || 0).toFixed(2)}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                  <span className="text-lg font-bold">${(typeof numericPrice === 'number' ? numericPrice : parseFloat(numericPrice) || 0).toFixed(2)}</span>
                 )}
               </div>
               
@@ -193,7 +194,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {/* Member Savings */}
             {tierDiscount > 0 && (
               <div className="text-xs text-green-600 font-medium">
-                You save ${tierDiscount.toFixed(2)} with {customerTier} membership!
+                You save ${(typeof tierDiscount === 'number' ? tierDiscount : parseFloat(tierDiscount) || 0).toFixed(2)} with {customerTier} membership!
               </div>
             )}
           </div>
@@ -225,7 +226,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         onClose={() => setShowPriceAlert(false)}
         productId={product.id}
         productName={product.name}
-        currentPrice={product.price}
+        currentPrice={numericPrice}
       />
       
       <ProductDetailModal

@@ -110,10 +110,10 @@ export const AccountPage = () => {
         customer_id: customer!.id!,
         type: 'REDEEMED',
         points: -points,
-        description: `Redeemed ${points} points for $${discountAmount.toFixed(2)} discount`
+        description: `Redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount`
       });
 
-      alert(`Successfully redeemed ${points} points for $${discountAmount.toFixed(2)} discount! Use code LOYALTY${points} at checkout.`);
+      alert(`Successfully redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount! Use code LOYALTY${points} at checkout.`);
       setRedeemPoints('');
       fetchCustomerData();
     } catch {
@@ -201,7 +201,7 @@ export const AccountPage = () => {
                 {membershipTier?.name || 'Green Member'}
               </Badge>
               <div className="text-sm text-gray-600">
-                Lifetime Value: ${(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0).toFixed(2)}
+                Lifetime Value: ${(typeof (customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0) === 'number' ? (customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0) : parseFloat(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0) || 0).toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">
                 Total Orders: {customer?.customer_profiles?.[0]?.total_orders || customer?.profile?.totalOrders || 0}
@@ -227,7 +227,7 @@ export const AccountPage = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
                         <span>{nextTier.name}</span>
-                        <span>${remaining.toFixed(0)} to go</span>
+                        <span>${(typeof remaining === 'number' ? remaining : parseFloat(remaining) || 0).toFixed(0)} to go</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
@@ -280,7 +280,7 @@ export const AccountPage = () => {
                   className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
                   disabled={!redeemPoints || parseInt(redeemPoints) < 100}
                 >
-                  Redeem for ${(parseInt(redeemPoints || '0') / 20).toFixed(2)} off
+                  Redeem for ${(typeof (parseInt(redeemPoints || '0') / 20) === 'number' ? (parseInt(redeemPoints || '0') / 20) : parseFloat(parseInt(redeemPoints || '0') / 20) || 0).toFixed(2)} off
                 </Button>
               </div>
               <div className="text-xs text-gray-500">
@@ -345,7 +345,7 @@ export const AccountPage = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${order.total.toFixed(2)}</div>
+                        <div className="font-medium">${(typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0).toFixed(2)}</div>
                         <Badge variant="outline">{order.status}</Badge>
                       </div>
                     </div>
@@ -412,10 +412,10 @@ export const AccountPage = () => {
                     <div className="flex-1">
                       <div className="font-medium text-sm">{alert.product_name}</div>
                       <div className="text-xs text-gray-600">
-                        Alert when price drops to ${alert.target_price.toFixed(2)}
+                        Alert when price drops to ${(typeof alert.target_price === 'number' ? alert.target_price : parseFloat(alert.target_price) || 0).toFixed(2)}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Current: ${alert.current_price.toFixed(2)}
+                        Current: ${(typeof alert.current_price === 'number' ? alert.current_price : parseFloat(alert.current_price) || 0).toFixed(2)}
                       </div>
                     </div>
                     <Button

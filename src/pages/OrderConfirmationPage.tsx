@@ -96,7 +96,7 @@ export const OrderConfirmationPage = ({ onNavigate }: OrderConfirmationPageProps
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">Total Amount:</span>
-                  <span className="text-white font-semibold">${orderData.total.toFixed(2)}</span>
+                  <span className="text-white font-semibold">${(typeof orderData.total === 'number' ? orderData.total : parseFloat(orderData.total) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">Payment Method:</span>

@@ -53,7 +53,7 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
               </Badge>
             )}
             <span className="text-sm font-medium text-risevia-black dark:text-gray-100">
-              ${item.price.toFixed(2)}
+              ${(typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0).toFixed(2)}
             </span>
           </div>
           
@@ -61,7 +61,7 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
             <div className="mt-2 text-xs text-risevia-teal">
               {item.quantityBreaks.map((qb, idx) => (
                 <div key={idx}>
-                  Buy {qb.minQuantity}+ for ${qb.discountedPrice.toFixed(2)} each
+                  Buy {qb.minQuantity}+ for ${(typeof qb.discountedPrice === 'number' ? qb.discountedPrice : parseFloat(qb.discountedPrice) || 0).toFixed(2)} each
                 </div>
               ))}
             </div>

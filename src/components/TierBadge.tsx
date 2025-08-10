@@ -42,7 +42,7 @@ export const TierBadge: React.FC<TierBadgeProps> = ({
       {getTierIcon(tier)}
       <span>{tier} Member</span>
       {showDiscount && discount && (
-        <span className="ml-1 font-bold">({(discount * 100).toFixed(0)}% off)</span>
+        <span className="ml-1 font-bold">({(typeof (discount * 100) === 'number' ? (discount * 100) : parseFloat(discount * 100) || 0).toFixed(0)}% off)</span>
       )}
     </Badge>
   );

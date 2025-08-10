@@ -125,7 +125,7 @@ export const WishlistMetricsDashboard = () => {
   }
 
   const conversionRate = metrics.addToWishlistEvents > 0
-    ? ((metrics.conversionEvents / metrics.addToWishlistEvents) * 100).toFixed(1)
+    ? (typeof ((metrics.conversionEvents / metrics.addToWishlistEvents) * 100) === 'number' ? ((metrics.conversionEvents / metrics.addToWishlistEvents) * 100) : parseFloat(((metrics.conversionEvents / metrics.addToWishlistEvents) * 100)) || 0).toFixed(1)
     : '0';
 
   return (
@@ -172,7 +172,7 @@ export const WishlistMetricsDashboard = () => {
         >
           <MetricCard
             title="Return Visitor Rate"
-            value={`${metrics.returnVisitorRate.toFixed(1)}%`}
+            value={`${(typeof metrics.returnVisitorRate === 'number' ? metrics.returnVisitorRate : parseFloat(metrics.returnVisitorRate) || 0).toFixed(1)}%`}
             change="+15% from baseline"
             trend="up"
             icon={<Users className="w-4 h-4" />}
@@ -190,7 +190,7 @@ export const WishlistMetricsDashboard = () => {
 
           <MetricCard
             title="Average Items"
-            value={metrics.averageItemsPerWishlist.toFixed(1)}
+            value={(typeof metrics.averageItemsPerWishlist === 'number' ? metrics.averageItemsPerWishlist : parseFloat(metrics.averageItemsPerWishlist) || 0).toFixed(1)}
             change="+2.3 items"
             trend="up"
             icon={<Heart className="w-4 h-4" />}
@@ -391,7 +391,7 @@ export const WishlistMetricsDashboard = () => {
                   <div>
                     <div className="text-xl font-bold text-purple-500">
                       {typeof dailyReport.conversionRate === 'number'
-                        ? dailyReport.conversionRate.toFixed(1)
+                        ? (typeof dailyReport.conversionRate === 'number' ? dailyReport.conversionRate : parseFloat(dailyReport.conversionRate) || 0).toFixed(1)
                         : dailyReport.conversionRate
                       }%
                     </div>
@@ -418,7 +418,7 @@ export const WishlistMetricsDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                 <div>
                   <div className="text-2xl font-bold text-green-500 mb-1">
-                    +{metrics.returnVisitorRate.toFixed(0)}%
+                    +{(typeof metrics.returnVisitorRate === 'number' ? metrics.returnVisitorRate : parseFloat(metrics.returnVisitorRate) || 0).toFixed(0)}%
                   </div>
                   <div className="text-sm text-risevia-charcoal">
                     Return Visitor Rate Improvement
@@ -434,7 +434,7 @@ export const WishlistMetricsDashboard = () => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-500 mb-1">
-                    {metrics.averageItemsPerWishlist.toFixed(1)}
+                    {(typeof metrics.averageItemsPerWishlist === 'number' ? metrics.averageItemsPerWishlist : parseFloat(metrics.averageItemsPerWishlist) || 0).toFixed(1)}
                   </div>
                   <div className="text-sm text-risevia-charcoal">
                     Average Items per User

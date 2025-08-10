@@ -148,7 +148,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
           <div className="flex justify-between items-center text-white">
             <span className="text-lg font-semibold">Total:</span>
             <span className="text-xl font-bold text-risevia-teal">
-              ${getCartTotal().toFixed(2)}
+              ${(typeof getCartTotal() === 'number' ? getCartTotal() : parseFloat(getCartTotal()) || 0).toFixed(2)}
             </span>
           </div>
 
@@ -157,7 +157,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
             disabled={!stripe || processing}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold py-3"
           >
-            {processing ? 'Processing...' : `Pay $${getCartTotal().toFixed(2)}`}
+            {processing ? 'Processing...' : `Pay $${(typeof getCartTotal() === 'number' ? getCartTotal() : parseFloat(getCartTotal()) || 0).toFixed(2)}`}
           </Button>
 
           <Alert className="bg-yellow-950/20 border-yellow-500/50">

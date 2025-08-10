@@ -142,7 +142,7 @@ export const ProductReviewsIntegration: React.FC<ProductReviewsIntegrationProps>
       <div className="flex items-center space-x-4 p-4 bg-risevia-light rounded-lg">
         <div className="text-center">
           <div className="text-3xl font-bold text-risevia-black">
-            {averageRating.toFixed(1)}
+            {(typeof averageRating === 'number' ? averageRating : parseFloat(averageRating) || 0).toFixed(1)}
           </div>
           {renderStars(averageRating, 'lg')}
           <div className="text-sm text-risevia-charcoal mt-1">

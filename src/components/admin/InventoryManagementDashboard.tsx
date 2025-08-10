@@ -228,7 +228,7 @@ export const InventoryManagementDashboard: React.FC = () => {
 
         <MetricCard
           title="Average Turnover Rate"
-          value={`${analytics.averageTurnoverRate.toFixed(1)}x`}
+          value={`${(typeof analytics.averageTurnoverRate === 'number' ? analytics.averageTurnoverRate : parseFloat(analytics.averageTurnoverRate) || 0).toFixed(1)}x`}
           change="Annual inventory turns"
           trend={analytics.averageTurnoverRate > 6 ? 'up' : 'down'}
           icon={<Zap className="w-4 h-4" />}
@@ -366,12 +366,12 @@ export const InventoryManagementDashboard: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Lead Time:</span>
-                      <span className="font-medium">{supplier.averageLeadTime.toFixed(1)} days</span>
+                      <span className="font-medium">{(typeof supplier.averageLeadTime === 'number' ? supplier.averageLeadTime : parseFloat(supplier.averageLeadTime) || 0).toFixed(1)} days</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Reliability:</span>
                       <span className={`font-medium ${supplier.reliability > 80 ? 'text-green-600' : supplier.reliability > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {supplier.reliability.toFixed(1)}%
+                        {(typeof supplier.reliability === 'number' ? supplier.reliability : parseFloat(supplier.reliability) || 0).toFixed(1)}%
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -425,7 +425,7 @@ export const InventoryManagementDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-risevia-black capitalize">{category.category}</h4>
                     <div className="text-sm text-gray-500">
-                      {category.turnoverRate.toFixed(1)}x turnover
+                      {(typeof category.turnoverRate === 'number' ? category.turnoverRate : parseFloat(category.turnoverRate) || 0).toFixed(1)}x turnover
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -447,7 +447,7 @@ export const InventoryManagementDashboard: React.FC = () => {
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600">Profit Margin:</span>
                         <span className={`font-medium ${category.profitMargin > 30 ? 'text-green-600' : category.profitMargin > 20 ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {category.profitMargin.toFixed(1)}%
+                          {(typeof category.profitMargin === 'number' ? category.profitMargin : parseFloat(category.profitMargin) || 0).toFixed(1)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">

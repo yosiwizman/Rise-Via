@@ -134,7 +134,7 @@ export const CouponInput: React.FC<CouponInputProps> = ({
                 {appliedCoupon.discountType === 'percentage' 
                   ? `${appliedCoupon.discountValue}% off`
                   : `$${appliedCoupon.discountValue} off`
-                } - You save ${appliedCoupon.discountAmount.toFixed(2)}
+                } - You save ${(typeof appliedCoupon.discountAmount === 'number' ? appliedCoupon.discountAmount : parseFloat(appliedCoupon.discountAmount) || 0).toFixed(2)}
               </p>
             </div>
           </div>

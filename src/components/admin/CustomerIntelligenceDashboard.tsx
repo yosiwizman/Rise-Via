@@ -235,7 +235,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
         <MetricCard
           title="Total Customers"
           value={analytics.totalCustomers.toLocaleString()}
-          change={`${analytics.newCustomerRate.toFixed(1)}% new this month`}
+          change={`${(typeof analytics.newCustomerRate === 'number' ? analytics.newCustomerRate : parseFloat(analytics.newCustomerRate) || 0).toFixed(1)}% new this month`}
           trend="up"
           icon={<Users className="w-4 h-4" />}
           description="Active customer base"
@@ -252,7 +252,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
 
         <MetricCard
           title="Retention Rate"
-          value={`${analytics.retentionRate.toFixed(1)}%`}
+          value={`${(typeof analytics.retentionRate === 'number' ? analytics.retentionRate : parseFloat(analytics.retentionRate) || 0).toFixed(1)}%`}
           change="Active customers"
           trend={analytics.retentionRate > 70 ? 'up' : 'down'}
           icon={<Heart className="w-4 h-4" />}
@@ -261,7 +261,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
 
         <MetricCard
           title="Churn Rate"
-          value={`${analytics.churnRate.toFixed(1)}%`}
+          value={`${(typeof analytics.churnRate === 'number' ? analytics.churnRate : parseFloat(analytics.churnRate) || 0).toFixed(1)}%`}
           change="Lost customers"
           trend={analytics.churnRate < 20 ? 'up' : 'down'}
           icon={<UserX className="w-4 h-4" />}
@@ -301,7 +301,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-3">
                       <Badge className={getSegmentColor(segment.segment)}>
-                        {segment.percentage.toFixed(1)}%
+                        {(typeof segment.percentage === 'number' ? segment.percentage : parseFloat(segment.percentage) || 0).toFixed(1)}%
                       </Badge>
                       <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div
@@ -527,7 +527,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-500 mb-1">
-                  {analytics.retentionRate.toFixed(1)}%
+                  {(typeof analytics.retentionRate === 'number' ? analytics.retentionRate : parseFloat(analytics.retentionRate) || 0).toFixed(1)}%
                 </div>
                 <div className="text-sm text-risevia-charcoal">
                   Customer Retention Rate
