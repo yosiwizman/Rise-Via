@@ -165,7 +165,7 @@ export function createWebhookRoute() {
 export function validateWebhookSignature(provider: string, payload: Record<string, unknown>, signature: string): boolean {
   try {
     switch (provider) {
-      case 'posabit':
+      case 'posabit': {
         const posSecret = process.env.VITE_POSABIT_SECRET || '';
         if (!posSecret) return false;
         
@@ -174,8 +174,9 @@ export function validateWebhookSignature(provider: string, payload: Record<strin
           .update(JSON.stringify(payload))
           .digest('hex');
         return signature === `sha256=${posExpectedSignature}`;
+      }
 
-      case 'aeropay':
+      case 'aeropay': {
         const aeroSecret = process.env.VITE_AEROPAY_SECRET || '';
         if (!aeroSecret) return false;
         
@@ -186,8 +187,9 @@ export function validateWebhookSignature(provider: string, payload: Record<strin
           .update(aeroPayload)
           .digest('hex');
         return signature === aeroExpectedSignature;
+      }
 
-      case 'hypur':
+      case 'hypur': {
         const hypSecret = process.env.VITE_HYPUR_SECRET || '';
         if (!hypSecret) return false;
         
@@ -196,6 +198,7 @@ export function validateWebhookSignature(provider: string, payload: Record<strin
           .update(JSON.stringify(payload))
           .digest('base64');
         return signature === hypExpectedSignature;
+      }
 
       case 'stripe':
         return true;

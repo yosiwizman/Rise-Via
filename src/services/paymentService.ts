@@ -61,7 +61,7 @@ export class PaymentService {
   /**
    * Enhanced fraud detection for payment processing
    */
-  private async detectPaymentFraud(orderData: OrderData, customerData: any): Promise<{ isValid: boolean; riskScore: number; reasons: string[] }> {
+  private async detectPaymentFraud(orderData: OrderData, customerData: Record<string, unknown>): Promise<{ isValid: boolean; riskScore: number; reasons: string[] }> {
     const reasons: string[] = [];
     let riskScore = 0;
 
@@ -130,7 +130,7 @@ export class PaymentService {
   /**
    * Process payment with enhanced security and fraud detection
    */
-  async processPayment(orderData: OrderData, preferredProcessor?: string, customerData?: any): Promise<PaymentResult> {
+  async processPayment(orderData: OrderData, preferredProcessor?: string, customerData?: Record<string, unknown>): Promise<PaymentResult> {
     try {
       const fraudCheck = await this.detectPaymentFraud(orderData, customerData || {});
       if (!fraudCheck.isValid) {
@@ -153,8 +153,8 @@ export class PaymentService {
 
       const customer = {
         email: orderData.customerId,
-        name: customerData?.name || 'Customer',
-        address: customerData?.address || {
+        name: (customerData?.name as string) || 'Customer',
+        address: (customerData?.address as { street: string; city: string; state: string; zipCode: string }) || {
           street: '',
           city: '',
           state: '',
@@ -205,15 +205,18 @@ export class PaymentService {
   async processRefund(transactionId: string, processorName: string): Promise<PaymentResult> {
     try {
       switch (processorName) {
-        case 'POSaBIT':
+        case 'POSaBIT': {
           const posResult = await this.posabit.refund(transactionId);
           return { success: posResult.success, error: posResult.error, transactionId: posResult.refundId };
-        case 'Aeropay':
+        }
+        case 'Aeropay': {
           const aeroResult = await this.aeropay.refund(transactionId);
           return { success: aeroResult.success, error: aeroResult.error, transactionId: aeroResult.refundId };
-        case 'Hypur':
+        }
+        case 'Hypur': {
           const hypResult = await this.hypur.refund(transactionId);
           return { success: hypResult.success, error: hypResult.error, transactionId: hypResult.refundId };
+        }
         default:
           return { success: false, error: 'Unsupported processor for refund' };
       }
