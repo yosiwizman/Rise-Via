@@ -1,479 +1,306 @@
 import * as SecureStore from 'expo-secure-store';
-import type { AuthUser, Product, Review, CartItem, ApiResponse } from '../types/shared';
+import type { AuthUser, Product, Review, CartItem, ApiResponse, RegisterData } from '../types/shared';
+
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:5173/api' 
+  : 'https://rise-via.vercel.app/api';
 
 class ApiClient {
   private baseURL: string;
+  private authToken: string | null = null;
 
   constructor() {
-    this.baseURL = __DEV__ ? 'http://localhost:5173' : 'https://rise-via.vercel.app';
+    this.baseURL = API_BASE_URL;
+    this.loadAuthToken();
   }
 
-  private async getAuthToken(): Promise<string | null> {
+  private async loadAuthToken() {
     try {
-      return await SecureStore.getItemAsync('auth_token');
+      this.authToken = await SecureStore.getItemAsync('auth_token');
     } catch (error) {
-      console.error('Failed to get auth token:', error);
-      return null;
+    }
+  }
+
+  setAuthToken(token: string | null) {
+    this.authToken = token;
+  }
+
+  private async getHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (!this.authToken) {
+      try {
+        this.authToken = await SecureStore.getItemAsync('auth_token');
+      } catch (error) {
+      }
+    }
+
+    if (this.authToken) {
+      headers.Authorization = `Bearer ${this.authToken}`;
+    }
+
+    return headers;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    try {
+      const headers = await this.getHeaders();
+      
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || data.error || 'Request failed',
+        };
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error',
+      };
     }
   }
 
   async login(email: string, password: string): Promise<ApiResponse<{ user: AuthUser; token: string }>> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const response = await this.request<{ user: AuthUser; token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      if (data.token) {
-        await SecureStore.setItemAsync('auth_token', data.token);
-      }
-
-      return { success: true, data: { user: data.user, token: data.token } };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
-      };
+    if (response.success && response.data) {
+      this.authToken = response.data.token;
+      await SecureStore.setItemAsync('auth_token', response.data.token);
     }
+
+    return response;
   }
 
-  async register(userData: {
-    email: string;
-    password: string;
-    name: string;
-    phone?: string;
-    date_of_birth: string;
-  }): Promise<ApiResponse<{ user: AuthUser; token: string }>> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
+  async register(userData: RegisterData): Promise<ApiResponse<{ user: AuthUser; token: string }>> {
+    const response = await this.request<{ user: AuthUser; token: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      if (data.token) {
-        await SecureStore.setItemAsync('auth_token', data.token);
-      }
-
-      return { success: true, data: { user: data.user, token: data.token } };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
-      };
+    if (response.success && response.data) {
+      this.authToken = response.data.token;
+      await SecureStore.setItemAsync('auth_token', response.data.token);
     }
+
+    return response;
   }
 
   async logout(): Promise<ApiResponse<void>> {
-    try {
-      await SecureStore.deleteItemAsync('auth_token');
-      return { success: true };
-    } catch (error) {
-      console.error('Logout error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Logout failed' 
-      };
-    }
+    const response = await this.request<void>('/auth/logout', {
+      method: 'POST',
+    });
+
+    this.authToken = null;
+    await SecureStore.deleteItemAsync('auth_token');
+
+    return response;
   }
 
   async getProfile(): Promise<ApiResponse<AuthUser>> {
-    try {
-      const token = await this.getAuthToken();
-      if (!token) {
-        throw new Error('No auth token found');
-      }
-
-      const response = await fetch(`${this.baseURL}/api/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch profile');
-      }
-
-      return { success: true, data: data.user };
-    } catch (error) {
-      console.error('Get profile error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch profile' 
-      };
-    }
+    return this.request<AuthUser>('/auth/profile');
   }
 
-  async getProducts(): Promise<ApiResponse<Product[]>> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/products`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch products');
-      }
-      
-      return { success: true, data: data.products || [] };
-    } catch (error) {
-      console.error('Get products error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch products' 
-      };
+  async getMe(): Promise<ApiResponse<AuthUser>> {
+    return this.request<AuthUser>('/auth/me');
+  }
+
+  async getProducts(filters?: {
+    category?: string;
+    strain?: string;
+    type?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    search?: string;
+  }): Promise<ApiResponse<Product[]>> {
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, value.toString());
+        }
+      });
     }
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/products?${queryString}` : '/products';
+    
+    return this.request<Product[]>(endpoint);
   }
 
   async getProductDetails(productId: string): Promise<ApiResponse<Product>> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/products/${productId}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch product details');
-      }
-      
-      return { success: true, data: data.product };
-    } catch (error) {
-      console.error('Get product details error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch product details' 
-      };
-    }
+    return this.request<Product>(`/products/${productId}`);
   }
 
-  async addToWishlist(productId: string): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/wishlist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ product_id: productId }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to add to wishlist');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Add to wishlist error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to add to wishlist' 
-      };
-    }
-  }
-
-  async removeFromWishlist(productId: string): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/wishlist/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to remove from wishlist');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Remove from wishlist error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to remove from wishlist' 
-      };
-    }
-  }
-
-  async getWishlist(): Promise<ApiResponse<Product[]>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/wishlist`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch wishlist');
-      }
-      
-      return { success: true, data: data.wishlist || [] };
-    } catch (error) {
-      console.error('Get wishlist error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch wishlist' 
-      };
-    }
-  }
-
-  async clearWishlist(): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/wishlist`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to clear wishlist');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Clear wishlist error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to clear wishlist' 
-      };
-    }
-  }
-
-  async syncWishlist(productIds: string[]): Promise<ApiResponse<Product[]>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/wishlist/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ product_ids: productIds }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to sync wishlist');
-      }
-      
-      return { success: true, data: data.wishlist || [] };
-    } catch (error) {
-      console.error('Sync wishlist error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to sync wishlist' 
-      };
-    }
+  async getProduct(id: string): Promise<ApiResponse<Product>> {
+    return this.request<Product>(`/products/${id}`);
   }
 
   async getProductReviews(productId: string): Promise<ApiResponse<Review[]>> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/products/${productId}/reviews`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch reviews');
-      }
-      
-      return { success: true, data: data.reviews || [] };
-    } catch (error) {
-      console.error('Get reviews error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch reviews' 
-      };
-    }
+    return this.request<Review[]>(`/products/${productId}/reviews`);
   }
 
-  async submitReview(productId: string, review: { rating: number; comment: string }): Promise<ApiResponse<Review>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/products/${productId}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(review),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit review');
-      }
-      
-      return { success: true, data: data.review };
-    } catch (error) {
-      console.error('Submit review error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to submit review' 
-      };
-    }
+  async getReviews(productId: string): Promise<ApiResponse<Review[]>> {
+    return this.request<Review[]>(`/products/${productId}/reviews`);
+  }
+
+  async addToCart(productId: string, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>('/cart/add', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity }),
+    });
   }
 
   async getCart(): Promise<ApiResponse<CartItem[]>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/cart`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch cart');
-      }
-      
-      return { success: true, data: data.cart || [] };
-    } catch (error) {
-      console.error('Get cart error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch cart' 
-      };
-    }
+    return this.request<CartItem[]>('/cart');
   }
 
-  async addToCart(productId: string, quantity: number): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/cart`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ product_id: productId, quantity }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to add to cart');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to add to cart' 
-      };
-    }
-  }
-
-  async updateCartItem(itemId: string, quantity: number): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/cart/${itemId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ quantity }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update cart item');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Update cart item error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update cart item' 
-      };
-    }
+  async updateCartItem(itemId: string, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>(`/cart/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity }),
+    });
   }
 
   async removeFromCart(itemId: string): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/cart/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to remove from cart');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Remove from cart error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to remove from cart' 
-      };
-    }
+    return this.request<void>(`/cart/${itemId}`, {
+      method: 'DELETE',
+    });
   }
 
   async clearCart(): Promise<ApiResponse<void>> {
-    try {
-      const token = await this.getAuthToken();
-      const response = await fetch(`${this.baseURL}/api/cart`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to clear cart');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Clear cart error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to clear cart' 
-      };
-    }
+    return this.request<void>('/cart', {
+      method: 'DELETE',
+    });
+  }
+
+  async addToWishlist(productId: string): Promise<ApiResponse<void>> {
+    return this.request<void>('/wishlist/add', {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
+    });
+  }
+
+  async getWishlist(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/wishlist');
+  }
+
+  async removeFromWishlist(productId: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/wishlist/${productId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/products/featured');
+  }
+
+  async getCategories(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/products/categories');
+  }
+
+  async getStrains(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/products/strains');
+  }
+
+  async verifyAge(dateOfBirth: string, state: string): Promise<ApiResponse<{ verified: boolean }>> {
+    return this.request<{ verified: boolean }>('/compliance/verify-age', {
+      method: 'POST',
+      body: JSON.stringify({ dateOfBirth, state }),
+    });
+  }
+
+  async checkStateCompliance(state: string): Promise<ApiResponse<{ allowed: boolean; restrictions?: string[] }>> {
+    return this.request<{ allowed: boolean; restrictions?: string[] }>(`/compliance/state/${state}`);
+  }
+
+  async getRecommendations(): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>('/recommendations');
+  }
+
+  async searchProducts(query: string): Promise<ApiResponse<Product[]>> {
+    return this.request<Product[]>(`/search?q=${encodeURIComponent(query)}`);
+  }
+
+  async getOrderHistory(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/orders');
+  }
+
+  async getOrder(orderId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/orders/${orderId}`);
+  }
+
+  async createOrder(orderData: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+  }
+
+  async getPaymentMethods(): Promise<ApiResponse<Array<{
+    id: string;
+    name: string;
+    type: string;
+    available: boolean;
+  }>>> {
+    return this.request<Array<{
+      id: string;
+      name: string;
+      type: string;
+      available: boolean;
+    }>>('/payment/methods');
+  }
+
+  async processPayment(paymentData: any): Promise<ApiResponse<{
+    success: boolean;
+    transactionId?: string;
+    redirectUrl?: string;
+    error?: string;
+  }>> {
+    return this.request<{
+      success: boolean;
+      transactionId?: string;
+      redirectUrl?: string;
+      error?: string;
+    }>('/payment/process', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async getPaymentStatus(transactionId: string): Promise<ApiResponse<{
+    status: 'pending' | 'completed' | 'failed' | 'cancelled';
+    amount?: number;
+    orderId?: string;
+  }>> {
+    return this.request<{
+      status: 'pending' | 'completed' | 'failed' | 'cancelled';
+      amount?: number;
+      orderId?: string;
+    }>(`/payment/status/${transactionId}`);
   }
 }
 

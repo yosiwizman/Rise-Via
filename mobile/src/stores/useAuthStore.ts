@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import type { AuthUser, ApiResponse } from '../types/shared';
+import type { AuthUser, ApiResponse, LoginCredentials, RegisterData } from '../types/shared';
 import { api } from '../services/api';
 
 interface AuthState {
@@ -10,18 +10,35 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<ApiResponse<{ user: AuthUser; token: string }>>;
-  register: (userData: {
-    email: string;
-    password: string;
-    name: string;
-    phone?: string;
-    date_of_birth: string;
-  }) => Promise<ApiResponse<{ user: AuthUser; token: string }>>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   updateProfile: (userData: Partial<AuthUser>) => Promise<void>;
 }
+
+const secureStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    try {
+      return await SecureStore.getItemAsync(name);
+    } catch (error) {
+      return null;
+    }
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    try {
+      await SecureStore.setItemAsync(name, value);
+    } catch (error) {
+    }
+  },
+  removeItem: async (name: string): Promise<void> => {
+    try {
+      await SecureStore.deleteItemAsync(name);
+    } catch (error) {
+    }
+  },
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -31,88 +48,83 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
-      login: async (email: string, password: string) => {
+      login: async (credentials: LoginCredentials) => {
+        set({ isLoading: true, error: null });
+        
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await api.login(email, password);
+          const response = await api.login(credentials.email, credentials.password) as ApiResponse<{ user: AuthUser; token: string }>;
           
           if (response.success && response.data) {
+            const { user, token } = response.data;
+            
+            api.setAuthToken(token);
+            await SecureStore.setItemAsync('auth_token', token);
+            
             set({
-              user: response.data.user,
+              user,
               isAuthenticated: true,
               isLoading: false,
               error: null
             });
           } else {
-            set({
-              isLoading: false,
-              error: response.error || 'Login failed'
-            });
+            throw new Error(response.error || 'Login failed');
           }
-          
-          return response;
         } catch (error) {
-          console.error('Login error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Login failed';
           set({
             isLoading: false,
             error: errorMessage
           });
-          return {
-            success: false,
-            error: errorMessage
-          };
+          throw error;
         }
       },
 
-      register: async (userData) => {
+      register: async (data: RegisterData) => {
+        set({ isLoading: true, error: null });
+        
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await api.register(userData);
+          const response = await api.register(data) as ApiResponse<{ user: AuthUser; token: string }>;
           
           if (response.success && response.data) {
+            const { user, token } = response.data;
+            
+            api.setAuthToken(token);
+            await SecureStore.setItemAsync('auth_token', token);
+            
             set({
-              user: response.data.user,
+              user,
               isAuthenticated: true,
               isLoading: false,
               error: null
             });
           } else {
-            set({
-              isLoading: false,
-              error: response.error || 'Registration failed'
-            });
+            throw new Error(response.error || 'Registration failed');
           }
-          
-          return response;
         } catch (error) {
-          console.error('Registration error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Registration failed';
           set({
             isLoading: false,
             error: errorMessage
           });
-          return {
-            success: false,
-            error: errorMessage
-          };
+          throw error;
         }
       },
 
       logout: async () => {
         try {
           await api.logout();
-          await SecureStore.deleteItemAsync('auth_token');
-          set({
-            user: null,
-            isAuthenticated: false,
-            error: null
-          });
         } catch (error) {
-          console.error('Logout error:', error);
         }
+        
+        api.setAuthToken(null);
+        await SecureStore.deleteItemAsync('auth_token');
+        
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null
+        });
       },
 
       loadUser: async () => {
@@ -142,12 +154,37 @@ export const useAuthStore = create<AuthState>()(
             });
           }
         } catch (error) {
-          console.error('Load user error:', error);
           await get().logout();
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to load user'
           });
+        }
+      },
+
+      refreshUser: async () => {
+        const token = await SecureStore.getItemAsync('auth_token');
+        
+        if (!token) {
+          set({ user: null, isAuthenticated: false });
+          return;
+        }
+        
+        try {
+          api.setAuthToken(token);
+          
+          const response = await api.getMe() as ApiResponse<AuthUser>;
+          
+          if (response.success && response.data) {
+            set({
+              user: response.data,
+              isAuthenticated: true,
+            });
+          } else {
+            await get().logout();
+          }
+        } catch {
+          await get().logout();
         }
       },
 
@@ -168,7 +205,6 @@ export const useAuthStore = create<AuthState>()(
             error: null
           });
         } catch (error) {
-          console.error('Update profile error:', error);
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to update profile'
@@ -179,7 +215,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ 
         user: state.user, 
         isAuthenticated: state.isAuthenticated 
@@ -187,3 +223,8 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+export const initializeAuth = async () => {
+  const authStore = useAuthStore.getState();
+  await authStore.refreshUser();
+};

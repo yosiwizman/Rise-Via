@@ -9,6 +9,7 @@ import WishlistScreen from '../screens/WishlistScreen';
 import AccountScreen from '../screens/AccountScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import type { MainTabParamList } from '../types/navigation';
+import { useCartStore } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createStackNavigator<MainTabParamList>();
@@ -32,6 +33,8 @@ function WishlistStack() {
 }
 
 export default function MainTabNavigator() {
+  const { itemCount } = useCartStore();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -65,7 +68,17 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Shop" component={ShopStack} />
-      <Tab.Screen name="Cart" component={CartScreen} />
+      <Tab.Screen 
+        name="Cart" 
+        component={CartScreen}
+        options={{
+          tabBarBadge: itemCount > 0 ? itemCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#10b981',
+            color: '#ffffff',
+          },
+        }}
+      />
       <Tab.Screen name="Wishlist" component={WishlistStack} />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>

@@ -17,6 +17,7 @@ interface CartState {
   loadCart: () => Promise<void>;
   syncWithServer: () => Promise<void>;
   updateTotals: () => void;
+  getCartTotal: () => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -64,7 +65,6 @@ export const useCartStore = create<CartState>()(
             throw new Error('Failed to add to cart');
           }
         } catch (error) {
-          console.error('Add to cart error:', error);
           set({ 
             error: 'Failed to add item to cart',
             isLoading: false 
@@ -88,7 +88,6 @@ export const useCartStore = create<CartState>()(
             throw new Error('Failed to remove from cart');
           }
         } catch (error) {
-          console.error('Remove from cart error:', error);
           set({ 
             error: 'Failed to remove item from cart',
             isLoading: false 
@@ -119,7 +118,6 @@ export const useCartStore = create<CartState>()(
             throw new Error('Failed to update cart item');
           }
         } catch (error) {
-          console.error('Update cart item error:', error);
           set({ 
             error: 'Failed to update cart item',
             isLoading: false 
@@ -144,7 +142,6 @@ export const useCartStore = create<CartState>()(
             throw new Error('Failed to clear cart');
           }
         } catch (error) {
-          console.error('Clear cart error:', error);
           set({ 
             error: 'Failed to clear cart',
             isLoading: false 
@@ -168,7 +165,6 @@ export const useCartStore = create<CartState>()(
             throw new Error('Failed to load cart');
           }
         } catch (error) {
-          console.error('Load cart error:', error);
           set({ 
             error: 'Failed to load cart',
             isLoading: false 
@@ -185,7 +181,6 @@ export const useCartStore = create<CartState>()(
             get().updateTotals();
           }
         } catch (error) {
-          console.error('Sync cart error:', error);
         }
       },
 
@@ -195,6 +190,10 @@ export const useCartStore = create<CartState>()(
         const totalPrice = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
         
         set({ itemCount, totalPrice });
+      },
+
+      getCartTotal: () => {
+        return get().totalPrice;
       }
     }),
     {
@@ -209,3 +208,19 @@ export const useCartStore = create<CartState>()(
     }
   )
 );
+
+export const syncCartWithServer = async () => {
+  try {
+    const response = await api.getCart();
+    
+    if (response.success && response.data) {
+      const cartStore = useCartStore.getState();
+      cartStore.clearCart();
+      
+      response.data.forEach((item: CartItem) => {
+        cartStore.addItem(item.product, item.quantity);
+      });
+    }
+  } catch (error) {
+  }
+};

@@ -36,7 +36,6 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
               await logout();
               navigation.navigate('Auth', { screen: 'Login' });
             } catch (error) {
-              console.error('Logout error:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
             }
           },
@@ -44,6 +43,26 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
       ]
     );
   };
+
+  const menuItems = [
+    { id: 'profile', icon: 'person-outline', title: 'Edit Profile', onPress: () => {} },
+    { id: 'orders', icon: 'receipt-outline', title: 'Order History', onPress: () => {} },
+    { id: 'wishlist', icon: 'heart-outline', title: 'Wishlist', onPress: () => navigation.navigate('Wishlist') },
+    { id: 'addresses', icon: 'location-outline', title: 'Addresses', onPress: () => {} },
+    { id: 'payment', icon: 'card-outline', title: 'Payment Methods', onPress: () => {} },
+    { id: 'notifications', icon: 'notifications-outline', title: 'Notifications', onPress: () => {} },
+    { id: 'privacy', icon: 'shield-outline', title: 'Privacy Settings', onPress: () => {} },
+    { id: 'help', icon: 'help-circle-outline', title: 'Help & Support', onPress: () => {} },
+    { id: 'terms', icon: 'document-text-outline', title: 'Terms & Privacy', onPress: () => {} },
+  ];
+
+  const renderMenuItem = (item: typeof menuItems[0]) => (
+    <TouchableOpacity key={item.id} style={styles.menuItem} onPress={item.onPress}>
+      <Ionicons name={item.icon as any} size={24} color="#10b981" />
+      <Text style={styles.menuItemText}>{item.title}</Text>
+      <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+    </TouchableOpacity>
+  );
 
   if (!isAuthenticated) {
     return (
@@ -98,60 +117,14 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
           
           {user?.loyalty_points !== undefined && (
             <View style={styles.loyaltySection}>
+              <Text style={styles.loyaltyTitle}>Loyalty Points</Text>
               <Text style={styles.loyaltyPoints}>{user.loyalty_points}</Text>
-              <Text style={styles.loyaltyLabel}>Loyalty Points</Text>
             </View>
           )}
         </View>
 
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="person-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Edit Profile</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="location-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Addresses</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="receipt-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Order History</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="card-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Payment Methods</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="gift-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Loyalty Program</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="notifications-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="help-circle-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Help & Support</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="document-text-outline" size={24} color="#9ca3af" />
-            <Text style={styles.menuItemText}>Terms & Privacy</Text>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
+          {menuItems.map(renderMenuItem)}
         </View>
 
         <View style={styles.logoutSection}>
@@ -159,11 +132,6 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
             <Ionicons name="log-out-outline" size={24} color="#ef4444" />
             <Text style={styles.logoutButtonText}>Sign Out</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>RiseViA Mobile v1.0.0</Text>
-          <Text style={styles.footerSubtext}>Premium Cannabis Products</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -173,10 +141,41 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
   },
   scrollContent: {
-    paddingBottom: 20,
+    flexGrow: 1,
+    padding: 20,
+  },
+  unauthenticatedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  unauthenticatedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  unauthenticatedSubtitle: {
+    fontSize: 16,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  signInButton: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  signInButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
@@ -184,43 +183,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#9ca3af',
-    fontSize: 16,
-  },
-  unauthenticatedContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  unauthenticatedTitle: {
-    fontSize: 20,
-    fontWeight: '600',
     color: '#ffffff',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  unauthenticatedSubtitle: {
     fontSize: 16,
-    color: '#9ca3af',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  signInButton: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 8,
-  },
-  signInButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#374151',
+    marginBottom: 30,
   },
   profileSection: {
     flexDirection: 'row',
@@ -231,73 +198,72 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#10b981',
+    backgroundColor: '#374151',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 15,
   },
   profileInfo: {
     flex: 1,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 5,
   },
   userEmail: {
     fontSize: 16,
     color: '#9ca3af',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   membershipBadge: {
-    backgroundColor: '#fbbf24',
-    paddingHorizontal: 8,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 12,
     alignSelf: 'flex-start',
   },
   membershipText: {
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '600',
-    color: '#1a1a1a',
   },
   loyaltySection: {
-    alignItems: 'center',
-    backgroundColor: '#4b5563',
+    backgroundColor: '#374151',
+    padding: 20,
     borderRadius: 12,
-    padding: 16,
+    alignItems: 'center',
+  },
+  loyaltyTitle: {
+    fontSize: 16,
+    color: '#9ca3af',
+    marginBottom: 5,
   },
   loyaltyPoints: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#10b981',
   },
-  loyaltyLabel: {
-    fontSize: 14,
-    color: '#9ca3af',
-    marginTop: 4,
-  },
   menuSection: {
-    backgroundColor: '#374151',
-    marginTop: 20,
+    marginBottom: 30,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#4b5563',
+    backgroundColor: '#374151',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   menuItemText: {
     flex: 1,
     fontSize: 16,
     color: '#ffffff',
-    marginLeft: 16,
+    marginLeft: 12,
   },
   logoutSection: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginTop: 'auto',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -305,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#374151',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#ef4444',
   },
@@ -314,19 +280,5 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontWeight: '600',
     marginLeft: 8,
-  },
-  footer: {
-    alignItems: 'center',
-    marginTop: 40,
-    paddingHorizontal: 20,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 12,
-    color: '#4b5563',
   },
 });
