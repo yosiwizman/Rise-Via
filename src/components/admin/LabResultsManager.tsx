@@ -39,6 +39,12 @@ export const LabResultsManager: React.FC = () => {
 
   const fetchLabResults = async () => {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty lab results');
+        setLabResults([]);
+        return;
+      }
+
       const data = await sql`
         SELECT * FROM lab_results 
         ORDER BY created_at DESC
@@ -79,6 +85,12 @@ export const LabResultsManager: React.FC = () => {
     const qrCode = generateQRCode(formData as LabResult);
     
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, cannot add lab result');
+        alert('Database not available');
+        return;
+      }
+
       await sql`
         INSERT INTO lab_results (
           product_id, batch_id, test_date, expiration_date, thca_percentage, 

@@ -16,6 +16,11 @@ export interface PriceAlert {
 export const priceAlertsService = {
   async createAlert(alert: Omit<PriceAlert, 'id' | 'created_at' | 'triggered_at' | 'notification_sent'>): Promise<PriceAlert | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for price alert creation');
+        return null;
+      }
+
       const alerts = await sql`
         INSERT INTO price_alerts (customer_id, product_id, product_name, target_price, current_price, is_active)
         VALUES (${alert.customer_id}, ${alert.product_id}, ${alert.product_name}, ${alert.target_price}, ${alert.current_price}, ${alert.is_active})
@@ -29,6 +34,11 @@ export const priceAlertsService = {
 
   async getCustomerAlerts(customerId: string): Promise<PriceAlert[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for customer alerts');
+        return [];
+      }
+
       const alerts = await sql`
         SELECT * FROM price_alerts 
         WHERE customer_id = ${customerId} AND is_active = true
@@ -42,6 +52,11 @@ export const priceAlertsService = {
 
   async updateAlert(alertId: string, updates: Partial<PriceAlert>): Promise<PriceAlert | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for price alert update');
+        return null;
+      }
+
       if (updates.target_price !== undefined) {
         const alerts = await sql`
           UPDATE price_alerts 
@@ -70,6 +85,11 @@ export const priceAlertsService = {
 
   async deleteAlert(alertId: string): Promise<boolean> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning false for price alert deletion');
+        return false;
+      }
+
       const result = await sql`
         UPDATE price_alerts 
         SET is_active = false
@@ -83,6 +103,11 @@ export const priceAlertsService = {
 
   async checkPriceDrops(productId: string, newPrice: number): Promise<PriceAlert[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for price drops check');
+        return [];
+      }
+
       const triggeredAlerts = await sql`
         SELECT * FROM price_alerts 
         WHERE product_id = ${productId} 
@@ -110,6 +135,11 @@ export const priceAlertsService = {
 
   async updateProductPrices(productId: string, newPrice: number): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping product price update');
+        return;
+      }
+
       await sql`
         UPDATE price_alerts 
         SET current_price = ${newPrice}

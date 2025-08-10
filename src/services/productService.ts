@@ -4,6 +4,11 @@ import { Product, InventoryLog, InventoryAlert } from '../types/product';
 export const productService = {
   async createTables() {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping table creation');
+        return;
+      }
+
       await sql`
         CREATE TABLE IF NOT EXISTS products (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,6 +69,11 @@ export const productService = {
 
   async getAll(): Promise<Product[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for products');
+        return [];
+      }
+
       const products = await sql`
         SELECT * FROM products 
         ORDER BY created_at DESC
@@ -77,6 +87,11 @@ export const productService = {
 
   async getById(id: string): Promise<Product | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for product');
+        return null;
+      }
+
       const products = await sql`
         SELECT * FROM products 
         WHERE id = ${id}
@@ -90,6 +105,11 @@ export const productService = {
 
   async create(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for product creation');
+        return null;
+      }
+
       const products = await sql`
         INSERT INTO products (
           sample_id, name, slug, category, strain_type, thca_percentage, 
@@ -132,6 +152,11 @@ export const productService = {
   async update(id: string, updates: Partial<Product>): Promise<Product | null> {
     try {
       if (Object.keys(updates).length === 0) return null;
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for product update');
+        return null;
+      }
 
       const products = await sql`
         UPDATE products 
@@ -176,6 +201,11 @@ export const productService = {
       const previousCount = product.volume_available || product.inventory || 0;
       const changeAmount = newCount - previousCount;
 
+      if (!sql) {
+        console.warn('⚠️ Database not available, cannot update inventory');
+        throw new Error('Database not available');
+      }
+
       await sql`
         UPDATE products 
         SET volume_available = ${newCount}, inventory = ${newCount}, updated_at = NOW()
@@ -208,6 +238,11 @@ export const productService = {
 
   async logInventoryChange(log: Omit<InventoryLog, 'id' | 'created_at'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping inventory log');
+        return;
+      }
+
       await sql`
         INSERT INTO inventory_logs (product_id, change_amount, reason, previous_count, new_count, user_id)
         VALUES (${log.product_id}, ${log.change_amount}, ${log.reason}, ${log.previous_count}, ${log.new_count}, ${log.user_id || null})
@@ -220,6 +255,11 @@ export const productService = {
 
   async createInventoryAlert(alert: Omit<InventoryAlert, 'id' | 'created_at'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping inventory alert');
+        return;
+      }
+
       await sql`
         INSERT INTO inventory_alerts (product_id, alert_type, threshold, current_value, resolved)
         VALUES (${alert.product_id}, ${alert.alert_type}, ${alert.threshold}, ${alert.current_value}, ${alert.resolved})
@@ -232,6 +272,11 @@ export const productService = {
 
   async getInventoryLogs(productId?: string): Promise<InventoryLog[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty inventory logs');
+        return [];
+      }
+
       let products;
       if (productId) {
         products = await sql`
@@ -254,6 +299,11 @@ export const productService = {
 
   async getInventoryAlerts(resolved: boolean = false): Promise<InventoryAlert[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty inventory alerts');
+        return [];
+      }
+
       const alerts = await sql`
         SELECT * FROM inventory_alerts 
         WHERE resolved = ${resolved}
@@ -268,6 +318,11 @@ export const productService = {
 
   async resolveAlert(alertId: string): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, cannot resolve alert');
+        throw new Error('Database not available');
+      }
+
       await sql`
         UPDATE inventory_alerts 
         SET resolved = true, updated_at = NOW()
@@ -286,9 +341,18 @@ export const productService = {
     priceRange?: { min: number; max: number };
   } = {}): Promise<Product[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array');
+        return [];
+      }
+
       let query = sql`SELECT * FROM products WHERE 1=1`;
       
       if (searchTerm) {
+        if (!sql) {
+          console.warn('⚠️ Database not available, returning empty array');
+          return [];
+        }
         query = sql`
           SELECT * FROM products 
           WHERE (name ILIKE ${'%' + searchTerm + '%'} 
@@ -316,6 +380,11 @@ export const productService = {
 
   async getByCategory(category: string): Promise<Product[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty products array');
+        return [];
+      }
+
       const products = await sql`
         SELECT * FROM products 
         WHERE category = ${category}
@@ -330,6 +399,11 @@ export const productService = {
 
   async getFeatured(): Promise<Product[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty featured products');
+        return [];
+      }
+
       const products = await sql`
         SELECT * FROM products 
         WHERE featured = true

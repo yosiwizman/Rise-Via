@@ -22,6 +22,12 @@ export const authService = {
       return { success: true };
     }
     const passwordHash = await hashPassword(password);
+    
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning login failure');
+      throw new Error('Database not available');
+    }
+    
     const users = await sql`
       SELECT id, email, created_at 
       FROM users 
@@ -41,6 +47,11 @@ export const authService = {
   },
 
   async register(email: string, password: string) {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning registration failure');
+      throw new Error('Database not available');
+    }
+    
     const existingUsers = await sql`
       SELECT id FROM users WHERE email = ${email}
     `;
@@ -73,6 +84,12 @@ export const authService = {
       const sessionData = localStorage.getItem(SESSION_KEY);
       if (!sessionData) return null;
       const user = JSON.parse(sessionData);
+      
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning cached user');
+        return user;
+      }
+      
       const users = await sql`
         SELECT id, email, created_at 
         FROM users 
@@ -108,6 +125,11 @@ export const authService = {
   },
 
   async requestPasswordReset(email: string): Promise<void> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, cannot process password reset');
+      throw new Error('Database not available');
+    }
+    
     const users = await sql`
       SELECT id FROM users WHERE email = ${email}
     `;
@@ -134,6 +156,11 @@ export const authService = {
   },
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, cannot reset password');
+      throw new Error('Database not available');
+    }
+
     const resetTokens = await sql`
       SELECT user_id FROM password_reset_tokens 
       WHERE token = ${token} AND expires_at > NOW()

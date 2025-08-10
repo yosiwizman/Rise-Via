@@ -127,6 +127,11 @@ class WholesalePricingService {
         dueDate
       };
 
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for purchase order creation');
+        return null;
+      }
+
       await sql`
         INSERT INTO purchase_orders (
           id, customer_id, order_number, items, subtotal, discount, total, 
@@ -147,6 +152,11 @@ class WholesalePricingService {
 
   async getPurchaseOrders(customerId: string): Promise<PurchaseOrder[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for purchase orders');
+        return [];
+      }
+
       const orders = await sql`
         SELECT * FROM purchase_orders 
         WHERE customer_id = ${customerId} 
@@ -174,6 +184,11 @@ class WholesalePricingService {
 
   async updatePurchaseOrderStatus(orderId: string, status: PurchaseOrder['status']): Promise<boolean> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning false for purchase order status update');
+        return false;
+      }
+
       await sql`
         UPDATE purchase_orders 
         SET status = ${status}, updated_at = ${new Date().toISOString()}
@@ -212,6 +227,11 @@ Status: ${purchaseOrder.status}
 
   async createPurchaseOrdersTable(): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping purchase orders table creation');
+        return;
+      }
+
       await sql`
         CREATE TABLE IF NOT EXISTS purchase_orders (
           id VARCHAR(255) PRIMARY KEY,

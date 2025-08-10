@@ -31,6 +31,11 @@ export interface CreateOrderData {
 export const orderService = {
   async createOrder(orderData: CreateOrderData): Promise<Order | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for order creation');
+        return null;
+      }
+
       const orders = await sql`
         INSERT INTO orders (customer_id, total, status)
         VALUES (${orderData.customer_id}, ${orderData.total}, 'pending')
@@ -56,6 +61,11 @@ export const orderService = {
 
   async getOrder(orderId: string): Promise<Order | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for order retrieval');
+        return null;
+      }
+
       const orders = await sql`
         SELECT * FROM orders 
         WHERE id = ${orderId}
@@ -68,6 +78,11 @@ export const orderService = {
 
   async getOrdersByCustomerEmail(email: string): Promise<Order[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for orders by email');
+        return [];
+      }
+
       const orders = await sql`
         SELECT * FROM orders 
         WHERE customer_email = ${email}
@@ -81,6 +96,11 @@ export const orderService = {
 
   async getOrdersByCustomer(customerId: string): Promise<Order[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for orders by customer');
+        return [];
+      }
+
       const orders = await sql`
         SELECT * FROM orders 
         WHERE customer_id = ${customerId}
@@ -94,6 +114,11 @@ export const orderService = {
 
   async getOrderItems(orderId: string): Promise<OrderItem[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for order items');
+        return [];
+      }
+
       const items = await sql`
         SELECT * FROM order_items 
         WHERE order_id = ${orderId}
@@ -107,6 +132,11 @@ export const orderService = {
 
   async updateOrderStatus(orderId: string, status: string): Promise<Order | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for order status update');
+        return null;
+      }
+
       const orders = await sql`
         UPDATE orders 
         SET status = ${status}, updated_at = NOW()

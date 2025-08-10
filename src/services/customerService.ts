@@ -43,6 +43,11 @@ export interface LoyaltyTransaction {
 
 export const customerService = {
   async getAll() {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty array for customers');
+      return [];
+    }
+
     const customers = await sql`
       SELECT c.*, 
              json_agg(cp.*) as customer_profiles
@@ -55,6 +60,11 @@ export const customerService = {
   },
 
   async create(customer: Customer) {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning null for customer creation');
+      return null;
+    }
+
     const customers = await sql`
       INSERT INTO customers (email, first_name, last_name, phone)
       VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null})
@@ -74,6 +84,11 @@ export const customerService = {
   },
 
   async update(id: string, updates: Partial<Customer>) {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning null for customer update');
+      return null;
+    }
+
     const customers = await sql`
       UPDATE customers 
       SET email = COALESCE(${updates.email}, email),
@@ -90,6 +105,11 @@ export const customerService = {
 
   async getCustomerProfile(customerId: string): Promise<CustomerProfile | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for customer profile');
+        return null;
+      }
+
       const profiles = await sql`
         SELECT * FROM customer_profiles 
         WHERE customer_id = ${customerId}
@@ -102,6 +122,11 @@ export const customerService = {
 
   async updateCustomerProfile(customerId: string, updates: Partial<CustomerProfile>): Promise<CustomerProfile | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for customer profile update');
+        return null;
+      }
+
       const existingProfiles = await sql`
         SELECT id FROM customer_profiles 
         WHERE customer_id = ${customerId}
@@ -137,6 +162,11 @@ export const customerService = {
 
   async getLoyaltyTransactions(customerId: string): Promise<LoyaltyTransaction[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for loyalty transactions');
+        return [];
+      }
+
       const transactions = await sql`
         SELECT * FROM loyalty_transactions 
         WHERE customer_id = ${customerId}
@@ -150,6 +180,11 @@ export const customerService = {
 
   async addLoyaltyTransaction(transaction: Omit<LoyaltyTransaction, 'id' | 'created_at'>): Promise<LoyaltyTransaction | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for loyalty transaction');
+        return null;
+      }
+
       const transactions = await sql`
         INSERT INTO loyalty_transactions (customer_id, type, points, description)
         VALUES (${transaction.customer_id}, ${transaction.type}, ${transaction.points}, ${transaction.description})
@@ -162,6 +197,11 @@ export const customerService = {
   },
 
   async search(searchTerm: string, filters: SearchFilters = {}) {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty array for customer search');
+      return [];
+    }
+
     const whereConditions = ['1=1'];
 
     if (searchTerm) {

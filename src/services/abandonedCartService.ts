@@ -62,6 +62,11 @@ export const abandonedCartService = {
     customerEmail?: string
   ): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping abandoned cart save');
+        return;
+      }
+
       await sql`
         INSERT INTO abandoned_carts (session_id, customer_email, cart_data, total_amount, created_at, last_updated)
         VALUES (${sessionId}, ${customerEmail || null}, ${JSON.stringify(cartData)}, ${totalAmount}, NOW(), NOW())
@@ -125,6 +130,11 @@ export const abandonedCartService = {
     limit: number = 100
   ): Promise<AbandonedCart[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty abandoned carts array');
+        return [];
+      }
+
       const result = await sql`
         SELECT * FROM abandoned_carts 
         WHERE last_updated < NOW() - INTERVAL '${hoursOld} hours'
@@ -164,6 +174,11 @@ export const abandonedCartService = {
 
   async markRecoveryEmailSent(cartId: string): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping recovery email mark');
+        return;
+      }
+
       await sql`
         UPDATE abandoned_carts 
         SET recovery_email_sent = true 
@@ -177,6 +192,11 @@ export const abandonedCartService = {
 
   async markCartRecovered(sessionId: string): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping cart recovery mark');
+        return;
+      }
+
       await sql`
         UPDATE abandoned_carts 
         SET recovered = true 
@@ -338,6 +358,18 @@ export const abandonedCartService = {
     recoveredValue: number;
   }> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty recovery stats');
+        return {
+          totalAbandoned: 0,
+          emailsSent: 0,
+          recovered: 0,
+          recoveryRate: 0,
+          totalValue: 0,
+          recoveredValue: 0
+        };
+      }
+
       const stats = await sql`
         SELECT 
           COUNT(*) as total_abandoned,
