@@ -5,6 +5,7 @@ import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Download, Eye, User, Building } from 'lucide-react';
 import { customerService } from '../../services/customerService';
+import { safeToFixed } from '../../utils/formatters';
 
 interface Customer {
   id: string;
@@ -155,7 +156,7 @@ export const CustomerList = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              ${(typeof customers.reduce((sum, c) => sum + (c.customer_profiles?.[0]?.lifetime_value || c.profile?.lifetimeValue || 0), 0) === 'number' ? customers.reduce((sum, c) => sum + (c.customer_profiles?.[0]?.lifetime_value || c.profile?.lifetimeValue || 0), 0) : parseFloat(customers.reduce((sum, c) => sum + (c.customer_profiles?.[0]?.lifetime_value || c.profile?.lifetimeValue || 0), 0)) || 0).toFixed(0)}
+              ${safeToFixed(customers.reduce((sum, c) => sum + (c.customer_profiles?.[0]?.lifetime_value || c.profile?.lifetimeValue || 0), 0), 0)}
             </div>
             <div className="text-sm text-gray-600">Total LTV</div>
           </CardContent>
@@ -234,7 +235,7 @@ export const CustomerList = () => {
                       </Badge>
                     </td>
                     <td className="p-3">{customer.customer_profiles?.[0]?.total_orders || customer.profile?.totalOrders || 0}</td>
-                    <td className="p-3">${(typeof (customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0) === 'number' ? (customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0) : parseFloat(customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0) || 0).toFixed(2)}</td>
+                    <td className="p-3">${safeToFixed(customer.customer_profiles?.[0]?.lifetime_value || customer.profile?.lifetimeValue || 0)}</td>
                     <td className="p-3">{customer.customer_profiles?.[0]?.loyalty_points || customer.profile?.loyaltyPoints || 0}</td>
                     <td className="p-3">
                       {customer.customer_profiles?.[0]?.is_b2b || customer.profile?.isB2B ? (

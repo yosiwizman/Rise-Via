@@ -16,6 +16,7 @@ import {
   Download
 } from 'lucide-react';
 import { complianceService, type ComplianceAlert, type StateCompliance } from '../services/ComplianceService';
+import { safeToFixed } from '../utils/formatters';
 
 interface ComplianceStats {
   totalStates: number;
@@ -316,7 +317,7 @@ export default function ComplianceDashboard() {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Tax Rate:</span>
-                          <span>{(typeof (state.taxRate * 100) === 'number' ? (state.taxRate * 100) : parseFloat(state.taxRate * 100) || 0).toFixed(1)}%</span>
+                          <span>{safeToFixed(state.taxRate * 100, 1)}%</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-2">
                           Updated: {new Date(state.lastUpdated).toLocaleDateString()}

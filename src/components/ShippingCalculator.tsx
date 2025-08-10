@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Truck, MapPin, Clock, DollarSign } from 'lucide-react';
 import { getStateRestriction, canShipToState } from '../utils/stateRestrictions';
+import { safeToFixed } from '../utils/formatters';
 
 interface ShippingCalculatorProps {
   cartItems: Array<{
@@ -300,7 +301,7 @@ export const ShippingCalculator: React.FC<ShippingCalculatorProps> = ({
               <div className="text-right">
                 <div className="flex items-center text-lg font-semibold text-gray-900 dark:text-white">
                   <DollarSign className="w-5 h-5" />
-                  {(typeof method.cost === 'number' ? method.cost : parseFloat(method.cost) || 0).toFixed(2)}
+                  {safeToFixed(method.cost)}
                 </div>
               </div>
             </div>
@@ -315,7 +316,7 @@ export const ShippingCalculator: React.FC<ShippingCalculatorProps> = ({
           className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
         >
           <p className="text-sm text-green-700 dark:text-green-300">
-            <strong>{selectedMethod.name}</strong> selected - ${(typeof selectedMethod.cost === 'number' ? selectedMethod.cost : parseFloat(selectedMethod.cost) || 0).toFixed(2)}
+            <strong>{selectedMethod.name}</strong> selected - ${safeToFixed(selectedMethod.cost)}
           </p>
           <p className="text-xs text-green-600 dark:text-green-400 mt-1">
             Estimated delivery: {selectedMethod.estimatedDays}
@@ -325,7 +326,7 @@ export const ShippingCalculator: React.FC<ShippingCalculatorProps> = ({
 
       <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
         <p>
-          Shipping costs are calculated based on package weight ({(typeof calculateWeight() === 'number' ? calculateWeight() : parseFloat(calculateWeight()) || 0).toFixed(1)} lbs), 
+          Shipping costs are calculated based on package weight ({safeToFixed(calculateWeight(), 1)} lbs), 
           destination, and selected service level. All shipments include tracking information.
         </p>
       </div>

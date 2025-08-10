@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { CreditCard, Lock, AlertTriangle } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { orderService } from '../services/orderService';
+import { safeToFixed } from '../utils/formatters';
 
 const stripePromise = loadStripe((import.meta as { env?: { VITE_STRIPE_PUBLISHABLE_KEY?: string } }).env?.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51placeholder');
 
@@ -148,7 +149,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
           <div className="flex justify-between items-center text-white">
             <span className="text-lg font-semibold">Total:</span>
             <span className="text-xl font-bold text-risevia-teal">
-              ${(typeof getCartTotal() === 'number' ? getCartTotal() : parseFloat(getCartTotal()) || 0).toFixed(2)}
+              ${safeToFixed(getCartTotal())}
             </span>
           </div>
 
@@ -157,7 +158,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
             disabled={!stripe || processing}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white font-semibold py-3"
           >
-            {processing ? 'Processing...' : `Pay $${(typeof getCartTotal() === 'number' ? getCartTotal() : parseFloat(getCartTotal()) || 0).toFixed(2)}`}
+            {processing ? 'Processing...' : `Pay $${safeToFixed(getCartTotal())}`}
           </Button>
 
           <Alert className="bg-yellow-950/20 border-yellow-500/50">
