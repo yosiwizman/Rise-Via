@@ -57,6 +57,11 @@ export const couponService = {
     }
 
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, falling back to mock coupons');
+        throw new Error('Database unavailable');
+      }
+
       const result = await sql/* sql */`
         SELECT *
         FROM coupons
@@ -119,6 +124,11 @@ export const couponService = {
   async applyCoupon(code: string): Promise<void> {
     const normalized = normalizeCode(code);
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, cannot apply coupon');
+        throw new Error('Database unavailable');
+      }
+
       await sql/* sql */`
         UPDATE coupons
         SET current_uses = current_uses + 1

@@ -3,8 +3,24 @@
  * Provides intelligent product recommendations and customer support
  */
 
-// AI Service now uses secure server-side API endpoints
-// OpenAI API key is kept on the server, never exposed to browser
+import OpenAI from 'openai';
+
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!openai && import.meta.env.VITE_OPENAI_API_KEY && import.meta.env.VITE_OPENAI_API_KEY !== 'your_openai_api_key') {
+    try {
+      openai = new OpenAI({
+        apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true
+      });
+    } catch (error) {
+      console.error('Failed to initialize OpenAI client:', error);
+      return null;
+    }
+  }
+  return openai;
+}
 
 export interface UserPreferences {
   desiredEffects?: string[];
@@ -38,6 +54,9 @@ export class AIService {
    */
   static async getStrainRecommendation(userPreferences: UserPreferences): Promise<string> {
     try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY === 'your_openai_api_key') {
+        return 'AI recommendations are currently unavailable. Please contact our support team for personalized strain recommendations.';
+      }
 
       const prompt = `Based on the following cannabis preferences, recommend suitable THCA strains:
       
@@ -50,19 +69,28 @@ Medical Conditions: ${userPreferences.medicalConditions?.join(', ') || 'None spe
 
 Please recommend 3 specific strains and explain why each would be suitable. Focus on effects, terpene profiles, and user experience. Keep recommendations compliant and educational.`;
 
-      // Call secure server endpoint
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'recommendation'
-        })
+      const client = getOpenAIClient();
+      if (!client) {
+        return 'AI recommendations are currently unavailable. Please contact our support team for personalized strain recommendations.';
+      }
+
+      const completion = await client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a knowledgeable cannabis consultant for Rise-Via. Provide helpful, educational information about cannabis strains while maintaining compliance with regulations. Never make medical claims."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
       });
 
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      return data.response || 'Unable to generate recommendations at this time.';
+      return completion.choices[0]?.message?.content || 'Unable to generate recommendations at this time.';
     } catch (error) {
       console.error('AI recommendation error:', error);
       return 'Recommendation service temporarily unavailable. Please try again later.';
@@ -116,6 +144,10 @@ Create a 150-word description that highlights the unique characteristics, effect
    */
   static async chat(message: string): Promise<string> {
     try {
+      if (!import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY === 'your_openai_api_key') {
+        return 'AI chat is currently unavailable. Please contact our support team for assistance with your cannabis questions.';
+      }
+
       // Add user message to history
       this.conversationHistory.push({
         role: 'user',
@@ -128,24 +160,30 @@ Create a 150-word description that highlights the unique characteristics, effect
         this.conversationHistory = this.conversationHistory.slice(-10);
       }
 
-      // Call the secure server-side API endpoint
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const messages = [
+        {
+          role: "system" as const,
+          content: "You are a helpful cannabis consultant for Rise-Via, a premium THCA cannabis e-commerce platform. Provide educational information about cannabis strains, effects, and products. Always remind users that you're 21+ only, maintain compliance with cannabis regulations, and never make medical claims. If asked about medical conditions, always recommend consulting a healthcare provider. Keep responses friendly, informative, and compliant."
         },
-        body: JSON.stringify({
-          message,
-          type: 'chat'
-        })
-      });
+        ...this.conversationHistory.slice(-8).map(msg => ({
+          role: msg.role as "user" | "assistant",
+          content: msg.content
+        }))
+      ];
 
-      if (!response.ok) {
-        throw new Error('API request failed');
+      const client = getOpenAIClient();
+      if (!client) {
+        return 'AI chat is currently unavailable. Please contact our support team for assistance with your cannabis questions.';
       }
 
-      const data = await response.json();
-      const assistantResponse = data.response || 'I apologize, but I couldn\'t process your request. Please try again.';
+      const completion = await client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages,
+        max_tokens: 300,
+        temperature: 0.7
+      });
+
+      const assistantResponse = completion.choices[0]?.message?.content || 'I apologize, but I couldn\'t process your request. Please try again.';
 
       // Add assistant response to history
       this.conversationHistory.push({

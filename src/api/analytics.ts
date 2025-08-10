@@ -45,6 +45,16 @@ interface ComplianceEventData {
 
 export const analyticsAPI = {
   async getSalesMetrics(startDate: string, endDate: string): Promise<AnalyticsMetrics['salesMetrics']> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty sales metrics');
+      return {
+        totalRevenue: 0,
+        totalOrders: 0,
+        averageOrderValue: 0,
+        conversionRate: 0
+      };
+    }
+
     const orders = await sql`
       SELECT total_amount, status, created_at FROM orders 
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
@@ -74,6 +84,16 @@ export const analyticsAPI = {
   },
 
   async getCustomerMetrics(startDate: string, endDate: string): Promise<AnalyticsMetrics['customerMetrics']> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty customer metrics');
+      return {
+        totalCustomers: 0,
+        newCustomers: 0,
+        returningCustomers: 0,
+        customerLifetimeValue: 0
+      };
+    }
+
     const customers = await sql`
       SELECT c.id, c.created_at, cp.loyalty_points as lifetime_value, 
              COALESCE((SELECT COUNT(*) FROM orders WHERE customer_id = c.id), 0) as total_orders
@@ -103,6 +123,14 @@ export const analyticsAPI = {
   },
 
   async getProductMetrics(): Promise<AnalyticsMetrics['productMetrics']> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty product metrics');
+      return {
+        topProducts: [],
+        categoryPerformance: []
+      };
+    }
+
     const wishlistItems = await sql`
       SELECT wi.product_id, COUNT(*) as popularity 
       FROM wishlist_items wi
@@ -137,6 +165,15 @@ export const analyticsAPI = {
   },
 
   async getComplianceMetrics(startDate: string, endDate: string): Promise<AnalyticsMetrics['complianceMetrics']> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty compliance metrics');
+      return {
+        ageVerificationRate: 100,
+        stateBlockRate: 0,
+        complianceScore: 100
+      };
+    }
+
     const complianceEvents = await sql`
       SELECT event_type, compliance_result, risk_score 
       FROM compliance_events 

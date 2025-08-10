@@ -154,6 +154,10 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     try {
       const sessionToken = state.sessionToken;
 
+      if (!sql) {
+        throw new Error('Database not available');
+      }
+
       const sessionData = await sql`SELECT * FROM wishlist_sessions WHERE session_token = ${sessionToken}`;
 
       let finalSessionData = sessionData;
@@ -240,11 +244,20 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
         );
 
         if (!existingItem) {
+          if (!sql) {
+            console.warn('⚠️ Database not available, skipping wishlist migration');
+            return;
+          }
           await sql`
             INSERT INTO wishlist_items (session_id, product_id, name, price, image, category, priority)
             VALUES (${state.sessionId}, ${item.id}, ${item.name}, ${item.price}, ${item.image || ''}, ${item.category}, 'medium')
           `;
         }
+      }
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping wishlist sync');
+        return;
       }
 
       const itemsData = await sql`
@@ -327,17 +340,21 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
           duration: 3000,
         });
       } else {
-        await sql`
-          INSERT INTO wishlist_items (
-            session_id, product_id, name, price, image, category,
-            thc_content, cbd_content, effects, priority
-          )
-          VALUES (
-            ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price},
-            ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null},
-            ${newItem.cbdContent || null}, ${JSON.stringify(newItem.effects || [])}, ${newItem.priority}
-          )
-        `;
+        if (!sql) {
+          console.warn('⚠️ Database not available, item added to localStorage only');
+        } else {
+          await sql`
+            INSERT INTO wishlist_items (
+              session_id, product_id, name, price, image, category,
+              thc_content, cbd_content, effects, priority
+            )
+            VALUES (
+              ${currentState.sessionId}, ${newItem.id}, ${newItem.name}, ${newItem.price},
+              ${newItem.image || ''}, ${newItem.category}, ${newItem.thcContent || null},
+              ${newItem.cbdContent || null}, ${JSON.stringify(newItem.effects || [])}, ${newItem.priority}
+            )
+          `;
+        }
 
         const updatedItems = [...currentState.items, newItem];
         const updatedStats = calculateStats(updatedItems);
@@ -390,7 +407,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
           error: null
         });
       } else {
-        await sql`DELETE FROM wishlist_items WHERE id = ${itemId}`;
+        if (!sql) {
+          console.warn('⚠️ Database not available, item removed from localStorage only');
+        } else {
+          await sql`DELETE FROM wishlist_items WHERE id = ${itemId}`;
+        }
 
         const updatedItems = state.items.filter(item => item.id !== itemId);
         const updatedStats = calculateStats(updatedItems);
@@ -424,7 +445,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`UPDATE wishlist_items SET priority = ${priority} WHERE id = ${itemId}`;
+      if (!sql) {
+        console.warn('⚠️ Database not available, priority updated in localStorage only');
+      } else {
+        await sql`UPDATE wishlist_items SET priority = ${priority} WHERE id = ${itemId}`;
+      }
 
       const updatedItems = state.items.map(item =>
         item.id === itemId ? { ...item, priority } : item
@@ -449,7 +474,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`DELETE FROM wishlist_items WHERE session_id = ${state.sessionId}`;
+      if (!sql) {
+        console.warn('⚠️ Database not available, wishlist cleared from localStorage only');
+      } else {
+        await sql`DELETE FROM wishlist_items WHERE session_id = ${state.sessionId}`;
+      }
 
       set({
         items: [],
@@ -571,7 +600,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`UPDATE wishlist_items SET price_alert = ${JSON.stringify(priceAlert)} WHERE id = ${itemId}`;
+      if (!sql) {
+        console.warn('⚠️ Database not available, price alert set in localStorage only');
+      } else {
+        await sql`UPDATE wishlist_items SET price_alert = ${JSON.stringify(priceAlert)} WHERE id = ${itemId}`;
+      }
 
       const updatedItems = state.items.map(item => {
         if (item.id === itemId) {
@@ -604,7 +637,11 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await sql`UPDATE wishlist_items SET price_alert = NULL WHERE id = ${itemId}`;
+      if (!sql) {
+        console.warn('⚠️ Database not available, price alert removed from localStorage only');
+      } else {
+        await sql`UPDATE wishlist_items SET price_alert = NULL WHERE id = ${itemId}`;
+      }
 
       const updatedItems = state.items.map(item => {
         if (item.id === itemId) {

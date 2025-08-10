@@ -1,6 +1,13 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
+const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+
+if (!isValidDatabaseUrl) {
+  console.warn('⚠️ No valid database URL provided in ComplianceService.ts. Running in development mode with mock data.');
+}
+
+const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
 
 export interface StateCompliance {
   state: string;
@@ -31,6 +38,35 @@ export interface ComplianceAlert {
   resolvedAt?: string;
 }
 
+interface StateComplianceRow {
+  state: string;
+  is_legal: boolean;
+  age_requirement: number;
+  max_possession: string;
+  home_grow_allowed: boolean;
+  public_consumption: boolean;
+  driving_limit: string;
+  retail_sales_allowed: boolean;
+  delivery_allowed: boolean;
+  online_ordering_allowed: boolean;
+  tax_rate: string;
+  license_required: boolean;
+  last_updated: Date;
+}
+
+interface ComplianceAlertRow {
+  id: string;
+  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action_required: boolean;
+  deadline: Date | null;
+  affected_states: string;
+  created_at: Date;
+  resolved_at: Date | null;
+}
+
 export interface AuditLog {
   id: string;
   userId: string;
@@ -41,6 +77,35 @@ export interface AuditLog {
   userAgent: string;
   timestamp: string;
   complianceFlags: string[];
+}
+
+interface StateComplianceRow {
+  state: string;
+  is_legal: boolean;
+  age_requirement: number;
+  max_possession: string;
+  home_grow_allowed: boolean;
+  public_consumption: boolean;
+  driving_limit: string;
+  retail_sales_allowed: boolean;
+  delivery_allowed: boolean;
+  online_ordering_allowed: boolean;
+  tax_rate: string;
+  license_required: boolean;
+  last_updated: Date;
+}
+
+interface ComplianceAlertRow {
+  id: string;
+  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action_required: boolean;
+  deadline: Date | null;
+  affected_states: string;
+  created_at: Date;
+  resolved_at: Date | null;
 }
 
 interface ComplianceEvent {
@@ -73,6 +138,11 @@ class ComplianceService {
     try {
       if (this.isCacheValid() && this.complianceCache.has(state)) {
         return this.complianceCache.get(state)!;
+      }
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for state compliance');
+        return null;
       }
 
       const result = await sql`
@@ -116,12 +186,17 @@ class ComplianceService {
         return Array.from(this.complianceCache.values());
       }
 
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for state compliance');
+        return [];
+      }
+
       const result = await sql`
         SELECT DISTINCT ON (state) * FROM state_compliance 
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = result.map(row => ({
+      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row: StateComplianceRow) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -134,7 +209,7 @@ class ComplianceService {
         onlineOrderingAllowed: row.online_ordering_allowed,
         taxRate: parseFloat(row.tax_rate),
         licenseRequired: row.license_required,
-        lastUpdated: row.last_updated
+        lastUpdated: row.last_updated.toISOString()
       }));
 
       this.complianceCache.clear();
@@ -231,6 +306,11 @@ class ComplianceService {
 
   async logComplianceAction(auditLog: Omit<AuditLog, 'id' | 'timestamp'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance action logging');
+        return;
+      }
+
       await sql`
         INSERT INTO compliance_audit_logs (
           user_id, action, resource, details, ip_address, user_agent, compliance_flags
@@ -252,6 +332,11 @@ class ComplianceService {
 
   async getComplianceAlerts(severity?: ComplianceAlert['severity']): Promise<ComplianceAlert[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for compliance alerts');
+        return [];
+      }
+
       let query = sql`
         SELECT * FROM compliance_alerts 
         WHERE resolved_at IS NULL
@@ -266,17 +351,17 @@ class ComplianceService {
 
       const result = await query;
 
-      return result.map(row => ({
+      return (result as ComplianceAlertRow[]).map((row: ComplianceAlertRow) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
         title: row.title,
         description: row.description,
         actionRequired: row.action_required,
-        deadline: row.deadline,
+        deadline: row.deadline?.toISOString(),
         affectedStates: JSON.parse(row.affected_states || '[]'),
-        createdAt: row.created_at,
-        resolvedAt: row.resolved_at
+        createdAt: row.created_at.toISOString(),
+        resolvedAt: row.resolved_at?.toISOString()
       }));
     } catch (error) {
       console.error('Error fetching compliance alerts:', error);
@@ -286,6 +371,11 @@ class ComplianceService {
 
   async createComplianceAlert(alert: Omit<ComplianceAlert, 'id' | 'createdAt'>): Promise<string> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning mock ID for compliance alert');
+        return 'mock-alert-id';
+      }
+
       const result = await sql`
         INSERT INTO compliance_alerts (
           type, severity, title, description, action_required, deadline, affected_states
@@ -309,6 +399,11 @@ class ComplianceService {
 
   async resolveComplianceAlert(alertId: string): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance alert resolution');
+        return;
+      }
+
       await sql`
         UPDATE compliance_alerts 
         SET resolved_at = NOW() 
@@ -355,6 +450,11 @@ class ComplianceService {
   }
 
   async checkPurchaseLimit(sessionId: string, userId?: string, purchaseAmount: number = 0): Promise<boolean> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning true for purchase limit check');
+      return true;
+    }
+
     const existingLimitResult = await sql`
       SELECT * FROM purchase_limits 
       WHERE user_id = ${userId} OR session_id = ${sessionId}
@@ -398,6 +498,18 @@ class ComplianceService {
     averageRiskScore: number;
     complianceRate: number;
   }> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty compliance report');
+      return {
+        totalEvents: 0,
+        ageVerifications: 0,
+        stateBlocks: 0,
+        purchaseLimitViolations: 0,
+        averageRiskScore: 0,
+        complianceRate: 100
+      };
+    }
+
     const events = await sql`
       SELECT * FROM compliance_events 
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
@@ -420,6 +532,11 @@ class ComplianceService {
 
   private async logComplianceEvent(event: Omit<ComplianceEvent, 'id' | 'created_at'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance event logging');
+        return;
+      }
+
       await sql`
         INSERT INTO compliance_events (event_type, user_id, session_id, data, risk_score, compliance_result)
         VALUES (${event.event_type}, ${event.user_id}, ${event.session_id}, ${JSON.stringify(event.data)}, ${event.risk_score}, ${event.compliance_result})

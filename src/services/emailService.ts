@@ -40,19 +40,27 @@ const emailService = {
       
       if (error) throw error;
 
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
-        VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email sent', 'sent', NOW())
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email sent', 'sent', NOW())
+        `
+      }
       
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send welcome email:', error);
       
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status)
-        VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email failed', 'failed')
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, 'Welcome to Rise Via!', 'Welcome email failed', 'failed')
+        `
+      }
       
       return { success: false, error };
     }
@@ -75,19 +83,27 @@ const emailService = {
       
       if (error) throw error;
 
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
-        VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation sent', 'sent', NOW())
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation sent', 'sent', NOW())
+        `
+      }
       
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order confirmation:', error);
       
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status)
-        VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation failed', 'failed')
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, ${`Order Confirmation #${orderData.orderNumber}`}, 'Order confirmation failed', 'failed')
+        `
+      }
       
       return { success: false, error };
     }
@@ -119,19 +135,27 @@ const emailService = {
       
       if (error) throw error;
 
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status, sent_at)
-        VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status updated to ${newStatus}`}, 'sent', NOW())
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status updated to ${newStatus}`}, 'sent', NOW())
+        `
+      }
       
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order status update:', error);
       
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status)
-        VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status update failed for ${newStatus}`}, 'failed')
-      `
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, ${`Order Update #${orderData.orderNumber}`}, ${`Order status update failed for ${newStatus}`}, 'failed')
+        `
+      }
       
       return { success: false, error };
     }
@@ -139,6 +163,11 @@ const emailService = {
 
   async sendEmail(to: string, subject: string, body: string): Promise<boolean> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+        return true;
+      }
+
       await sql`
         INSERT INTO email_logs (to_email, subject, body, status, sent_at)
         VALUES (${to}, ${subject}, ${body}, 'sent', NOW())
@@ -151,6 +180,11 @@ const emailService = {
 
   async getEmailLogs(limit: number = 50): Promise<EmailLog[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty email logs');
+        return [];
+      }
+
       const logs = await sql`
         SELECT * FROM email_logs 
         ORDER BY created_at DESC 
@@ -164,6 +198,11 @@ const emailService = {
 
   async getEmailTemplate(name: string): Promise<EmailTemplate | null> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null email template');
+        return null;
+      }
+
       const templates = await sql`
         SELECT * FROM email_templates 
         WHERE name = ${name}

@@ -2,14 +2,20 @@ import { neon } from '@neondatabase/serverless';
 
 const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
 
-if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL not found in environment variables');
-  throw new Error('DATABASE_URL is required for Neon connection');
+const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+
+if (!isValidDatabaseUrl) {
+  console.warn('⚠️ No valid database URL provided. Running in development mode with mock data.');
 }
 
-export const sql = neon(DATABASE_URL);
+export const sql = isValidDatabaseUrl ? neon(DATABASE_URL!) : null;
 
 export async function query(text: string, params: (string | number | boolean | Date | null | undefined)[] = []) {
+  if (!sql) {
+    console.warn('⚠️ Database not available, returning mock data for query:', text.substring(0, 60) + '...');
+    return { rows: [], error: null };
+  }
+  
   try {
     console.log('🔵 Executing Neon query:', text.substring(0, 60) + '...');
     const startTime = Date.now();
