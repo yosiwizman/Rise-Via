@@ -1,6 +1,13 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
+const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+
+if (!isValidDatabaseUrl) {
+  console.warn('⚠️ No valid database URL provided in ComplianceService.ts. Running in development mode with mock data.');
+}
+
+const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
 
 export interface StateCompliance {
   state: string;
@@ -75,6 +82,11 @@ class ComplianceService {
         return this.complianceCache.get(state)!;
       }
 
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning null for state compliance');
+        return null;
+      }
+
       const result = await sql`
         SELECT * FROM state_compliance 
         WHERE state = ${state} 
@@ -116,12 +128,17 @@ class ComplianceService {
         return Array.from(this.complianceCache.values());
       }
 
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for state compliance');
+        return [];
+      }
+
       const result = await sql`
         SELECT DISTINCT ON (state) * FROM state_compliance 
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = result.map(row => ({
+      const complianceData: StateCompliance[] = result.map((row: any) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -231,6 +248,11 @@ class ComplianceService {
 
   async logComplianceAction(auditLog: Omit<AuditLog, 'id' | 'timestamp'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance action logging');
+        return;
+      }
+
       await sql`
         INSERT INTO compliance_audit_logs (
           user_id, action, resource, details, ip_address, user_agent, compliance_flags
@@ -252,6 +274,11 @@ class ComplianceService {
 
   async getComplianceAlerts(severity?: ComplianceAlert['severity']): Promise<ComplianceAlert[]> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty array for compliance alerts');
+        return [];
+      }
+
       let query = sql`
         SELECT * FROM compliance_alerts 
         WHERE resolved_at IS NULL
@@ -266,7 +293,7 @@ class ComplianceService {
 
       const result = await query;
 
-      return result.map(row => ({
+      return result.map((row: any) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
@@ -286,6 +313,11 @@ class ComplianceService {
 
   async createComplianceAlert(alert: Omit<ComplianceAlert, 'id' | 'createdAt'>): Promise<string> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning mock ID for compliance alert');
+        return 'mock-alert-id';
+      }
+
       const result = await sql`
         INSERT INTO compliance_alerts (
           type, severity, title, description, action_required, deadline, affected_states
@@ -309,6 +341,11 @@ class ComplianceService {
 
   async resolveComplianceAlert(alertId: string): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance alert resolution');
+        return;
+      }
+
       await sql`
         UPDATE compliance_alerts 
         SET resolved_at = NOW() 
@@ -355,6 +392,11 @@ class ComplianceService {
   }
 
   async checkPurchaseLimit(sessionId: string, userId?: string, purchaseAmount: number = 0): Promise<boolean> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning true for purchase limit check');
+      return true;
+    }
+
     const existingLimitResult = await sql`
       SELECT * FROM purchase_limits 
       WHERE user_id = ${userId} OR session_id = ${sessionId}
@@ -398,6 +440,18 @@ class ComplianceService {
     averageRiskScore: number;
     complianceRate: number;
   }> {
+    if (!sql) {
+      console.warn('⚠️ Database not available, returning empty compliance report');
+      return {
+        totalEvents: 0,
+        ageVerifications: 0,
+        stateBlocks: 0,
+        purchaseLimitViolations: 0,
+        averageRiskScore: 0,
+        complianceRate: 100
+      };
+    }
+
     const events = await sql`
       SELECT * FROM compliance_events 
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
@@ -420,6 +474,11 @@ class ComplianceService {
 
   private async logComplianceEvent(event: Omit<ComplianceEvent, 'id' | 'created_at'>): Promise<void> {
     try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping compliance event logging');
+        return;
+      }
+
       await sql`
         INSERT INTO compliance_events (event_type, user_id, session_id, data, risk_score, compliance_result)
         VALUES (${event.event_type}, ${event.user_id}, ${event.session_id}, ${JSON.stringify(event.data)}, ${event.risk_score}, ${event.compliance_result})

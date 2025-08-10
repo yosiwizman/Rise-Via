@@ -1,8 +1,20 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL || '');
+const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
+const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+
+if (!isValidDatabaseUrl) {
+  console.warn('⚠️ No valid database URL provided in database.ts. Running in development mode with mock data.');
+}
+
+const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
 
 export async function testConnection() {
+  if (!sql) {
+    console.warn('⚠️ Database not available, skipping connection test');
+    return false;
+  }
+  
   try {
     const result = await sql`SELECT 1 as test`;
     console.log('Neon Database connected:', result);
@@ -15,6 +27,11 @@ export async function testConnection() {
 
 // Create required tables if they don't exist
 export async function initializeTables() {
+  if (!sql) {
+    console.warn('⚠️ Database not available, skipping table initialization');
+    return false;
+  }
+  
   try {
     // Products table
     await sql`
