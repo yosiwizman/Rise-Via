@@ -13,12 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NavigationProp } from '@react-navigation/native';
 import type { MainTabParamList } from '../types/navigation';
+import type { Product } from '../types/shared';
 import { useCartStore } from '../stores/useCartStore';
 import { api } from '../services/api';
 
 export default function ShopScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -31,19 +32,38 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     { id: 'hybrid', label: 'Hybrid' },
   ];
 
+  const filterProducts = React.useCallback(() => {
+    let filtered = products;
+
+    if (searchQuery) {
+      filtered = filtered.filter((product: Product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.strain.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedFilter !== 'all') {
+      filtered = filtered.filter((product: Product) =>
+        product.type === selectedFilter
+      );
+    }
+
+    setFilteredProducts(filtered);
+  }, [products, searchQuery, selectedFilter]);
+
   useEffect(() => {
     loadProducts();
   }, []);
 
   useEffect(() => {
     filterProducts();
-  }, [products, searchQuery, selectedFilter]);
+  }, [filterProducts]);
 
   const loadProducts = async () => {
     try {
       const response = await api.getProducts();
-      if ((response as any).success && (response as any).data) {
-        setProducts((response as any).data);
+      if ((response as { success: boolean; data: Product[] }).success && (response as { success: boolean; data: Product[] }).data) {
+        setProducts((response as { success: boolean; data: Product[] }).data);
       }
     } catch (error) {
       console.error('Failed to load products:', error);
@@ -53,35 +73,17 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     }
   };
 
-  const filterProducts = () => {
-    let filtered = products;
-
-    if (searchQuery) {
-      filtered = filtered.filter((product: any) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.strain.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedFilter !== 'all') {
-      filtered = filtered.filter((product: any) =>
-        product.type === selectedFilter
-      );
-    }
-
-    setFilteredProducts(filtered);
-  };
-
-  const handleAddToCart = async (product: any) => {
+  const handleAddToCart = async (product: Product) => {
     try {
       await addItem(product, 1);
       Alert.alert('Success', `${product.name} added to cart!`);
     } catch (error) {
+      console.error('Add to cart error:', error);
       Alert.alert('Error', 'Failed to add item to cart. Please try again.');
     }
   };
 
-  const renderProduct = ({ item }: { item: any }) => (
+  const renderProduct = ({ item }: { item: Product }) => (
     <View style={styles.productCard}>
       <Image
         source={{ uri: item.image_url || 'https://via.placeholder.com/150' }}
@@ -107,7 +109,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     </View>
   );
 
-  const renderFilter = ({ item }: { item: any }) => (
+  const renderFilter = ({ item }: { item: { id: string; label: string } }) => (
     <TouchableOpacity
       style={[
         styles.filterButton,
@@ -160,7 +162,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
         <FlatList
           data={filters}
           renderItem={renderFilter}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item: { id: string; label: string }) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filtersList}
@@ -175,7 +177,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
         <FlatList
           data={filteredProducts}
           renderItem={renderProduct}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item: Product) => item.id}
           numColumns={2}
           contentContainerStyle={styles.productsList}
           showsVerticalScrollIndicator={false}

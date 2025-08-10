@@ -22,8 +22,6 @@ export type AuthStackParamList = {
   Main: undefined;
 };
 
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
+declare module '@react-navigation/native' {
+  export type RootParamList = RootStackParamList;
 }

@@ -12,6 +12,12 @@ import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAppStore } from '../stores/useAppStore';
 
+interface StateItem {
+  code: string;
+  name: string;
+  legal: boolean;
+}
+
 interface StateSelectionScreenProps {
   navigation: NavigationProp<RootStackParamList>;
 }
@@ -80,7 +86,7 @@ export default function StateSelectionScreen({ navigation }: StateSelectionScree
     }
   };
 
-  const renderState = ({ item }: { item: any }) => (
+  const renderState = ({ item }: { item: StateItem }) => (
     <TouchableOpacity
       style={[
         styles.stateItem,
@@ -119,7 +125,7 @@ export default function StateSelectionScreen({ navigation }: StateSelectionScree
         <FlatList
           data={CANNABIS_STATES}
           renderItem={renderState}
-          keyExtractor={(item: any) => item.code}
+          keyExtractor={(item: StateItem) => item.code}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.statesList}
         />
