@@ -1,27 +1,30 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import { AuthState, AuthUser, LoginCredentials, RegisterData } from '../types/shared';
+import { AuthState, LoginCredentials, RegisterData, ApiResponse } from '../types/shared';
 import { api, apiClient } from '../services/api';
 
 const secureStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       return await SecureStore.getItemAsync(name);
-    } catch {
+    } catch (error) {
+      console.error('SecureStore error:', error);
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
       await SecureStore.setItemAsync(name, value);
-    } catch {
+    } catch (error) {
+      console.error('SecureStore error:', error);
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
       await SecureStore.deleteItemAsync(name);
-    } catch {
+    } catch (error) {
+      console.error('SecureStore error:', error);
     }
   },
 };
@@ -37,10 +40,10 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          const response: any = await api.login(credentials.email, credentials.password);
+          const response = await api.login(credentials.email, credentials.password) as ApiResponse<{ user: any; token: string }>;
           
-          if ((response as any).success && (response as any).data) {
-            const { user, token } = (response as any).data;
+          if (response.success && response.data) {
+            const { user, token } = response.data;
             
             apiClient.setAuthToken(token);
             
@@ -64,10 +67,10 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          const response: any = await api.register(data);
+          const response = await api.register(data) as ApiResponse<{ user: any; token: string }>;
           
-          if ((response as any).success && (response as any).data) {
-            const { user, token } = (response as any).data;
+          if (response.success && response.data) {
+            const { user, token } = response.data;
             
             apiClient.setAuthToken(token);
             
@@ -115,11 +118,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           apiClient.setAuthToken(token);
           
-          const response = await apiClient.getMe();
+          const response = await apiClient.getMe() as ApiResponse<any>;
           
-          if ((response as any).success && (response as any).data) {
+          if (response.success && response.data) {
             set({
-              user: (response as any).data,
+              user: response.data,
               isAuthenticated: true,
             });
           } else {

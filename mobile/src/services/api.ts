@@ -48,33 +48,33 @@ export class ApiClient {
     }
   }
 
-  async login(email: string, password: string): Promise<any> {
+  async login(email: string, password: string): Promise<unknown> {
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   }
 
-  async register(userData: any): Promise<any> {
+  async register(userData: unknown): Promise<unknown> {
     return this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   }
 
-  async logout(): Promise<any> {
+  async logout(): Promise<unknown> {
     return this.request('/auth/logout', {
       method: 'POST',
     });
   }
 
-  async refreshToken(): Promise<any> {
+  async refreshToken(): Promise<unknown> {
     return this.request('/auth/refresh', {
       method: 'POST',
     });
   }
 
-  async getMe(): Promise<any> {
+  async getMe(): Promise<unknown> {
     return this.request('/auth/me');
   }
 
@@ -138,7 +138,7 @@ export class ApiClient {
     return this.request(`/orders/${id}`);
   }
 
-  async createOrder(orderData: any) {
+  async createOrder(orderData: unknown) {
     return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
@@ -162,14 +162,14 @@ export class ApiClient {
     });
   }
 
-  async chatWithAI(message: string, context?: any) {
+  async chatWithAI(message: string, context?: unknown) {
     return this.request('/ai-chat', {
       method: 'POST',
       body: JSON.stringify({ message, context }),
     });
   }
 
-  async getStrainRecommendations(preferences: any) {
+  async getStrainRecommendations(preferences: unknown) {
     return this.request('/ai/recommendations', {
       method: 'POST',
       body: JSON.stringify(preferences),
@@ -195,7 +195,7 @@ export class ApiClient {
     return this.request('/payments/methods');
   }
 
-  async processPayment(paymentData: any) {
+  async processPayment(paymentData: unknown) {
     return this.request('/payments/process', {
       method: 'POST',
       body: JSON.stringify(paymentData),
@@ -212,7 +212,7 @@ export const apiClient = new ApiClient();
 
 export const api = {
   login: (email: string, password: string) => apiClient.login(email, password),
-  register: (userData: any) => apiClient.register(userData),
+  register: (userData: unknown) => apiClient.register(userData),
   logout: () => apiClient.logout(),
   
   getProducts: (params?: any) => apiClient.getProducts(params),
@@ -229,15 +229,15 @@ export const api = {
   
   getOrders: () => apiClient.getOrders(),
   getOrder: (id: string) => apiClient.getOrder(id),
-  createOrder: (orderData: any) => apiClient.createOrder(orderData),
+  createOrder: (orderData: unknown) => apiClient.createOrder(orderData),
   
   getWishlist: () => apiClient.getWishlist(),
   addToWishlist: (productId: string) => apiClient.addToWishlist(productId),
   removeFromWishlist: (productId: string) => apiClient.removeFromWishlist(productId),
   
-  chatWithAI: (message: string, context?: any) => 
+  chatWithAI: (message: string, context?: unknown) => 
     apiClient.chatWithAI(message, context),
-  getStrainRecommendations: (preferences: any) => 
+  getStrainRecommendations: (preferences: unknown) => 
     apiClient.getStrainRecommendations(preferences),
   
   verifyAge: (dateOfBirth: string) => apiClient.verifyAge(dateOfBirth),
@@ -245,7 +245,7 @@ export const api = {
   getPurchaseLimits: (customerId: string) => apiClient.getPurchaseLimits(customerId),
   
   getPaymentMethods: () => apiClient.getPaymentMethods(),
-  processPayment: (paymentData: any) => apiClient.processPayment(paymentData),
+  processPayment: (paymentData: unknown) => apiClient.processPayment(paymentData),
   getPaymentStatus: (transactionId: string) => 
     apiClient.getPaymentStatus(transactionId),
 };

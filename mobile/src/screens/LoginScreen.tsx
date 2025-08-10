@@ -11,10 +11,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NavigationProp } from '@react-navigation/native';
+import type { AuthStackParamList } from '../types/navigation';
 import { useAuthStore } from '../stores/useAuthStore';
 
 interface LoginScreenProps {
-  navigation: any;
+  navigation: NavigationProp<AuthStackParamList>;
 }
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
@@ -30,7 +32,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     try {
       await login({ email, password });
-      navigation.replace('Main');
+      navigation.navigate('Main');
     } catch (error) {
       Alert.alert(
         'Login Failed',

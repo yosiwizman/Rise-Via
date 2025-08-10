@@ -11,10 +11,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NavigationProp } from '@react-navigation/native';
+import type { AuthStackParamList } from '../types/navigation';
 import { useAuthStore } from '../stores/useAuthStore';
 
 interface RegisterScreenProps {
-  navigation: any;
+  navigation: NavigationProp<AuthStackParamList>;
 }
 
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
@@ -50,7 +52,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         last_name: lastName,
         phone: phone || undefined,
       });
-      navigation.replace('Main');
+      navigation.navigate('Main');
     } catch (error) {
       Alert.alert(
         'Registration Failed',

@@ -1,27 +1,30 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CartState, CartItem, Product } from '../types/shared';
+import { CartState, CartItem, Product, ApiResponse } from '../types/shared';
 import { api } from '../services/api';
 
 const asyncStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       return await AsyncStorage.getItem(name);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
       await AsyncStorage.setItem(name, value);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
       await AsyncStorage.removeItem(name);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
     }
   },
 };
@@ -154,7 +157,7 @@ function calculateItemCount(items: CartItem[]): number {
 
 export const syncCartWithServer = async () => {
   try {
-    const response: any = await api.getCart();
+    const response = await api.getCart() as ApiResponse<{ items: CartItem[] }>;
     if (response.success && response.data) {
       const serverItems = response.data.items || [];
       const total = calculateTotal(serverItems);

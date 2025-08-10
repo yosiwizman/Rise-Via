@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { NavigationProp } from '@react-navigation/native';
+import type { MainTabParamList } from '../types/navigation';
 import { useCartStore } from '../stores/useCartStore';
 import { api } from '../services/api';
 
-export default function ShopScreen({ navigation }: any) {
+export default function ShopScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,7 +160,7 @@ export default function ShopScreen({ navigation }: any) {
         <FlatList
           data={filters}
           renderItem={renderFilter}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filtersList}
@@ -173,7 +175,7 @@ export default function ShopScreen({ navigation }: any) {
         <FlatList
           data={filteredProducts}
           renderItem={renderProduct}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
           numColumns={2}
           contentContainerStyle={styles.productsList}
           showsVerticalScrollIndicator={false}

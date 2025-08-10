@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { NavigationProp } from '@react-navigation/native';
+import type { MainTabParamList } from '../types/navigation';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useAppStore } from '../stores/useAppStore';
 
-export default function AccountScreen({ navigation }: any) {
+export default function AccountScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
   const { user, logout } = useAuthStore();
   const { selectedState } = useAppStore();
 
@@ -27,7 +29,7 @@ export default function AccountScreen({ navigation }: any) {
           style: 'destructive', 
           onPress: async () => {
             await logout();
-            navigation.replace('Auth');
+            navigation.navigate('Auth', { screen: 'Login' });
           }
         },
       ]

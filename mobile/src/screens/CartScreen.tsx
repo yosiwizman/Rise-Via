@@ -10,9 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { NavigationProp } from '@react-navigation/native';
+import type { MainTabParamList } from '../types/navigation';
 import { useCartStore } from '../stores/useCartStore';
 
-export default function CartScreen({ navigation }: any) {
+export default function CartScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
   const { items, removeItem, updateQuantity, clearCart, getCartTotal } = useCartStore();
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
@@ -128,7 +130,7 @@ export default function CartScreen({ navigation }: any) {
           <FlatList
             data={items}
             renderItem={renderCartItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item: any) => item.id}
             style={styles.cartList}
             showsVerticalScrollIndicator={false}
           />

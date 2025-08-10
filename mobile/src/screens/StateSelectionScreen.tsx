@@ -8,10 +8,12 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../types/navigation';
 import { useAppStore } from '../stores/useAppStore';
 
 interface StateSelectionScreenProps {
-  navigation: any;
+  navigation: NavigationProp<RootStackParamList>;
 }
 
 const CANNABIS_STATES = [
@@ -59,7 +61,7 @@ export default function StateSelectionScreen({ navigation }: StateSelectionScree
             text: 'Continue Browsing',
             onPress: () => {
               setSelectedState(stateCode);
-              navigation.replace('Auth');
+              navigation.navigate('MainTabs', { screen: 'Home' });
             }
           }
         ]
@@ -70,11 +72,11 @@ export default function StateSelectionScreen({ navigation }: StateSelectionScree
     try {
       await checkCompliance(stateCode);
       setSelectedState(stateCode);
-      navigation.replace('Auth');
+      navigation.navigate('MainTabs', { screen: 'Home' });
     } catch (error) {
       console.error('Compliance check failed:', error);
       setSelectedState(stateCode);
-      navigation.replace('Auth');
+      navigation.navigate('MainTabs', { screen: 'Home' });
     }
   };
 
@@ -117,7 +119,7 @@ export default function StateSelectionScreen({ navigation }: StateSelectionScree
         <FlatList
           data={CANNABIS_STATES}
           renderItem={renderState}
-          keyExtractor={(item) => item.code}
+          keyExtractor={(item: any) => item.code}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.statesList}
         />

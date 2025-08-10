@@ -10,13 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { NavigationProp } from '@react-navigation/native';
+import type { MainTabParamList } from '../types/navigation';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useCartStore } from '../stores/useCartStore';
 import { api } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
   const { user } = useAuthStore();
   const { itemCount } = useCartStore();
   const [featuredProducts, setFeaturedProducts] = useState([]);

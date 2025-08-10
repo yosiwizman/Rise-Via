@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../types/navigation';
 import { useAppStore } from '../stores/useAppStore';
 
 interface AgeVerificationScreenProps {
-  navigation: any;
+  navigation: NavigationProp<RootStackParamList>;
 }
 
 export default function AgeVerificationScreen({ navigation }: AgeVerificationScreenProps) {
@@ -57,7 +59,7 @@ export default function AgeVerificationScreen({ navigation }: AgeVerificationScr
     setTimeout(() => {
       setAgeVerified(true);
       setIsLoading(false);
-      navigation.replace('StateSelection');
+      navigation.navigate('StateSelection');
     }, 1000);
   };
 

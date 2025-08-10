@@ -1,27 +1,30 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, ComplianceCheck } from '../types/shared';
+import { AppState, ComplianceCheck, ApiResponse } from '../types/shared';
 import { api } from '../services/api';
 
 const asyncStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       return await AsyncStorage.getItem(name);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
       await AsyncStorage.setItem(name, value);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
       await AsyncStorage.removeItem(name);
-    } catch {
+    } catch (error) {
+      console.error('AsyncStorage error:', error);
     }
   },
 };
@@ -57,7 +60,7 @@ export const useAppStore = create<AppState>()(
 
       checkCompliance: async (state: string) => {
         try {
-          const response: any = await api.checkStateCompliance(state);
+          const response = await api.checkStateCompliance(state) as ApiResponse<ComplianceCheck>;
           
           if (response.success && response.data) {
             set({ complianceData: response.data });
