@@ -18,6 +18,7 @@ class ApiClient {
     try {
       this.authToken = await SecureStore.getItemAsync('auth_token');
     } catch {
+      // Handle error silently
     }
   }
 
@@ -34,6 +35,7 @@ class ApiClient {
       try {
         this.authToken = await SecureStore.getItemAsync('auth_token');
       } catch {
+        // Handle error silently
       }
     }
 

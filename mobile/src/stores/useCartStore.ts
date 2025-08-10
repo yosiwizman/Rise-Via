@@ -181,6 +181,7 @@ export const useCartStore = create<CartState>()(
             get().updateTotals();
           }
         } catch {
+          // Handle error silently
         }
       },
 
@@ -222,5 +223,6 @@ export const syncCartWithServer = async () => {
       });
     }
   } catch {
+    // Handle error silently
   }
 };

@@ -29,12 +29,14 @@ const secureStorage = {
     try {
       await SecureStore.setItemAsync(name, value);
     } catch {
+      // Handle error silently
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
       await SecureStore.deleteItemAsync(name);
     } catch {
+      // Handle error silently
     }
   },
 };
@@ -113,6 +115,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await api.logout();
         } catch {
+          // Handle error silently
         }
         
         api.setAuthToken(null);
