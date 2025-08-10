@@ -3,12 +3,13 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
+import { User, Star, Gift, ShoppingBag, Crown, Copy, Bell, Trash2 } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
 import { orderService } from '../services/orderService';
 import { customerService } from '../services/customerService';
 import { membershipService, MEMBERSHIP_TIERS } from '../services/membershipService';
+import { priceAlertsService, PriceAlert } from '../services/priceAlertsService';
 
 interface Order {
   id: string;
@@ -45,6 +46,7 @@ export const AccountPage = () => {
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
   const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
   const fetchCustomerData = useCallback(async () => {
     try {
@@ -52,9 +54,11 @@ export const AccountPage = () => {
 
       const ordersData = await orderService.getOrdersByCustomer(customer.id);
       const transactionsData = await customerService.getLoyaltyTransactions(customer.id);
+      const alertsData = await priceAlertsService.getCustomerAlerts(customer.id);
 
       setOrders(ordersData || []);
       setLoyaltyTransactions(transactionsData || []);
+      setPriceAlerts(alertsData || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const tierInfo = membershipService.getTierInfo(tierName);
@@ -122,6 +126,20 @@ export const AccountPage = () => {
     if (referralCode) {
       navigator.clipboard.writeText(referralCode);
       alert('Referral code copied to clipboard!');
+    }
+  };
+
+  const handleDeleteAlert = async (alertId: string) => {
+    try {
+      const success = await priceAlertsService.deleteAlert(alertId);
+      if (success) {
+        setPriceAlerts(prev => prev.filter(alert => alert.id !== alertId));
+        window.alert('Price alert removed successfully!');
+      } else {
+        window.alert('Failed to remove price alert');
+      }
+    } catch {
+      window.alert('Failed to remove price alert');
     }
   };
 
@@ -299,7 +317,7 @@ export const AccountPage = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -368,6 +386,46 @@ export const AccountPage = () => {
                       {transaction.type === 'EARNED' || transaction.type === 'BONUS' ? '+' : ''}
                       {transaction.points}
                     </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bell className="w-5 h-5 mr-2" />
+              Price Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {priceAlerts.length === 0 ? (
+                <div className="text-center text-gray-500 py-4">
+                  No price alerts set. Visit product pages to set alerts when prices drop!
+                </div>
+              ) : (
+                priceAlerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{alert.product_name}</div>
+                      <div className="text-xs text-gray-600">
+                        Alert when price drops to ${alert.target_price.toFixed(2)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Current: ${alert.current_price.toFixed(2)}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteAlert(alert.id)}
+                      className="ml-2"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 ))
               )}
