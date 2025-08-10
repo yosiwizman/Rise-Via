@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -37,7 +37,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     { id: 'hybrid', label: 'Hybrid' },
   ];
 
-  const filterProducts = () => {
+  const filterProducts = useCallback(() => {
     let filtered = [...products];
 
     if (selectedFilter !== 'all') {
@@ -68,7 +68,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     });
 
     setFilteredProducts(filtered);
-  };
+  }, [products, selectedFilter, searchQuery, sortBy]);
 
   useEffect(() => {
     loadProducts();
