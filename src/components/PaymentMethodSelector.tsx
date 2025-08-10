@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from './ui/alert';
 import { CreditCard, Smartphone, Building, AlertTriangle, CheckCircle } from 'lucide-react';
 import { paymentService } from '../services/paymentService';
 import { useCart } from '../hooks/useCart';
+import { orderService } from '../services/orderService';
+import { revenueAnalytics } from '../analytics/revenueAnalytics';
 
 interface PaymentMethodSelectorProps {
   onPaymentComplete: (result: { success: boolean; error?: string; orderNumber?: string; paymentMethod?: string; transactionId?: string }) => void;
@@ -25,7 +27,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [availableMethods, setAvailableMethods] = useState<typeof paymentMethods>([]);
-  const { clearCart } = useCart();
+  const { clearCart, items: cartItems } = useCart();
 
   const paymentMethods = useMemo(() => [
     {
@@ -86,24 +88,70 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
 
     setIsProcessing(true);
     try {
-      // Create order data for payment processing
+      // Create order in database first
       const orderData = {
-        orderId: `RV-${Date.now()}`,
+        customer_id: customerData.email, // Using email as customer ID for now
+        items: cartItems.map(item => ({
+          product_id: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: totalAmount
+      };
+
+      const order = await orderService.createOrder(orderData);
+      
+      if (!order) {
+        throw new Error('Failed to create order in database');
+      }
+
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = subtotal * 0.08;
+      const shipping = subtotal > 100 ? 0 : 10;
+      
+      const transaction = {
+        id: order.id,
+        timestamp: Date.now(),
+        customerId: customerData.email,
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          productName: item.name,
+          category: item.category || 'Cannabis',
+          quantity: item.quantity,
+          unitPrice: item.price,
+          totalPrice: item.price * item.quantity,
+          costOfGoodsSold: item.price * 0.6
+        })),
+        subtotal,
+        tax,
+        shipping,
+        total: totalAmount,
+        paymentMethod: selectedMethod,
+        customerSegment: 'retail' as const
+      };
+
+      revenueAnalytics.recordSale(transaction);
+
+      const paymentData = {
+        orderId: order.id,
         amount: totalAmount,
         customerId: customerData.email,
-        items: [] // TODO: Get cart items
+        items: cartItems
       };
       
-      const result = await paymentService.processPayment(orderData, selectedMethod);
+      const result = await paymentService.processPayment(paymentData, selectedMethod);
 
       if (result.success) {
+        await orderService.updateOrderStatus(order.id, 'completed');
+
         clearCart();
         onPaymentComplete({
           ...result,
-          orderNumber: `RV-${Date.now()}`,
+          orderNumber: order.id,
           paymentMethod: selectedMethod
         });
       } else {
+        await orderService.updateOrderStatus(order.id, 'failed');
         onPaymentComplete(result);
       }
     } catch (error) {

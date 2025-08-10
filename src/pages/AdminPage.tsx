@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard, Bot } from 'lucide-react';
+import { Shield, Package, Upload, FileText, DollarSign, BarChart3, Users, Settings, Activity, Warehouse, CreditCard, Bot, TrendingUp, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -8,6 +8,9 @@ import { Label } from '../components/ui/label';
 import { SEOHead } from '../components/SEOHead';
 import { CustomerList } from '../components/admin/CustomerList';
 import { DashboardMetrics } from '../components/admin/DashboardMetrics';
+import { RevenueAnalyticsDashboard } from '../components/admin/RevenueAnalyticsDashboard';
+import { CustomerIntelligenceDashboard } from '../components/admin/CustomerIntelligenceDashboard';
+import { InventoryManagementDashboard } from '../components/admin/InventoryManagementDashboard';
 import { ProductManager } from '../components/admin/ProductManager';
 import { ProductMediaManager } from '../components/admin/ProductMediaManager';
 import { BulkProductUpload } from '../components/admin/BulkProductUpload';
@@ -105,6 +108,9 @@ export const AdminPage = () => {
 
   const adminTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'revenue', label: 'Revenue Analytics', icon: TrendingUp },
+    { id: 'customer-intelligence', label: 'Customer Intelligence', icon: Brain },
+    { id: 'inventory-analytics', label: 'Inventory Analytics', icon: Warehouse },
     { id: 'orders', label: 'Orders', icon: Package },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: Warehouse },
@@ -123,6 +129,15 @@ export const AdminPage = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardMetrics />;
+      
+      case 'revenue':
+        return <RevenueAnalyticsDashboard />;
+      
+      case 'customer-intelligence':
+        return <CustomerIntelligenceDashboard />;
+      
+      case 'inventory-analytics':
+        return <InventoryManagementDashboard />;
       
       case 'orders':
         return <OrderManager />;
