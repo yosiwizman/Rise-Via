@@ -8,7 +8,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import { toast } from 'sonner';
 import productsData from '../data/products.json';
 import { productService } from '../services/productService';
-import type { Product } from '../types/product';
+import type { Product as ProductType } from '../types/product';
 
 interface FilterOptions {
   strainType?: string;
@@ -21,7 +21,7 @@ interface FilterOptions {
 
 export const ShopPage = () => {
   const [filter, setFilter] = useState('all');
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -37,12 +37,12 @@ export const ShopPage = () => {
       setLoading(true);
       const dbProducts = await productService.getAll();
       if (dbProducts.length > 0) {
-        setProducts(dbProducts as Product[]);
+        setProducts(dbProducts as ProductType[]);
       } else {
-        setProducts(productsData.products as Product[]);
+        setProducts(productsData.products as ProductType[]);
       }
     } catch {
-      setProducts(productsData.products as Product[]);
+      setProducts(productsData.products as ProductType[]);
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export const ShopPage = () => {
     }
   };
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: ProductType) => {
     const productData = {
       productId: product.id || '',
       name: product.name,
@@ -231,10 +231,11 @@ export const ShopPage = () => {
                     name: product.name,
                     price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
                     images: product.images || [],
+                    category: product.category || '',
                     strain_type: product.strain_type || product.strainType,
                     thc_percentage: product.thca_percentage || product.thcaPercentage,
                     cbd_percentage: undefined,
-                    description: product.description
+                    description: product.description || ''
                   }}
                   onAddToCart={handleAddToCart}
                   onToggleWishlist={handleToggleWishlist}

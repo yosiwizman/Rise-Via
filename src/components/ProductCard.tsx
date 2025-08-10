@@ -12,10 +12,11 @@ interface Product {
   name: string;
   price: number;
   images: string[];
+  category: string;
   strain_type?: string;
   thc_percentage?: number;
   cbd_percentage?: number;
-  description?: string;
+  description: string;
 }
 
 interface ProductCardProps {
