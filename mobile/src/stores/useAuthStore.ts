@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import { AuthState, LoginCredentials, RegisterData, ApiResponse } from '../types/shared';
+import { AuthState, LoginCredentials, RegisterData, ApiResponse, AuthUser } from '../types/shared';
 import { api, apiClient } from '../services/api';
 
 const secureStorage = {
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          const response = await api.login(credentials.email, credentials.password) as ApiResponse<{ user: any; token: string }>;
+          const response = await api.login(credentials.email, credentials.password) as ApiResponse<{ user: AuthUser; token: string }>;
           
           if (response.success && response.data) {
             const { user, token } = response.data;
@@ -67,7 +67,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          const response = await api.register(data) as ApiResponse<{ user: any; token: string }>;
+          const response = await api.register(data) as ApiResponse<{ user: AuthUser; token: string }>;
           
           if (response.success && response.data) {
             const { user, token } = response.data;
@@ -93,7 +93,8 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await api.logout();
-        } catch {
+        } catch (error) {
+          console.error('Logout error:', error);
         }
         
         apiClient.setAuthToken(null);
@@ -118,7 +119,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           apiClient.setAuthToken(token);
           
-          const response = await apiClient.getMe() as ApiResponse<any>;
+          const response = await apiClient.getMe() as ApiResponse<AuthUser>;
           
           if (response.success && response.data) {
             set({

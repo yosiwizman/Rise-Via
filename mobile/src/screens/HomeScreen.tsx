@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,12 +15,11 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useCartStore } from '../stores/useCartStore';
 import { api } from '../services/api';
 
-const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
   const { user } = useAuthStore();
   const { itemCount } = useCartStore();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState<{ id: string; name: string; strain: string; price: number; image_url?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +29,8 @@ export default function HomeScreen({ navigation }: { navigation: NavigationProp<
   const loadFeaturedProducts = async () => {
     try {
       const response = await api.getFeaturedProducts();
-      if ((response as any).success && (response as any).data) {
-        setFeaturedProducts((response as any).data.slice(0, 3));
+      if ((response as { success: boolean; data: { id: string; name: string; strain: string; price: number; image_url?: string }[] }).success && (response as { success: boolean; data: { id: string; name: string; strain: string; price: number; image_url?: string }[] }).data) {
+        setFeaturedProducts((response as { success: boolean; data: { id: string; name: string; strain: string; price: number; image_url?: string }[] }).data.slice(0, 3));
       }
     } catch (error) {
       console.error('Failed to load featured products:', error);
@@ -41,7 +39,7 @@ export default function HomeScreen({ navigation }: { navigation: NavigationProp<
     }
   };
 
-  const handleProductPress = (product: any) => {
+  const handleProductPress = (product: { id: string; name: string; strain: string; price: number; image_url?: string }) => {
     navigation.navigate('Shop', { productId: product.id });
   };
 
@@ -96,7 +94,7 @@ export default function HomeScreen({ navigation }: { navigation: NavigationProp<
               showsHorizontalScrollIndicator={false}
               style={styles.productsScroll}
             >
-              {featuredProducts.map((product: any) => (
+              {featuredProducts.map((product: { id: string; name: string; strain: string; price: number; image_url?: string }) => (
                 <TouchableOpacity
                   key={product.id}
                   style={styles.productCard}

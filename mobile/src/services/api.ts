@@ -86,7 +86,7 @@ export class ApiClient {
     search?: string;
   }) {
     const queryString = params 
-      ? '?' + new URLSearchParams(params as any).toString()
+      ? '?' + new URLSearchParams(params as Record<string, string>).toString()
       : '';
     
     return this.request(`/products${queryString}`);
@@ -215,7 +215,7 @@ export const api = {
   register: (userData: unknown) => apiClient.register(userData),
   logout: () => apiClient.logout(),
   
-  getProducts: (params?: any) => apiClient.getProducts(params),
+  getProducts: (params?: { page?: number; limit?: number; strain?: string; type?: string; search?: string }) => apiClient.getProducts(params),
   getProduct: (id: string) => apiClient.getProduct(id),
   getFeaturedProducts: () => apiClient.getFeaturedProducts(),
   

@@ -71,7 +71,7 @@ export default function AgeVerificationScreen({ navigation }: AgeVerificationScr
     );
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
+  const onDateChange = (event: unknown, selectedDate?: Date) => {
     const currentDate = selectedDate || birthDate;
     setShowDatePicker(Platform.OS === 'ios');
     setBirthDate(currentDate);

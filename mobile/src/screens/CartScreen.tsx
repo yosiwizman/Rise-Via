@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NavigationProp } from '@react-navigation/native';
 import type { MainTabParamList } from '../types/navigation';
+import type { CartItem } from '../types/shared';
 import { useCartStore } from '../stores/useCartStore';
 
 export default function CartScreen({ navigation }: { navigation: NavigationProp<MainTabParamList> }) {
@@ -56,7 +57,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
     );
   };
 
-  const renderCartItem = ({ item }: { item: any }) => (
+  const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <Image
         source={{ uri: item.product.image_url || 'https://via.placeholder.com/80' }}
@@ -130,7 +131,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
           <FlatList
             data={items}
             renderItem={renderCartItem}
-            keyExtractor={(item: any) => item.id}
+            keyExtractor={(item: CartItem) => item.id}
             style={styles.cartList}
             showsVerticalScrollIndicator={false}
           />

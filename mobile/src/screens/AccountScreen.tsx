@@ -87,14 +87,14 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
     },
   ];
 
-  const renderMenuItem = (item: any) => (
+  const renderMenuItem = (item: { id: string; title: string; icon: string; onPress: () => void }) => (
     <TouchableOpacity
       key={item.id}
       style={styles.menuItem}
       onPress={item.onPress}
     >
       <View style={styles.menuItemLeft}>
-        <Ionicons name={item.icon as any} size={24} color="#10b981" />
+        <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={24} color="#10b981" />
         <Text style={styles.menuItemTitle}>{item.title}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
