@@ -14,7 +14,11 @@ interface CartSidebarProps {
 }
 
 export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) => {
-  const { items, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { items, removeFromCart, updateQuantity, clearCart, stats } = useCart();
+  
+  if (!stats) {
+    return null;
+  }
 
   const CartItemComponent = ({ item }: { item: CartItem }) => {
     const [isUpdating, setIsUpdating] = useState(false);
@@ -175,12 +179,12 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Progress to free delivery</span>
-                <span>${useCart.getState().stats.subtotal.toFixed(2)} / $75.00</span>
+                <span>${(stats?.subtotal || 0).toFixed(2)} / $75.00</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-gradient-to-r from-risevia-purple to-risevia-teal h-2 rounded-full transition-all"
-                  style={{ width: `${Math.min((useCart.getState().stats.subtotal / 75) * 100, 100)}%` }}
+                  style={{ width: `${Math.min(((stats?.subtotal || 0) / 75) * 100, 100)}%` }}
                 />
               </div>
             </div>
@@ -189,22 +193,22 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal:</span>
-                <span>${useCart.getState().stats.subtotal.toFixed(2)}</span>
+                <span>${(stats?.subtotal || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Tax (8%):</span>
-                <span>${useCart.getState().stats.tax.toFixed(2)}</span>
+                <span>${(stats?.tax || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center border-t pt-2">
                 <span className="text-lg font-semibold text-risevia-black dark:text-gray-100">
                   Total:
                 </span>
                 <span className="text-xl font-bold gradient-text">
-                  ${useCart.getState().stats.totalValue.toFixed(2)}
+                  ${(stats?.totalValue || 0).toFixed(2)}
                 </span>
               </div>
               <div className="text-xs text-risevia-charcoal">
-                Estimated delivery: {useCart.getState().stats.estimatedDelivery}
+                Estimated delivery: {stats?.estimatedDelivery || 'Next business day'}
               </div>
             </div>
             
