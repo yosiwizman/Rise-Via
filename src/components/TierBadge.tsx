@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from './ui/badge';
 import { Crown, Star, User } from 'lucide-react';
+import { safeToFixed } from '../utils/formatters';
 
 interface TierBadgeProps {
   tier: string;
@@ -42,7 +43,7 @@ export const TierBadge: React.FC<TierBadgeProps> = ({
       {getTierIcon(tier)}
       <span>{tier} Member</span>
       {showDiscount && discount && (
-        <span className="ml-1 font-bold">({(discount * 100).toFixed(0)}% off)</span>
+        <span className="ml-1 font-bold">({safeToFixed(discount * 100, 0)}% off)</span>
       )}
     </Badge>
   );

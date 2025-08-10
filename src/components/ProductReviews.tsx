@@ -142,7 +142,7 @@ export const ProductReviews = ({ productId }: ProductReviewsProps) => {
           <CardContent>
             <div className="flex items-center space-x-4 mb-4">
               <div className="text-3xl font-bold text-risevia-black">
-                {stats.averageRating.toFixed(1)}
+                {(typeof stats.averageRating === 'number' ? stats.averageRating : parseFloat(stats.averageRating) || 0).toFixed(1)}
               </div>
               <StarRating rating={Math.round(stats.averageRating)} size="lg" />
             </div>

@@ -240,7 +240,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
         <div className="pt-4 space-y-3">
           <div className="flex justify-between items-center text-white">
             <span>Subtotal:</span>
-            <span>${totalAmount.toFixed(2)}</span>
+            <span>${(typeof totalAmount === 'number' ? totalAmount : parseFloat(totalAmount) || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center text-gray-400 text-sm">
             <span>Processing Fee:</span>
@@ -254,7 +254,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
             disabled={!selectedMethod || isProcessing}
             className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3"
           >
-            {isProcessing ? 'Processing Payment...' : `Pay $${totalAmount.toFixed(2)}`}
+            {isProcessing ? 'Processing Payment...' : `Pay $${(typeof totalAmount === 'number' ? totalAmount : parseFloat(totalAmount) || 0).toFixed(2)}`}
           </Button>
           
           <p className="text-gray-400 text-xs text-center">

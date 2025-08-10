@@ -145,7 +145,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
   };
 
   const formatPercentage = (value: number) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+    return `${value >= 0 ? '+' : ''}${(typeof value === 'number' ? value : parseFloat(value) || 0).toFixed(1)}%`;
   };
 
   const getCurrentPeriodRevenue = () => {
@@ -249,7 +249,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
 
         <MetricCard
           title="Gross Margin"
-          value={`${metrics.profitMargins.grossMargin.toFixed(1)}%`}
+          value={`${(typeof metrics.profitMargins.grossMargin === 'number' ? metrics.profitMargins.grossMargin : parseFloat(metrics.profitMargins.grossMargin) || 0).toFixed(1)}%`}
           change={`${formatCurrency(metrics.profitMargins.grossProfit)} profit`}
           trend="up"
           icon={<Percent className="w-4 h-4" />}
@@ -347,7 +347,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center space-x-3">
                         <Badge className="bg-gray-100 text-gray-800">
-                          {category.percentage.toFixed(1)}%
+                          {(typeof category.percentage === 'number' ? category.percentage : parseFloat(category.percentage) || 0).toFixed(1)}%
                         </Badge>
                         <span className="font-semibold text-risevia-black min-w-[80px] text-right">
                           {formatCurrency(category.revenue)}
@@ -389,7 +389,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-sm text-risevia-charcoal">Gross Profit</div>
                 <div className="text-xs text-gray-500">
-                  {metrics.profitMargins.grossMargin.toFixed(1)}% margin
+                  {(typeof metrics.profitMargins.grossMargin === 'number' ? metrics.profitMargins.grossMargin : parseFloat(metrics.profitMargins.grossMargin) || 0).toFixed(1)}% margin
                 </div>
               </div>
               <div className="text-center">
@@ -398,7 +398,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-sm text-risevia-charcoal">Net Profit</div>
                 <div className="text-xs text-gray-500">
-                  {metrics.profitMargins.netMargin.toFixed(1)}% margin
+                  {(typeof metrics.profitMargins.netMargin === 'number' ? metrics.profitMargins.netMargin : parseFloat(metrics.profitMargins.netMargin) || 0).toFixed(1)}% margin
                 </div>
               </div>
               <div className="text-center">
@@ -478,7 +478,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-500 mb-1">
-                  {metrics.profitMargins.grossMargin.toFixed(1)}%
+                  {(typeof metrics.profitMargins.grossMargin === 'number' ? metrics.profitMargins.grossMargin : parseFloat(metrics.profitMargins.grossMargin) || 0).toFixed(1)}%
                 </div>
                 <div className="text-sm text-risevia-charcoal">
                   Average Gross Margin

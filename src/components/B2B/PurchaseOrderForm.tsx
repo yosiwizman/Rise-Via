@@ -187,10 +187,10 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
                   <div className="space-y-1 mb-3">
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-500 line-through">Retail: ${product.price}</span>
-                      <span className="text-green-600 font-medium">Save ${savings.toFixed(2)}</span>
+                      <span className="text-green-600 font-medium">Save ${(typeof savings === 'number' ? savings : parseFloat(savings) || 0).toFixed(2)}</span>
                     </div>
                     <div className="text-sm font-bold text-risevia-purple">
-                      Wholesale: ${wholesalePrice.toFixed(2)}
+                      Wholesale: ${(typeof wholesalePrice === 'number' ? wholesalePrice : parseFloat(wholesalePrice) || 0).toFixed(2)}
                     </div>
                   </div>
                   <Button
@@ -224,7 +224,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
                   <div className="flex-1">
                     <h4 className="font-medium">{item.productName}</h4>
                     <p className="text-sm text-gray-600">
-                      ${item.wholesalePrice.toFixed(2)} each
+                      ${(typeof item.wholesalePrice === 'number' ? item.wholesalePrice : parseFloat(item.wholesalePrice) || 0).toFixed(2)} each
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
                     </Button>
                   </div>
                   <div className="text-right ml-4">
-                    <p className="font-medium">${item.total.toFixed(2)}</p>
+                    <p className="font-medium">${(typeof item.total === 'number' ? item.total : parseFloat(item.total) || 0).toFixed(2)}</p>
                   </div>
                 </div>
               ))}
@@ -256,15 +256,15 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${(typeof subtotal === 'number' ? subtotal : parseFloat(subtotal) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-green-600">
                   <span>Wholesale Discount ({tierInfo?.discountPercentage}%):</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-${(typeof discount === 'number' ? discount : parseFloat(discount) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${(typeof total === 'number' ? total : parseFloat(total) || 0).toFixed(2)}</span>
                 </div>
                 {tierInfo && total < tierInfo.minimumOrder && (
                   <p className="text-sm text-red-600">

@@ -153,13 +153,13 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
           {item.price > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-risevia-charcoal">Price:</span>
-              <span className="font-semibold text-risevia-black">${item.price}</span>
+              <span className="font-semibold text-risevia-black">${(typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0).toFixed(2)}</span>
             </div>
           )}
 
           {item.priceAlert ? (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-risevia-teal">Alert at ${item.priceAlert.targetPrice}</span>
+              <span className="text-risevia-teal">Alert at ${(typeof item.priceAlert.targetPrice === 'number' ? item.priceAlert.targetPrice : parseFloat(item.priceAlert.targetPrice) || 0).toFixed(2)}</span>
               <Button
                 onClick={() => removePriceAlert(item.id)}
                 size="sm"
@@ -269,7 +269,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
                 My Wishlist
               </h1>
               <p className="text-risevia-charcoal">
-                {stats.totalItems} items • Total value: ${stats.totalValue.toFixed(2)}
+                {stats.totalItems} items • Total value: ${(typeof stats.totalValue === 'number' ? stats.totalValue : parseFloat(stats.totalValue) || 0).toFixed(2)}
               </p>
             </div>
             <div className="flex space-x-3">
@@ -305,7 +305,7 @@ export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
             <Card className="bg-white border-gray-200">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-risevia-teal">
-                  ${stats.averagePrice.toFixed(0)}
+                  ${(typeof stats.averagePrice === 'number' ? stats.averagePrice : parseFloat(stats.averagePrice) || 0).toFixed(0)}
                 </div>
                 <div className="text-sm text-risevia-charcoal">Avg. Price</div>
               </CardContent>

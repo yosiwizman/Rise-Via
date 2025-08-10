@@ -83,7 +83,7 @@ export const PriceAlertModal = ({ isOpen, onClose, productId, productName, curre
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label className="text-sm font-medium">{productName}</Label>
-              <div className="text-sm text-gray-600">Current price: ${currentPrice.toFixed(2)}</div>
+              <div className="text-sm text-gray-600">Current price: ${(typeof currentPrice === 'number' ? currentPrice : parseFloat(currentPrice) || 0).toFixed(2)}</div>
             </div>
             
             <div>

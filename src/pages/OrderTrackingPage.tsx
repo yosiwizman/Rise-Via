@@ -207,13 +207,13 @@ export const OrderTrackingPage: React.FC = () => {
                       {order.items.map((item, index) => (
                         <div key={index} className="flex justify-between text-sm">
                           <span>{item.name} x{item.quantity}</span>
-                          <span>${item.price.toFixed(2)}</span>
+                          <span>${(typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0).toFixed(2)}</span>
                         </div>
                       ))}
                       <div className="border-t border-gray-700 pt-2 mt-2">
                         <div className="flex justify-between font-semibold">
                           <span>Total</span>
-                          <span>${order.total.toFixed(2)}</span>
+                          <span>${(typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

@@ -43,8 +43,8 @@ export const ComplianceReports: React.FC = () => {
       ['Age Verifications', reportData.ageVerifications],
       ['State Blocks', reportData.stateBlocks],
       ['Purchase Limit Violations', reportData.purchaseLimitViolations],
-      ['Average Risk Score', reportData.averageRiskScore.toFixed(2)],
-      ['Compliance Rate (%)', reportData.complianceRate.toFixed(2)]
+      ['Average Risk Score', (typeof reportData.averageRiskScore === 'number' ? reportData.averageRiskScore : parseFloat(reportData.averageRiskScore) || 0).toFixed(2)],
+      ['Compliance Rate (%)', (typeof reportData.complianceRate === 'number' ? reportData.complianceRate : parseFloat(reportData.complianceRate) || 0).toFixed(2)]
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -153,7 +153,7 @@ export const ComplianceReports: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Avg Risk Score</p>
-                  <p className="text-2xl font-bold">{reportData.averageRiskScore.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{(typeof reportData.averageRiskScore === 'number' ? reportData.averageRiskScore : parseFloat(reportData.averageRiskScore) || 0).toFixed(2)}</p>
                 </div>
                 <Shield className="w-8 h-8 text-purple-500" />
               </div>
@@ -165,7 +165,7 @@ export const ComplianceReports: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Compliance Rate</p>
-                  <p className="text-2xl font-bold">{reportData.complianceRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">{(typeof reportData.complianceRate === 'number' ? reportData.complianceRate : parseFloat(reportData.complianceRate) || 0).toFixed(1)}%</p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>

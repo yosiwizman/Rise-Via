@@ -246,7 +246,7 @@ export const OrderManager: React.FC = () => {
                         <div className="text-sm text-gray-600">{order.customerEmail}</div>
                       </div>
                     </td>
-                    <td className="p-3 font-semibold">${order.totalAmount.toFixed(2)}</td>
+                    <td className="p-3 font-semibold">${(typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount) || 0).toFixed(2)}</td>
                     <td className="p-3">
                       <Select
                         value={order.status}
@@ -344,7 +344,7 @@ export const OrderManager: React.FC = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Total</label>
-                  <p className="text-lg font-semibold">${selectedOrder.totalAmount.toFixed(2)}</p>
+                  <p className="text-lg font-semibold">${(typeof selectedOrder.totalAmount === 'number' ? selectedOrder.totalAmount : parseFloat(selectedOrder.totalAmount) || 0).toFixed(2)}</p>
                 </div>
               </div>
               
@@ -357,7 +357,7 @@ export const OrderManager: React.FC = () => {
                         <p className="font-medium">{item.productName}</p>
                         <p className="text-sm text-gray-600">Qty: {item.quantity} × ${item.price}</p>
                       </div>
-                      <p className="font-semibold">${item.total.toFixed(2)}</p>
+                      <p className="font-semibold">${(typeof item.total === 'number' ? item.total : parseFloat(item.total) || 0).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
