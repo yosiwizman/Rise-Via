@@ -35,7 +35,7 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
             try {
               await logout();
               navigation.navigate('Auth', { screen: 'Login' });
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to sign out. Please try again.');
             }
           },
@@ -45,7 +45,7 @@ export default function AccountScreen({ navigation }: { navigation: NavigationPr
   };
 
   const menuItems = [
-    { id: 'profile', icon: 'person-outline', title: 'Edit Profile', onPress: () => {} },
+    { id: 'profile', icon: 'person-outline', title: 'Edit Profile', onPress: () => { /* TODO: Implement profile editing */ } },
     { id: 'orders', icon: 'receipt-outline', title: 'Order History', onPress: () => {} },
     { id: 'wishlist', icon: 'heart-outline', title: 'Wishlist', onPress: () => navigation.navigate('Wishlist') },
     { id: 'addresses', icon: 'location-outline', title: 'Addresses', onPress: () => {} },

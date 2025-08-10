@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import type { AuthUser, ApiResponse, LoginCredentials, RegisterData } from '../types/shared';
 import { api } from '../services/api';
@@ -22,20 +21,20 @@ const secureStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       return await SecureStore.getItemAsync(name);
-    } catch (error) {
+    } catch {
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
       await SecureStore.setItemAsync(name, value);
-    } catch (error) {
+    } catch {
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
       await SecureStore.deleteItemAsync(name);
-    } catch (error) {
+    } catch {
     }
   },
 };
@@ -113,7 +112,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await api.logout();
-        } catch (error) {
+        } catch {
         }
         
         api.setAuthToken(null);

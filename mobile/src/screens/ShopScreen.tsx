@@ -26,7 +26,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortBy] = useState<SortOption>('name');
   const { addItem } = useCartStore();
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlistStore();
 
@@ -76,7 +76,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
 
   useEffect(() => {
     filterProducts();
-  }, [products, selectedFilter, searchQuery, sortBy]);
+  }, [products, selectedFilter, searchQuery, sortBy, filterProducts]);
 
   const loadProducts = async () => {
     try {
@@ -85,9 +85,9 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
       if (response.success && response.data) {
         setProducts(response.data);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to load products. Please try again.');
-    } finally {
+    }finally {
       setIsLoading(false);
     }
   };
@@ -96,7 +96,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
     try {
       await addItem(product, 1);
       Alert.alert('Success', `${product.name} added to cart!`);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to add item to cart. Please try again.');
     }
   };
@@ -109,7 +109,7 @@ export default function ShopScreen({ navigation }: { navigation: NavigationProp<
       } else {
         await addToWishlist(product);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to update wishlist. Please try again.');
     }
   };

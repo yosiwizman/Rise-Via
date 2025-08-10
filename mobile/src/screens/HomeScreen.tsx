@@ -30,7 +30,7 @@ export default function HomeScreen({ navigation }: { navigation: NavigationProp<
       if (response.success && response.data) {
         setFeaturedProducts(response.data.slice(0, 6));
       }
-    } catch (error) {
+    } catch {
     } finally {
       setIsLoading(false);
     }

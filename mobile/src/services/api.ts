@@ -17,7 +17,7 @@ class ApiClient {
   private async loadAuthToken() {
     try {
       this.authToken = await SecureStore.getItemAsync('auth_token');
-    } catch (error) {
+    } catch {
     }
   }
 
@@ -33,7 +33,7 @@ class ApiClient {
     if (!this.authToken) {
       try {
         this.authToken = await SecureStore.getItemAsync('auth_token');
-      } catch (error) {
+      } catch {
       }
     }
 
@@ -245,16 +245,16 @@ class ApiClient {
     return this.request<Product[]>(`/search?q=${encodeURIComponent(query)}`);
   }
 
-  async getOrderHistory(): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>('/orders');
+  async getOrderHistory(): Promise<ApiResponse<unknown[]>> {
+    return this.request<unknown[]>('/orders');
   }
 
-  async getOrder(orderId: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/orders/${orderId}`);
+  async getOrder(orderId: string): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>(`/orders/${orderId}`);
   }
 
-  async createOrder(orderData: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/orders', {
+  async createOrder(orderData: unknown): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
     });
@@ -274,7 +274,7 @@ class ApiClient {
     }>>('/payment/methods');
   }
 
-  async processPayment(paymentData: any): Promise<ApiResponse<{
+  async processPayment(paymentData: unknown): Promise<ApiResponse<{
     success: boolean;
     transactionId?: string;
     redirectUrl?: string;

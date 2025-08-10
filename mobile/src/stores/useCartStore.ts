@@ -164,7 +164,7 @@ export const useCartStore = create<CartState>()(
           } else {
             throw new Error('Failed to load cart');
           }
-        } catch (error) {
+        } catch {
           set({ 
             error: 'Failed to load cart',
             isLoading: false 
@@ -180,7 +180,7 @@ export const useCartStore = create<CartState>()(
             set({ items: response.data });
             get().updateTotals();
           }
-        } catch (error) {
+        } catch {
         }
       },
 
@@ -221,6 +221,6 @@ export const syncCartWithServer = async () => {
         cartStore.addItem(item.product, item.quantity);
       });
     }
-  } catch (error) {
+  } catch {
   }
 };

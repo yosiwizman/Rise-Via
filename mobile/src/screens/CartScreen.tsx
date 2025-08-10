@@ -25,7 +25,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     try {
       await updateQuantity(itemId, newQuantity);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to update quantity. Please try again.');
     }
   };
@@ -33,7 +33,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
   const handleRemoveItem = async (itemId: string) => {
     try {
       await removeItem(itemId);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to remove item. Please try again.');
     }
   };
@@ -50,7 +50,7 @@ export default function CartScreen({ navigation }: { navigation: NavigationProp<
           onPress: async () => {
             try {
               await clearCart();
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to clear cart. Please try again.');
             }
           },
