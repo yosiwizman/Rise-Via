@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -38,7 +38,7 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
   const { addItem } = useCartStore();
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlistStore();
 
-  const loadProductDetails = async () => {
+  const loadProductDetails = useCallback(async () => {
     try {
       const response = await api.getProductDetails(productId);
       if (response.success && response.data) {
@@ -50,9 +50,9 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId]);
 
-  const loadProductReviews = async () => {
+  const loadProductReviews = useCallback(async () => {
     try {
       const response = await api.getProductReviews(productId);
       if (response.success && response.data) {
@@ -61,11 +61,13 @@ export default function ProductDetailScreen({ route, navigation }: ProductDetail
     } catch (error) {
       console.error('Failed to load reviews:', error);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
-    loadProductDetails();
-    loadProductReviews();
+    if (productId) {
+      loadProductDetails();
+      loadProductReviews();
+    }
   }, [productId, loadProductDetails, loadProductReviews]);
 
   const handleAddToCart = async () => {
