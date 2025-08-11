@@ -21,7 +21,7 @@ interface ProductEditorProps {
     thc: string;
     inventory: number;
     effects?: string[];
-    active?: boolean;
+    status?: string;
     images?: string[];
   }) => void;
   product?: Product;
@@ -58,7 +58,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
       type: formData.strainType || 'hybrid',
       effects: formData.effects.split(',').map((e: string) => e.trim()).filter((e: string) => e),
       inventory: parseInt(formData.inventory.toString()),
-      active: true,
+      status: 'active',
       images: formData.images || [],
       description: formData.description || ''
     };

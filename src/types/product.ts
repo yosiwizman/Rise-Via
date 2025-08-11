@@ -26,14 +26,13 @@ export interface Product {
   inventory?: number;
   coa_document?: string;
   in_stock?: boolean;
-  status?: 'active' | 'inactive' | 'out_of_stock';
+  status?: 'active' | 'inactive' | 'out_of_stock' | string;
   created_at?: string;
   updated_at?: string;
   // Legacy/camelCase fields for compatibility
   strainType?: string;
   thcaPercentage?: number;
   inStock?: boolean;
-  active?: boolean;
   thc?: string;
   type?: string;
 }

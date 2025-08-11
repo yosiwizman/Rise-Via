@@ -84,9 +84,9 @@ export const ProductManager: React.FC = () => {
     }
   };
 
-  const handleBulkStatusChange = (active: boolean) => {
+  const handleBulkStatusChange = (status: string) => {
     setProducts(prev => prev.map(p =>
-      selectedProducts.includes(p.id!) ? { ...p, active } : p
+      selectedProducts.includes(p.id!) ? { ...p, status } as Product : p
     ));
     setSelectedProducts([]);
   };
@@ -133,7 +133,7 @@ export const ProductManager: React.FC = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Name', 'Price', 'Category', 'THC', 'Type', 'Inventory', 'Active'];
+    const headers = ['ID', 'Name', 'Price', 'Category', 'THC', 'Type', 'Inventory', 'Status'];
     const csvContent = [
       headers.join(','),
       ...products.map(p => [
@@ -144,7 +144,7 @@ export const ProductManager: React.FC = () => {
         p.thcaPercentage || 0,
         p.strainType || '',
         p.inventory || 0,
-        true
+        p.status || 'active'
       ].join(','))
     ].join('\n');
 
@@ -267,14 +267,14 @@ export const ProductManager: React.FC = () => {
                 </span>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleBulkStatusChange(true)}
+                    onClick={() => handleBulkStatusChange('active')}
                     size="sm"
                     variant="outline"
                   >
                     Activate
                   </Button>
                   <Button
-                    onClick={() => handleBulkStatusChange(false)}
+                    onClick={() => handleBulkStatusChange('inactive')}
                     size="sm"
                     variant="outline"
                   >
@@ -416,8 +416,8 @@ export const ProductManager: React.FC = () => {
           images: product.images || [],
           description: product.description || '',
           effects: product.effects || [],
-          active: product.active ?? true
-        })}
+          status: product.status || 'active'
+        } as Product)}
         product={editingProduct ? {
           id: editingProduct.id || '',
           name: editingProduct.name,
@@ -426,7 +426,7 @@ export const ProductManager: React.FC = () => {
           type: editingProduct.strain_type || editingProduct.type || '',
           thc: editingProduct.thca_percentage?.toString() || editingProduct.thc || '',
           inventory: editingProduct.inventory || 0,
-          active: editingProduct.status === 'active',
+          status: editingProduct.status || 'active',
           effects: editingProduct.effects || [],
           description: editingProduct.description || '',
           images: editingProduct.images || [],
