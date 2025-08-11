@@ -55,7 +55,18 @@ export const mockDatabase = {
   blog_posts: []
 };
 
-export const sql = function(query: string, ...values: unknown[]) {
+export const sql = function(strings: TemplateStringsArray | string, ...values: unknown[]): Promise<any[]> {
+  let query: string;
+  
+  if (typeof strings === 'string') {
+    query = strings;
+  } else if (strings && strings.length) {
+    query = strings.join('?');
+  } else {
+    console.log('Mock SQL Query: strings is undefined or empty');
+    return Promise.resolve([]);
+  }
+  
   console.log('Mock SQL Query called:', query, values);
   
   const queryLower = query.toLowerCase().trim();
@@ -84,6 +95,13 @@ export const sql = function(query: string, ...values: unknown[]) {
 };
 
 sql.unsafe = (str: string) => str;
+
+Object.defineProperty(sql, Symbol.toPrimitive, {
+  value: () => sql,
+  writable: false,
+  enumerable: false,
+  configurable: false
+});
 
 export const dbHelpers = {
   async findOne(tableName: string, conditions?: Record<string, unknown>) {

@@ -1,28 +1,4 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (authService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (authService):', query, values);
-    
-    if (query.includes('admin_users')) {
-      return Promise.resolve([{
-        id: 'mock-admin-id',
-        email: 'admin@rise-via.com',
-        password_hash: '$2a$12$LQv3c1yqBWVHxkd0LQ4YCOuLQv3c1yqBWVHxkd0LQ4YCOuLQv3c1y',
-        role: 'admin',
-        created_at: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export const authService = {
   async login(email: string, password: string): Promise<{ success: boolean; user?: { id: string; email: string; role: string; created_at: string } }> {

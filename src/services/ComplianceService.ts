@@ -1,36 +1,4 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (ComplianceService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (ComplianceService):', query, values);
-    
-    if (query.includes('state_compliance')) {
-      return Promise.resolve([{
-        state: 'CA',
-        is_legal: true,
-        age_requirement: 21,
-        max_possession: '1 oz',
-        home_grow_allowed: true,
-        public_consumption: false,
-        driving_limit: '5ng/ml',
-        retail_sales_allowed: true,
-        delivery_allowed: true,
-        online_ordering_allowed: true,
-        tax_rate: '0.15',
-        license_required: true,
-        last_updated: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export interface StateCompliance {
   state: string;

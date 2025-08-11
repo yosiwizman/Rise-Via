@@ -6,38 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Switch } from '../../ui/switch';
 import { Eye, EyeOff, Save, TestTube } from 'lucide-react';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (APISettings): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (APISettings):', query, values);
-    
-    if (query.includes('api_settings')) {
-      return Promise.resolve([{
-        id: 'mock-api-id',
-        service_name: 'openai',
-        api_key_encrypted: 'sk-mock-key',
-        configuration: {
-          api_key: 'sk-mock-key',
-          model: 'gpt-4',
-          max_tokens: 1000
-        },
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../../lib/neon';
 
 interface APIConfig {
   id?: string;

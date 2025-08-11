@@ -4,31 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Badge } from '../../ui/badge';
 import { BarChart3, Download, Calendar, TrendingUp, Users, Package } from 'lucide-react';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (ReportsSettings): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (ReportsSettings):', query, values);
-    
-    if (query.includes('system_settings')) {
-      return Promise.resolve([
-        { key: 'sales_analytics_enabled', value: true, category: 'reports' },
-        { key: 'customer_analytics_enabled', value: true, category: 'reports' },
-        { key: 'inventory_reports_enabled', value: true, category: 'reports' },
-        { key: 'compliance_reports_enabled', value: true, category: 'reports' }
-      ]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../../lib/neon';
 
 const ReportsSettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, unknown>>({});

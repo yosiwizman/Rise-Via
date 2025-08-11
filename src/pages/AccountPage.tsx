@@ -6,46 +6,7 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (AccountPage): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (AccountPage):', query, values);
-    
-    if (query.includes('orders')) {
-      return Promise.resolve([{
-        id: 'mock-order-1',
-        orderNumber: 'ORD-001',
-        total: 89.99,
-        status: 'delivered',
-        created_at: new Date().toISOString(),
-        items: [{
-          product: { name: 'Sample Product', images: [] },
-          quantity: 1,
-          price: 89.99
-        }]
-      }]);
-    }
-    
-    if (query.includes('loyalty_transactions')) {
-      return Promise.resolve([{
-        id: 'mock-transaction-1',
-        type: 'EARNED',
-        points: 50,
-        description: 'Points earned from purchase',
-        created_at: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 interface Order {
   id: string;

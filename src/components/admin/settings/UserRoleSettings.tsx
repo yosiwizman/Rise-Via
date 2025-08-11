@@ -6,49 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Switch } from '../../ui/switch';
 import { Plus, Edit, Shield, Users } from 'lucide-react';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (UserRoleSettings): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (UserRoleSettings):', query, values);
-    
-    if (query.includes('admin_users')) {
-      return Promise.resolve([
-        {
-          id: 'admin-1',
-          email: 'admin@rise-via.com',
-          first_name: 'Admin',
-          last_name: 'User',
-          role: 'admin',
-          permissions: {},
-          is_active: true,
-          last_login_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'manager-1',
-          email: 'manager@rise-via.com',
-          first_name: 'Manager',
-          last_name: 'User',
-          role: 'manager',
-          permissions: {},
-          is_active: true,
-          last_login_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        }
-      ]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../../lib/neon';
 
 interface AdminUser {
   id: string;

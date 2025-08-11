@@ -1,36 +1,4 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (abandonedCartService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (abandonedCartService):', query, values);
-    
-    if (query.includes('abandoned_carts')) {
-      return Promise.resolve([{
-        id: 'mock-cart-id',
-        session_id: 'mock-session',
-        customer_email: 'customer@example.com',
-        cart_data: {
-          items: [],
-          total: 0,
-          currency: 'USD'
-        },
-        total_amount: 0,
-        created_at: new Date().toISOString(),
-        last_updated: new Date().toISOString(),
-        recovery_email_sent: false,
-        recovered: false
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export interface AbandonedCart {
   id: string;

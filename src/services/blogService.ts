@@ -1,31 +1,4 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (blogService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (blogService):', query, values);
-    
-    if (query.includes('blog_posts')) {
-      return Promise.resolve([{
-        id: 'mock-blog-id',
-        title: 'Mock Blog Post',
-        content: 'Mock content',
-        excerpt: 'Mock excerpt',
-        slug: 'mock-blog-post',
-        status: 'published',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export interface BlogPost {
   id: string;

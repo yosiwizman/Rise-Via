@@ -1,34 +1,4 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (wholesalePricingService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (wholesalePricingService):', query, values);
-    
-    if (query.includes('purchase_orders')) {
-      return Promise.resolve([{
-        id: 'mock-po-id',
-        customer_id: 'mock-customer-id',
-        order_number: 'PO-123456',
-        items: JSON.stringify([]),
-        subtotal: '100.00',
-        discount: '10.00',
-        total: '90.00',
-        credit_terms: 'Net 30',
-        status: 'PENDING',
-        created_at: new Date().toISOString(),
-        due_date: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export interface WholesaleTier {
   name: string;

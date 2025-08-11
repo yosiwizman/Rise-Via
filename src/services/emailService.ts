@@ -1,42 +1,5 @@
 import { Resend } from 'resend';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (emailService): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (emailService):', query, values);
-    
-    if (query.includes('email_logs')) {
-      return Promise.resolve([{
-        id: 'mock-email-log-id',
-        to_email: 'user@example.com',
-        subject: 'Mock Email',
-        body: 'Mock email content',
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      }]);
-    }
-    
-    if (query.includes('email_templates')) {
-      return Promise.resolve([{
-        id: 'mock-template-id',
-        name: 'welcome',
-        subject: 'Welcome to Rise Via!',
-        body: 'Welcome email template',
-        created_at: new Date().toISOString()
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
 

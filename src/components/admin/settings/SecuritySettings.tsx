@@ -6,62 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Badge } from '../../ui/badge';
 import { Shield, Lock, Eye, AlertTriangle, Activity } from 'lucide-react';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (SecuritySettings): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (SecuritySettings):', query, values);
-    
-    if (query.includes('system_settings') && query.includes('security')) {
-      return Promise.resolve([
-        { key: 'two_factor_auth', value: false },
-        { key: 'session_timeout', value: true },
-        { key: 'ip_restrictions', value: false },
-        { key: 'audit_logging', value: true },
-        { key: 'failed_login_protection', value: true },
-        { key: 'session_timeout_minutes', value: 60 },
-        { key: 'max_failed_attempts', value: 5 },
-        { key: 'lockout_duration', value: 30 },
-        { key: 'allowed_ips', value: '' }
-      ]);
-    }
-    
-    if (query.includes('admin_login') || query.includes('UNION ALL')) {
-      return Promise.resolve([
-        {
-          action: 'admin_login',
-          description: 'Admin user logged in',
-          user_email: 'admin@rise-via.com',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          status: 'success'
-        },
-        {
-          action: 'settings_update',
-          description: 'Updated API settings',
-          user_email: 'manager@rise-via.com',
-          created_at: new Date(Date.now() - 7200000).toISOString(),
-          status: 'success'
-        },
-        {
-          action: 'failed_login',
-          description: 'Failed login attempt',
-          user_email: 'unknown@example.com',
-          created_at: new Date(Date.now() - 10800000).toISOString(),
-          status: 'failed'
-        }
-      ]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../../lib/neon';
 
 const SecuritySettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, unknown>>({});

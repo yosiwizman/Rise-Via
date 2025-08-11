@@ -6,32 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (B2BPage): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (B2BPage):', query, values);
-    
-    if (query.includes('customer_profiles')) {
-      return Promise.resolve([{
-        customer_id: 'mock-customer-id',
-        is_b2b: true,
-        business_name: values[0] || 'Mock Business',
-        business_license: values[1] || 'MOCK-LICENSE-123',
-        membership_tier: 'SILVER',
-        segment: 'B2B'
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../lib/neon';
 
 export const B2BPage = () => {
   const [formData, setFormData] = useState({

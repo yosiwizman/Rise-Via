@@ -5,37 +5,7 @@ import { Label } from '../../ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Globe, Clock, DollarSign, Shield, Save } from 'lucide-react';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (SystemSettings): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (SystemSettings):', query, values);
-    
-    if (query.includes('system_settings')) {
-      return Promise.resolve([
-        { key: 'site_name', value: 'Rise-Via Cannabis' },
-        { key: 'site_description', value: 'Premium cannabis products delivered to your door' },
-        { key: 'contact_email', value: 'info@rise-via.com' },
-        { key: 'contact_phone', value: '(555) 123-4567' },
-        { key: 'business_address', value: '123 Cannabis St, Denver, CO 80202' },
-        { key: 'timezone', value: 'America/Denver' },
-        { key: 'currency', value: 'USD' },
-        { key: 'tax_rate', value: '8.25' },
-        { key: 'age_verification_required', value: true },
-        { key: 'maintenance_mode', value: false }
-      ]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../../lib/neon';
 
 const SystemSettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
