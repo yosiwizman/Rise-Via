@@ -1,6 +1,13 @@
-import { neon } from '@neondatabase/serverless';
+// import { neon } from '@neondatabase/serverless';
 
 const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
+
+console.log('🔵 DATABASE_URL check in database.ts:', {
+  exists: !!DATABASE_URL,
+  type: typeof DATABASE_URL,
+  value: DATABASE_URL ? 'present' : 'missing'
+});
+
 const isValidDatabaseUrl = DATABASE_URL && typeof DATABASE_URL === 'string' && DATABASE_URL.startsWith('postgresql://');
 
 if (!isValidDatabaseUrl) {
@@ -10,7 +17,9 @@ if (!isValidDatabaseUrl) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sql: any = null;
 try {
-  sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
+  // sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
+  sql = null;
+  console.log('🔵 Neon initialization bypassed for debugging');
 } catch (error) {
   console.error('❌ Failed to initialize Neon database connection in database.ts:', error);
   sql = null;
