@@ -1,7 +1,13 @@
 import { neon } from '@neondatabase/serverless';
 
 const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const sql = DATABASE_URL ? neon(DATABASE_URL) : null;
+const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+
+if (!isValidDatabaseUrl) {
+  console.warn('⚠️ No valid database URL provided in blogService.ts. Running in development mode with mock data.');
+}
+
+const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
 
 export interface BlogPost {
   id: string;
