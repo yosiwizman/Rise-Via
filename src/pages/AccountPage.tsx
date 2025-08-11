@@ -7,7 +7,7 @@ import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (AccountPage):', query, values);
     
@@ -86,8 +86,8 @@ export const AccountPage = () => {
 
       const transactionsData = await sql`SELECT * FROM loyalty_transactions WHERE customer_id = ${customer.id} ORDER BY created_at DESC`;
 
-      setOrders((ordersData as any[]) || []);
-      setLoyaltyTransactions((transactionsData as any[]) || []);
+      setOrders((ordersData as Array<{ id: string; orderNumber?: string; total: number; status: string; created_at: string; items?: Array<{ product: { name: string; images: string[] }; quantity: number; price: number }> }>) || []);
+      setLoyaltyTransactions((transactionsData as Array<{ id: string; type: string; points: number; description: string; created_at: string }>) || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const tierInfo = { name: tierName, benefits: [] };

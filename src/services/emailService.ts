@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (emailService):', query, values);
     
@@ -270,7 +270,7 @@ const emailService = {
         ORDER BY created_at DESC 
         LIMIT ${limit}
       `
-      return (logs || []) as EmailLog[]
+      return (logs || []) as Array<EmailLog>
     } catch {
       return []
     }

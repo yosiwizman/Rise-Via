@@ -6,7 +6,7 @@ import { Badge } from '../../ui/badge';
 import { BarChart3, Download, Calendar, TrendingUp, Users, Package } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (ReportsSettings):', query, values);
     
@@ -27,7 +27,7 @@ const sql = Object.assign(
 );
 
 const ReportsSettings: React.FC = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [, setLoading] = useState(false);
 
   const reportTypes = [
@@ -110,8 +110,8 @@ const ReportsSettings: React.FC = () => {
         WHERE category = 'reports'
       `;
       
-      const settingsMap: Record<string, any> = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, unknown> = {};
+      data.forEach((setting: { key: string; value: unknown }) => {
         settingsMap[setting.key] = setting.value;
       });
       
@@ -121,7 +121,7 @@ const ReportsSettings: React.FC = () => {
     }
   };
 
-  const saveReportSetting = async (key: string, value: any) => {
+  const saveReportSetting = async (key: string, value: unknown) => {
     setLoading(true);
     try {
       await sql`

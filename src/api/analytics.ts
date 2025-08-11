@@ -1,5 +1,5 @@
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (analytics):', query, values);
     
@@ -117,7 +117,7 @@ export const analyticsAPI = {
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
     `;
 
-    const uniqueSessions = (sessions as any[])?.[0]?.unique_sessions || 1;
+    const uniqueSessions = (sessions as Array<{ unique_sessions: number }>)?.[0]?.unique_sessions || 1;
     const conversionRate = (totalOrders / uniqueSessions) * 100;
 
     return {

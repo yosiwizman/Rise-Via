@@ -44,7 +44,7 @@ export const useWishlist = () => {
     setLoading(false)
   }
 
-  const addToWishlist = async (item: any) => {
+  const addToWishlist = async (item: { id: string }) => {
     const productId = item.id
     const { error } = await wishlistService.addToWishlist(productId)
     if (!error) {

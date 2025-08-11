@@ -102,7 +102,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       };
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === mockUser.email);
+      const customerData = customers.find((c: { email: string }) => c.email === mockUser.email);
       
       if (customerData) {
         setCustomer(customerData as Customer);
@@ -117,7 +117,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
     }
   };
 
-  const login = async (email: string, _password: string): Promise<LoginResult> => {
+  const login = async (email: string): Promise<LoginResult> => {
     try {
       setLoading(true);
       
@@ -133,7 +133,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === email);
+      const customerData = customers.find((c: { email: string }) => c.email === email);
       
       if (customerData) {
         setCustomer(customerData as Customer);
@@ -149,9 +149,9 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         setIsAuthenticated(true);
         return { success: true };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login failed:', error);
-      return { success: false, message: error.message || 'Login failed' };
+      return { success: false, message: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }

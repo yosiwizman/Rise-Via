@@ -6,7 +6,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (LabResultsManager):', query, values);
     
@@ -58,7 +58,7 @@ interface LabResult {
 }
 
 export const LabResultsManager: React.FC = () => {
-  const [labResults, setLabResults] = useState<LabResult[]>([]);
+  const [labResults, setLabResults] = useState<Array<{ id?: string; product_id: string; batch_id: string; test_date: string; expiration_date: string; thca_percentage: number; delta9_thc_percentage: number; cbd_percentage: number; pesticides_passed: boolean; heavy_metals_passed: boolean; microbials_passed: boolean; terpene_profile: Record<string, number>; coa_url?: string; qr_code?: string; lab_name: string; certificate_number: string }>>([]);
   const [formData, setFormData] = useState<Partial<LabResult>>({
     test_date: new Date().toISOString().split('T')[0],
     expiration_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -81,7 +81,7 @@ export const LabResultsManager: React.FC = () => {
         SELECT * FROM lab_results 
         ORDER BY created_at DESC
       `;
-      setLabResults((data as LabResult[]) || []);
+      setLabResults((data as Array<{ id?: string; product_id: string; batch_id: string; test_date: string; expiration_date: string; thca_percentage: number; delta9_thc_percentage: number; cbd_percentage: number; pesticides_passed: boolean; heavy_metals_passed: boolean; microbials_passed: boolean; terpene_profile: Record<string, number>; coa_url?: string; qr_code?: string; lab_name: string; certificate_number: string }>) || []);
     } catch (error) {
       console.error('Failed to fetch lab results:', error);
     }

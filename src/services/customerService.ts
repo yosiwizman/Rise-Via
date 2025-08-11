@@ -1,5 +1,5 @@
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (customerService):', query, values);
     
@@ -69,70 +69,57 @@ export interface LoyaltyTransaction {
 
 export const customerService = {
   async getAll() {
-    try {
-      const customers = await sql`
-        SELECT 
-          c.*,
-          cp.segment,
-          cp.is_b2b,
-          cp.loyalty_points,
-          cp.total_spent,
-          cp.last_order_date
-        FROM customers c
-        LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
-        ORDER BY c.created_at DESC
-      `;
-      
-      return customers;
-    } catch (error) {
-      throw error;
-    }
+    const customers = await sql`
+      SELECT 
+        c.*,
+        cp.segment,
+        cp.is_b2b,
+        cp.loyalty_points,
+        cp.total_spent,
+        cp.last_order_date
+      FROM customers c
+      LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
+      ORDER BY c.created_at DESC
+    `;
+    
+    return customers;
   },
 
   async create(customer: Customer) {
-    try {
-      const customers = await sql`
-        INSERT INTO customers (email, first_name, last_name, phone, created_at)
-        VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null}, NOW())
-        RETURNING *
-      ` as any[];
-      
-      const newCustomer = customers[0];
-      
-      await sql`
-        INSERT INTO customer_profiles (customer_id, created_at)
-        VALUES (${newCustomer.id}, NOW())
-      `;
-      
-      return newCustomer;
-    } catch (error) {
-      throw error;
-    }
+    const customers = await sql`
+      INSERT INTO customers (email, first_name, last_name, phone, created_at)
+      VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null}, NOW())
+      RETURNING *
+    ` as Array<{ id: string; email: string; first_name: string; last_name: string; phone?: string; created_at: string }>;
+    
+    const newCustomer = customers[0];
+    
+    await sql`
+      INSERT INTO customer_profiles (customer_id, created_at)
+      VALUES (${newCustomer.id}, NOW())
+    `;
+    
+    return newCustomer;
   },
 
   async update(id: string, updates: Partial<Customer>) {
-    try {
-      const setClause = Object.keys(updates)
-        .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
-        .join(', ');
-      
-      const customers = await sql`
-        UPDATE customers 
-        SET ${sql.unsafe(setClause)}, updated_at = NOW()
-        WHERE id = ${id}
-        RETURNING *
-      ` as any[];
-      
-      return customers[0];
-    } catch (error) {
-      throw error;
-    }
+    const setClause = Object.keys(updates)
+      .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
+      .join(', ');
+    
+    const customers = await sql`
+      UPDATE customers 
+      SET ${sql.unsafe(setClause)}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    ` as Array<Customer>;
+    
+    return customers[0];
   },
 
   async search(searchTerm: string, filters: SearchFilters = {}) {
-    try {
-      let whereConditions = [];
-      let params = [];
+    const whereConditions = [];
+    const params = [];
       
       if (searchTerm) {
         whereConditions.push(`(
@@ -172,54 +159,39 @@ export const customerService = {
       `;
       
       return customers;
-    } catch (error) {
-      throw error;
-    }
   },
 
   async getCustomerProfile(customerId: string): Promise<CustomerProfile | null> {
-    try {
-      const profiles = await sql`
-        SELECT * FROM customer_profiles 
-        WHERE customer_id = ${customerId}
-      ` as any[];
-      
-      return profiles.length > 0 ? profiles[0] : null;
-    } catch (error) {
-      throw error;
-    }
+    const profiles = await sql`
+      SELECT * FROM customer_profiles 
+      WHERE customer_id = ${customerId}
+    ` as Array<Record<string, unknown>>;
+    
+    return profiles.length > 0 ? (profiles[0] as unknown) as CustomerProfile : null;
   },
 
   async updateCustomerProfile(customerId: string, updates: Partial<CustomerProfile>): Promise<CustomerProfile | null> {
-    try {
-      const setClause = Object.keys(updates)
-        .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
-        .join(', ');
-      
-      const profiles = await sql`
-        UPDATE customer_profiles 
-        SET ${sql.unsafe(setClause)}, updated_at = NOW()
-        WHERE customer_id = ${customerId}
-        RETURNING *
-      ` as any[];
-      
-      return profiles.length > 0 ? profiles[0] : null;
-    } catch (error) {
-      throw error;
-    }
+    const setClause = Object.keys(updates)
+      .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
+      .join(', ');
+    
+    const profiles = await sql`
+      UPDATE customer_profiles 
+      SET ${sql.unsafe(setClause)}, updated_at = NOW()
+      WHERE customer_id = ${customerId}
+      RETURNING *
+    ` as Array<Record<string, unknown>>;
+    
+    return profiles.length > 0 ? (profiles[0] as unknown) as CustomerProfile : null;
   },
 
   async addLoyaltyTransaction(transaction: Omit<LoyaltyTransaction, 'id' | 'created_at'>): Promise<LoyaltyTransaction | null> {
-    try {
-      const transactions = await sql`
-        INSERT INTO loyalty_transactions (customer_id, type, points, description, created_at)
-        VALUES (${transaction.customer_id}, ${transaction.type}, ${transaction.points}, ${transaction.description}, NOW())
-        RETURNING *
-      ` as any[];
-      
-      return transactions.length > 0 ? transactions[0] : null;
-    } catch (error) {
-      throw error;
-    }
+    const transactions = await sql`
+      INSERT INTO loyalty_transactions (customer_id, type, points, description, created_at)
+      VALUES (${transaction.customer_id}, ${transaction.type}, ${transaction.points}, ${transaction.description}, NOW())
+      RETURNING *
+    ` as Array<Record<string, unknown>>;
+    
+    return transactions.length > 0 ? (transactions[0] as unknown) as LoyaltyTransaction : null;
   }
 };

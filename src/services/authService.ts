@@ -1,5 +1,5 @@
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (authService):', query, values);
     
@@ -21,41 +21,37 @@ const sql = Object.assign(
 );
 
 export const authService = {
-  async login(email: string, password: string): Promise<any> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: { id: string; email: string; role: string; created_at: string } }> {
     if (email === 'admin' && password === 'admin123') {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };
     }
     
-    try {
-      const users = await sql`SELECT id, email, password_hash, role, created_at 
-        FROM admin_users 
-        WHERE email = ${email} AND is_active = true` as Array<{
-        id: string;
-        email: string;
-        password_hash: string;
-        role: string;
-        created_at: string;
-      }>;
-      
-      if (users.length === 0) {
-        throw new Error('Invalid credentials');
-      }
-      
-      const user = users[0];
-      
-      const sessionToken = btoa(JSON.stringify({ 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role,
-        timestamp: Date.now() 
-      }));
-      
-      localStorage.setItem('adminToken', sessionToken);
-      return { success: true, user: { id: user.id, email: user.email, role: user.role } };
-    } catch (error) {
-      throw error;
+    const users = await sql`SELECT id, email, password_hash, role, created_at 
+      FROM admin_users 
+      WHERE email = ${email} AND is_active = true` as Array<{
+      id: string;
+      email: string;
+      password_hash: string;
+      role: string;
+      created_at: string;
+    }>;
+    
+    if (users.length === 0) {
+      throw new Error('Invalid credentials');
     }
+    
+    const user = users[0];
+    
+    const sessionToken = btoa(JSON.stringify({ 
+      userId: user.id, 
+      email: user.email, 
+      role: user.role,
+      timestamp: Date.now() 
+    }));
+    
+    localStorage.setItem('adminToken', sessionToken);
+    return { success: true, user: { id: user.id, email: user.email, role: user.role, created_at: user.created_at } };
   },
 
   async register(email: string, _password: string, metadata: Record<string, unknown>) {
@@ -78,7 +74,7 @@ export const authService = {
   async getCurrentUser() {
     const token = localStorage.getItem('adminToken');
     if (!token || token === 'admin-token') {
-      return token === 'admin-token' ? { email: 'admin', role: 'admin' } : null;
+      return token === 'admin-token' ? { id: 'admin-1', email: 'admin', role: 'admin', created_at: new Date().toISOString() } : null;
     }
     
     try {
@@ -103,7 +99,7 @@ export const authService = {
     return user ? { user } : null;
   },
 
-  async onAuthStateChange(callback: (event: string, session: any) => void) {
+  async onAuthStateChange(callback: (event: string, session: { user: { id: string; email: string; role: string; created_at: string } } | null) => void) {
     const checkAuth = async () => {
       const session = await this.getSession();
       callback(session ? 'SIGNED_IN' : 'SIGNED_OUT', session);

@@ -55,7 +55,7 @@ export const mockDatabase = {
   blog_posts: []
 };
 
-export const sql = function(query: string, ...values: any[]) {
+export const sql = function(query: string, ...values: unknown[]) {
   console.log('Mock SQL Query called:', query, values);
   
   const queryLower = query.toLowerCase().trim();
@@ -86,7 +86,7 @@ export const sql = function(query: string, ...values: any[]) {
 sql.unsafe = (str: string) => str;
 
 export const dbHelpers = {
-  async findOne(tableName: string, conditions?: Record<string, any>) {
+  async findOne(tableName: string, conditions?: Record<string, unknown>) {
     console.log('Mock findOne called for table:', tableName, conditions);
     if (tableName === 'admin_users') {
       return mockDatabase.admin_users[0] || null;
@@ -94,7 +94,7 @@ export const dbHelpers = {
     return null;
   },
   
-  async findMany(tableName: string, conditions: Record<string, any> = {}) {
+  async findMany(tableName: string, conditions: Record<string, unknown> = {}) {
     console.log('Mock findMany called for table:', tableName, conditions);
     if (tableName === 'admin_users') {
       return mockDatabase.admin_users;
@@ -105,7 +105,7 @@ export const dbHelpers = {
     return [];
   },
   
-  async insertOne(tableName: string, data: Record<string, any>) {
+  async insertOne(tableName: string, data: Record<string, unknown>) {
     console.log('Mock insertOne called for table:', tableName);
     return { id: 'mock-id', ...data };
   }

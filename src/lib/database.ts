@@ -1,4 +1,4 @@
-const sql = function(query: string, ...values: any[]) {
+const sql = function(query: string, ...values: unknown[]) {
   console.log('Mock SQL Query (database.ts):', query, values);
   return Promise.resolve([{ success: true }]);
 };

@@ -9,34 +9,9 @@ import { safeToFixed } from '../../utils/formatters';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Label } from '../ui/label';
 
-interface Customer {
-  id: string;
-  firstName: string;
-  lastName: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  createdAt: string;
-  profile?: {
-    membershipTier: string;
-    lifetimeValue: number;
-    totalOrders: number;
-    segment: string;
-    isB2B: boolean;
-    loyaltyPoints: number;
-  };
-  customer_profiles?: Array<{
-    membership_tier: string;
-    lifetime_value: number;
-    total_orders: number;
-    segment: string;
-    is_b2b: boolean;
-    loyalty_points: number;
-  }>;
-}
 
 export const CustomerList = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<Array<{ id: string; email: string; first_name: string; last_name: string; phone?: string; created_at: string; firstName?: string; lastName?: string; profile?: { membershipTier: string; lifetimeValue: number; totalOrders: number; segment: string; isB2B: boolean; loyaltyPoints: number }; customer_profiles?: Array<{ membership_tier: string; lifetime_value: number; total_orders: number; segment: string; is_b2b: boolean; loyalty_points: number }> }>>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSegment, setFilterSegment] = useState('all');
   const [filterB2B, setFilterB2B] = useState('all');
@@ -64,7 +39,7 @@ export const CustomerList = () => {
       };
       
       const data = await customerService.search(searchTerm, filters);
-      setCustomers((data || []) as any[]);
+      setCustomers((data || []) as Array<{ id: string; email: string; first_name: string; last_name: string; phone?: string; created_at: string; firstName?: string; lastName?: string; profile?: { membershipTier: string; lifetimeValue: number; totalOrders: number; segment: string; isB2B: boolean; loyaltyPoints: number }; customer_profiles?: Array<{ membership_tier: string; lifetime_value: number; total_orders: number; segment: string; is_b2b: boolean; loyalty_points: number }> }>);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       setCustomers([]);

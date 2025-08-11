@@ -8,7 +8,7 @@ import { Switch } from '../../ui/switch';
 import { Plus, Edit, Shield, Users } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (UserRoleSettings):', query, values);
     
@@ -52,7 +52,7 @@ interface AdminUser {
   first_name?: string;
   last_name?: string;
   role: 'admin' | 'manager' | 'employee';
-  permissions: Record<string, any>;
+  permissions: Record<string, Record<string, boolean>>;
   is_active: boolean;
   last_login_at?: string;
   created_at: string;
