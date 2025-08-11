@@ -215,10 +215,11 @@ Sentry.init({
 
 ### Database Rollback
 1. Stop application traffic
-2. Restore from Supabase backup:
+2. Restore from Neon backup:
    ```sql
-   -- Via Supabase dashboard or CLI
-   supabase db reset --db-url "your-db-url"
+   -- Via Neon console or API
+   -- Restore from point-in-time backup
+   -- Use Neon branching for rollback scenarios
    ```
 3. Verify data integrity
 4. Resume application traffic
@@ -240,9 +241,9 @@ Sentry.init({
 - Check dependency conflicts
 
 #### Database Connection Issues
-- Verify Supabase credentials
+- Verify Neon credentials and connection string
 - Check network connectivity
-- Review RLS policies
+- Review database permissions
 - Monitor connection limits
 
 #### Performance Issues
@@ -263,7 +264,7 @@ Sentry.init({
 vercel logs --follow
 
 # Database debugging
-supabase logs --db
+# Check Neon console for query logs and metrics
 
 # Performance analysis
 npm run build:analyze
@@ -271,7 +272,7 @@ npm run build:analyze
 
 ### Support Contacts
 - **Vercel Support**: vercel.com/support
-- **Supabase Support**: supabase.com/support
+- **Neon Support**: neon.tech/docs/support
 - **Emergency Contact**: admin@risevia.com
 
 ## Scaling Considerations
