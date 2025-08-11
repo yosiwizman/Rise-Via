@@ -19,6 +19,7 @@ import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
 import { PaymentSettings } from '../components/admin/PaymentSettings';
 import { AIContentGenerator } from '../components/admin/AIContentGenerator';
+import { EmailManager } from '../components/admin/EmailManager';
 import { LabResultsManager } from '../components/admin/LabResultsManager';
 import { ComplianceReports } from './admin/ComplianceReports';
 
@@ -117,6 +118,7 @@ export const AdminPage = () => {
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'ai-content', label: 'AI Content', icon: Bot },
+    { id: 'email', label: 'Email Management', icon: FileText },
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'lab-results', label: 'Lab Results', icon: FileText },
     { id: 'compliance', label: 'Compliance', icon: Shield },
@@ -159,6 +161,10 @@ export const AdminPage = () => {
       
       case 'ai-content':
         return <AIContentGenerator />;
+      
+      case 'email':
+        return <EmailManager />;
+      
       case 'uploads':
         return (
           <div className="space-y-6">

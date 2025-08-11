@@ -3,9 +3,11 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Download, Eye, User, Building } from 'lucide-react';
+import { Download, Eye, User, Building, Plus, X } from 'lucide-react';
 import { customerService } from '../../services/customerService';
 import { safeToFixed } from '../../utils/formatters';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Label } from '../ui/label';
 
 interface Customer {
   id: string;
@@ -40,7 +42,19 @@ export const CustomerList = () => {
   const [filterB2B, setFilterB2B] = useState('all');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const ITEMS_PER_PAGE = 20;
+
+  const [newCustomer, setNewCustomer] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    membershipTier: 'GREEN' as 'GREEN' | 'SILVER' | 'GOLD' | 'PLATINUM',
+    isB2B: false,
+    segment: 'New' as 'New' | 'Regular' | 'VIP' | 'Dormant'
+  });
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -81,6 +95,48 @@ export const CustomerList = () => {
       Dormant: 'bg-red-100 text-red-800'
     };
     return colors[segment as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleAddCustomer = async () => {
+    if (!newCustomer.firstName || !newCustomer.lastName || !newCustomer.email) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const customerData = {
+        first_name: newCustomer.firstName,
+        last_name: newCustomer.lastName,
+        email: newCustomer.email,
+        phone: newCustomer.phone,
+        membership_tier: newCustomer.membershipTier,
+        is_b2b: newCustomer.isB2B,
+        segment: newCustomer.segment,
+        loyalty_points: 0,
+        lifetime_value: 0,
+        total_orders: 0
+      };
+
+      await customerService.create(customerData);
+      await fetchCustomers();
+      setShowAddModal(false);
+      setNewCustomer({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        membershipTier: 'GREEN',
+        isB2B: false,
+        segment: 'New'
+      });
+      alert('Customer added successfully!');
+    } catch (error) {
+      console.error('Failed to add customer:', error);
+      alert('Failed to add customer. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const exportCustomers = () => {
@@ -124,10 +180,16 @@ export const CustomerList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Customer Management</h2>
-        <Button onClick={exportCustomers} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddModal(true)} className="bg-gradient-to-r from-risevia-purple to-risevia-teal">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Customer
+          </Button>
+          <Button onClick={exportCustomers} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -320,6 +382,128 @@ export const CustomerList = () => {
           )}
         </CardContent>
       </Card>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Add New Customer</h3>
+              <Button
+                onClick={() => setShowAddModal(false)}
+                variant="outline"
+                size="sm"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={newCustomer.firstName}
+                    onChange={(e) => setNewCustomer(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={newCustomer.lastName}
+                    onChange={(e) => setNewCustomer(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="john.doe@example.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="membershipTier">Membership Tier</Label>
+                  <Select value={newCustomer.membershipTier} onValueChange={(value: 'GREEN' | 'SILVER' | 'GOLD' | 'PLATINUM') => setNewCustomer(prev => ({ ...prev, membershipTier: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GREEN">GREEN</SelectItem>
+                      <SelectItem value="SILVER">SILVER</SelectItem>
+                      <SelectItem value="GOLD">GOLD</SelectItem>
+                      <SelectItem value="PLATINUM">PLATINUM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="segment">Customer Segment</Label>
+                  <Select value={newCustomer.segment} onValueChange={(value: 'New' | 'Regular' | 'VIP' | 'Dormant') => setNewCustomer(prev => ({ ...prev, segment: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="New">New</SelectItem>
+                      <SelectItem value="Regular">Regular</SelectItem>
+                      <SelectItem value="VIP">VIP</SelectItem>
+                      <SelectItem value="Dormant">Dormant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isB2B"
+                  checked={newCustomer.isB2B}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, isB2B: e.target.checked }))}
+                  className="rounded"
+                />
+                <Label htmlFor="isB2B">B2B Customer</Label>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={handleAddCustomer} 
+                  disabled={isCreating}
+                  className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                >
+                  {isCreating ? 'Adding...' : 'Add Customer'}
+                </Button>
+                <Button
+                  onClick={() => setShowAddModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
