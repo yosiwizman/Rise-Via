@@ -1,18 +1,18 @@
 # Rise-Via Deployment Guide
 
 ## Overview
-Rise-Via is deployed on Vercel with Supabase as the backend database.
+Rise-Via is deployed on Vercel with Neon PostgreSQL as the backend database.
 
 ## Prerequisites
 - Vercel account
-- Supabase project
+- Neon database project
 - GitHub repository access
 - Domain name (optional)
 
 ## Environment Setup
 
-### Supabase Configuration
-1. Create new Supabase project
+### Neon Database Configuration
+1. Create new Neon project
 2. Set up database tables:
    ```sql
    -- Wishlist sessions
@@ -67,63 +67,16 @@ Rise-Via is deployed on Vercel with Supabase as the backend database.
    );
    ```
 
-3. Configure Row Level Security (RLS):
-   ```sql
-   -- Enable RLS
-   ALTER TABLE wishlist_sessions ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE wishlist_items ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+3. Configure database permissions and access controls as needed
 
-   -- Wishlist sessions policies
-   CREATE POLICY "Users can access their own sessions" ON wishlist_sessions
-     FOR ALL USING (
-       session_token = current_setting('request.headers')::json->>'session-token'
-       OR user_id = auth.uid()
-     );
-
-   -- Wishlist items policies
-   CREATE POLICY "Users can access their wishlist items" ON wishlist_items
-     FOR ALL USING (
-       session_id IN (
-         SELECT id FROM wishlist_sessions 
-         WHERE session_token = current_setting('request.headers')::json->>'session-token'
-         OR user_id = auth.uid()
-       )
-     );
-
-   -- Customer policies
-   CREATE POLICY "Users can access their own data" ON customers
-     FOR ALL USING (auth.uid() = id);
-
-   -- Order policies
-   CREATE POLICY "Users can access their orders" ON orders
-     FOR ALL USING (
-       customer_id IN (
-         SELECT id FROM customers WHERE id = auth.uid()
-       )
-     );
-
-   -- Order items policies
-   CREATE POLICY "Users can access their order items" ON order_items
-     FOR ALL USING (
-       order_id IN (
-         SELECT id FROM orders WHERE customer_id = auth.uid()
-       )
-     );
-   ```
-
-4. Generate API keys
+4. Get connection string from Neon dashboard
 
 ### Environment Variables
 Set the following in Vercel:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `VITE_SUPABASE_URL` | Supabase project URL | `https://xxx.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Public anonymous key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
-| `VITE_SUPABASE_SERVICE_KEY` | Service role key (admin) | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `VITE_NEON_DATABASE_URL` | Neon database connection string | `postgresql://user:pass@host/db` |
 | `VITE_RESEND_API_KEY` | Email service key | `re_xxx` |
 
 ## Vercel Deployment
@@ -160,7 +113,7 @@ Set the following in Vercel:
 ## Database Migrations
 
 ### Schema Updates
-1. Update Supabase schema via dashboard or SQL editor
+1. Update Neon schema via dashboard or SQL editor
 2. Test changes in staging environment
 3. Apply to production database
 4. Update application code accordingly
@@ -191,7 +144,7 @@ ON wishlist_items(session_id);
 
 ### Health Checks
 - Vercel function monitoring
-- Supabase database health
+- Neon database health
 - Third-party service status
 - SSL certificate expiration
 
@@ -202,7 +155,7 @@ ON wishlist_items(session_id);
 - API response times
 
 ### Backup Strategy
-- Supabase automatic backups (daily)
+- Neon automatic backups (daily)
 - Code repository backups
 - Environment variable backups
 - Database schema versioning

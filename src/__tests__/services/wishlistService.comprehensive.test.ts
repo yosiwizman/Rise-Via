@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
+vi.mock('../../lib/neon', () => ({
+  neon: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({

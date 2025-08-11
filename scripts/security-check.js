@@ -4,8 +4,8 @@ import { glob } from 'glob';
 
 const securityPatterns = [
   {
-    pattern: /SUPABASE_SERVICE_KEY\s*=\s*["'][^"']+["']/g,
-    message: 'Supabase service key found in code',
+    pattern: /NEON_API_KEY\s*=\s*["'][^"']+["']/g,
+    message: 'Neon API key found in code',
     severity: 'error'
   },
   {

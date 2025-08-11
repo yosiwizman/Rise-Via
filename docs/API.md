@@ -1,14 +1,14 @@
 # Rise-Via API Documentation
 
 ## Overview
-The Rise-Via platform uses Supabase as the backend database with client-side services for data management.
+The Rise-Via platform uses Neon PostgreSQL as the backend database with client-side services for data management.
 
 ## Authentication
 
-### Supabase Auth
-- **Base URL**: Configured via `VITE_SUPABASE_URL`
-- **Authentication**: Anonymous and authenticated users supported
-- **Service Key**: Admin operations use `VITE_SUPABASE_SERVICE_KEY`
+### Neon Database Auth
+- **Base URL**: Configured via `VITE_NEON_DATABASE_URL`
+- **Authentication**: Connection string based authentication
+- **Service Key**: Admin operations use secure connection strings
 
 ## Database Schema
 
@@ -239,16 +239,15 @@ Cart operations are rate-limited to prevent abuse:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `VITE_SUPABASE_URL` | Supabase project URL | Yes |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `VITE_SUPABASE_SERVICE_KEY` | Supabase service key (admin) | No |
+| `VITE_NEON_DATABASE_URL` | Neon PostgreSQL connection URL | Yes |
+| `VITE_NEON_API_KEY` | Neon API key for management operations | No |
 | `VITE_RESEND_API_KEY` | Resend email service key | No |
 
 ## API Endpoints
 
 ### REST API Patterns
 
-All database operations follow RESTful patterns through Supabase:
+All database operations follow RESTful patterns through Neon PostgreSQL:
 
 #### Wishlist Operations
 - `GET /wishlist_sessions` - Retrieve sessions
@@ -679,42 +678,37 @@ API requests are limited to:
 
 ### JavaScript/TypeScript
 ```javascript
-import { createClient } from '@supabase/supabase-js'
+import { neon } from '@neondatabase/serverless'
 
-const supabase = createClient(
-  'https://your-project.supabase.co',
-  'your-anon-key'
-)
+const sql = neon(process.env.VITE_NEON_DATABASE_URL!)
 
 // Get customer
-const { data, error } = await supabase
-  .from('customers')
-  .select('*')
-  .eq('id', customerId)
-  .single()
+const customers = await sql`
+  SELECT * FROM customers 
+  WHERE id = ${customerId}
+  LIMIT 1
+`
 
 // Add to wishlist
-const { data, error } = await supabase
-  .from('wishlist_items')
-  .insert({
-    session_id: sessionId,
-    product_id: productId
-  })
+const result = await sql`
+  INSERT INTO wishlist_items (session_id, product_id)
+  VALUES (${sessionId}, ${productId})
+  RETURNING *
+`
 ```
 
 ### cURL
 ```bash
-# Get customer
+# Get customer (via API endpoint)
 curl -X GET \
-  'https://your-project.supabase.co/rest/v1/customers?id=eq.customer_id' \
+  'https://your-app.vercel.app/api/customers/customer_id' \
   -H 'Authorization: Bearer jwt_token' \
-  -H 'apikey: anon_key'
+  -H 'Content-Type: application/json'
 
-# Create order
+# Create order (via API endpoint)
 curl -X POST \
-  'https://your-project.supabase.co/rest/v1/orders' \
+  'https://your-app.vercel.app/api/orders' \
   -H 'Authorization: Bearer jwt_token' \
-  -H 'apikey: anon_key' \
   -H 'Content-Type: application/json' \
   -d '{
     "customer_id": "customer_id",
@@ -727,14 +721,14 @@ curl -X POST \
 # Rise-Via API Documentation
 
 ## Overview
-The Rise-Via platform uses Supabase as the backend database with client-side services for data management.
+The Rise-Via platform uses Neon PostgreSQL as the backend database with client-side services for data management.
 
 ## Authentication
 
-### Supabase Auth
-- **Base URL**: Configured via `VITE_SUPABASE_URL`
-- **Authentication**: Anonymous and authenticated users supported
-- **Service Key**: Admin operations use `VITE_SUPABASE_SERVICE_KEY`
+### Neon Database Auth
+- **Base URL**: Configured via `VITE_NEON_DATABASE_URL`
+- **Authentication**: Connection string based authentication
+- **Service Key**: Admin operations use secure connection strings
 
 ## Database Schema
 
@@ -965,16 +959,15 @@ Cart operations are rate-limited to prevent abuse:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `VITE_SUPABASE_URL` | Supabase project URL | Yes |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `VITE_SUPABASE_SERVICE_KEY` | Supabase service key (admin) | No |
+| `VITE_NEON_DATABASE_URL` | Neon PostgreSQL connection URL | Yes |
+| `VITE_NEON_API_KEY` | Neon API key for management operations | No |
 | `VITE_RESEND_API_KEY` | Resend email service key | No |
 
 ## API Endpoints
 
 ### REST API Patterns
 
-All database operations follow RESTful patterns through Supabase:
+All database operations follow RESTful patterns through Neon PostgreSQL:
 
 #### Wishlist Operations
 - `GET /wishlist_sessions` - Retrieve sessions

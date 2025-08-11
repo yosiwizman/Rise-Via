@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '../../test-utils'
 import { AccountPage } from '../../pages/AccountPage'
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
+vi.mock('../../lib/neon', () => ({
+  neon: {
     auth: {
       getUser: vi.fn(() => Promise.resolve({ 
         data: { user: { email: 'test@example.com' } }, 

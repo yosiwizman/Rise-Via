@@ -1,11 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_KEY;
+const neonUrl = process.env.DATABASE_URL;
 const cloudName = process.env.VITE_CLOUDINARY_CLOUD_NAME;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase configuration');
+if (!neonUrl) {
+  console.error('Missing Neon database configuration');
   process.exit(1);
 }
 
@@ -14,7 +13,7 @@ if (!cloudName) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const sql = neon(neonUrl);
 
 const generatePlaceholderImage = async (strainName, variant = 1) => {
   const encodedName = encodeURIComponent(`${strainName} - ${variant}`);
@@ -60,13 +59,14 @@ const generateImagesForAllStrains = async () => {
   try {
     console.log('🖼️  Starting image generation for all strains...');
     
-    const { data: products, error } = await supabase
-      .from('products')
-      .select('id, name')
-      .eq('status', 'active');
+    const products = await sql`
+      SELECT id, name 
+      FROM products 
+      WHERE status = 'active'
+    `;
     
-    if (error) {
-      console.error('Error fetching products:', error);
+    if (!products) {
+      console.error('Error fetching products from Neon database');
       return;
     }
     
@@ -79,16 +79,13 @@ const generateImagesForAllStrains = async () => {
       try {
         const images = await generateStrainImages(product.name);
         
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ images })
-          .eq('id', product.id);
+        await sql`
+          UPDATE products 
+          SET images = ${JSON.stringify(images)}
+          WHERE id = ${product.id}
+        `;
         
-        if (updateError) {
-          console.error(`❌ Error updating images for ${product.name}:`, updateError);
-        } else {
-          console.log(`✅ Generated ${images.length} images for ${product.name}`);
-        }
+        console.log(`✅ Generated ${images.length} images for ${product.name}`);
         
         await new Promise(resolve => setTimeout(resolve, 1000));
         

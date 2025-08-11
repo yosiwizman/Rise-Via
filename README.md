@@ -19,7 +19,7 @@ Premium THCA hemp products e-commerce platform with full compliance features.
 - [ ] **Asset Audit** - Comprehensive image and video verification ([Issue #45](https://github.com/yosiwizman/Rise-Via/issues/45))
 
 ### 📅 Upcoming Features
-- [ ] User authentication system (Supabase Auth)
+- [ ] User authentication system (Neon Auth)
 - [ ] Payment processing integration
 - [ ] Admin panel enhancements
 - [ ] Advanced analytics and monitoring
@@ -36,7 +36,7 @@ Premium THCA hemp products e-commerce platform with full compliance features.
 
 ## Tech Stack
 - **Frontend:** React 19, TypeScript, TailwindCSS, shadcn/ui, Framer Motion
-- **Database:** Hybrid strategy - Neon (wishlist), Supabase (main e-commerce)
+- **Database:** Neon PostgreSQL (serverless database)
 - **Deployment:** Vercel with automated CI/CD
 - **Testing:** Vitest, React Testing Library
 - **Code Quality:** ESLint, Prettier, Husky
