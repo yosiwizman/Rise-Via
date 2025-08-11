@@ -105,7 +105,11 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
     return () => {
       if (authStateChange && typeof authStateChange.then === 'function') {
-        authStateChange.then(res => res.data.subscription.unsubscribe());
+        authStateChange.then(authHandler => {
+          if (authHandler?.data?.subscription?.unsubscribe) {
+            authHandler.data.subscription.unsubscribe();
+          }
+        });
       }
     };
     // No console.log
