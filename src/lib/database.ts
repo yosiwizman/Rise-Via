@@ -173,6 +173,12 @@ export async function initializeTables() {
 
     // Cart items table (make user_id optional to avoid foreign key constraint issues)
     await sql`
+      ALTER TABLE IF EXISTS cart_items 
+      DROP CONSTRAINT IF EXISTS cart_items_user_id_fkey
+    `.catch(() => {
+    });
+    
+    await sql`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID,
@@ -198,9 +204,15 @@ export async function initializeTables() {
 
     // Activity logs table (for admin dashboard)
     await sql`
+      ALTER TABLE IF EXISTS activity_logs 
+      DROP CONSTRAINT IF EXISTS activity_logs_user_id_fkey
+    `.catch(() => {
+    });
+    
+    await sql`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id),
+        user_id UUID,
         action VARCHAR(100) NOT NULL,
         details JSONB,
         ip_address VARCHAR(45),
