@@ -8,25 +8,27 @@ const sql = Object.assign(
         return Promise.resolve([{
           id: 'mock-session-id',
           session_token: values[0] || 'mock-token',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }]);
       }
       return Promise.resolve([{
         id: 'mock-session-id',
         session_token: 'mock-token',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }]);
     }
     
     if (query.includes('wishlist_items')) {
       if (query.includes('SELECT product_id')) {
         return Promise.resolve([
-          { product_id: 'mock-product-1' },
-          { product_id: 'mock-product-2' }
+          { id: 'mock-item-1', session_id: 'mock-session-id', product_id: 'mock-product-1', created_at: new Date().toISOString() },
+          { id: 'mock-item-2', session_id: 'mock-session-id', product_id: 'mock-product-2', created_at: new Date().toISOString() }
         ]);
       }
       if (query.includes('SELECT id')) {
-        return Promise.resolve([{ id: 'mock-item-id' }]);
+        return Promise.resolve([{ id: 'mock-item-id', session_id: 'mock-session-id', product_id: 'mock-product-1', created_at: new Date().toISOString() }]);
       }
       if (query.includes('SELECT *')) {
         return Promise.resolve([{
@@ -36,6 +38,9 @@ const sql = Object.assign(
           created_at: new Date().toISOString()
         }]);
       }
+      if (query.includes('INSERT') || query.includes('DELETE')) {
+        return Promise.resolve([]);
+      }
     }
     
     return Promise.resolve([]);
@@ -43,7 +48,7 @@ const sql = Object.assign(
   {
     unsafe: (str: string) => str
   }
-);
+) as any;
 
 const getSessionToken = () => {
   let token = localStorage.getItem('wishlist_session_token')
