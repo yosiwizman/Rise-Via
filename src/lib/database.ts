@@ -82,11 +82,17 @@ export async function initializeTables() {
       )
     `;
 
-    // Customer profiles table
+    // Customer profiles table (remove foreign key constraint)
+    await sql`
+      ALTER TABLE IF EXISTS customer_profiles 
+      DROP CONSTRAINT IF EXISTS customer_profiles_customer_id_fkey
+    `.catch(() => {
+    });
+    
     await sql`
       CREATE TABLE IF NOT EXISTS customer_profiles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         membership_tier VARCHAR(50) DEFAULT 'GREEN',
         loyalty_points INTEGER DEFAULT 0,
         preferences JSONB DEFAULT '{}',
@@ -190,11 +196,17 @@ export async function initializeTables() {
       )
     `;
 
-    // Loyalty transactions table
+    // Loyalty transactions table (remove foreign key constraint)
+    await sql`
+      ALTER TABLE IF EXISTS loyalty_transactions 
+      DROP CONSTRAINT IF EXISTS loyalty_transactions_customer_id_fkey
+    `.catch(() => {
+    });
+    
     await sql`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         type VARCHAR(50) NOT NULL,
         points INTEGER NOT NULL,
         description TEXT,
@@ -222,9 +234,15 @@ export async function initializeTables() {
     `;
 
     await sql`
+      ALTER TABLE IF EXISTS price_alerts 
+      DROP CONSTRAINT IF EXISTS price_alerts_customer_id_fkey
+    `.catch(() => {
+    });
+    
+    await sql`
       CREATE TABLE IF NOT EXISTS price_alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         product_id VARCHAR(255) NOT NULL,
         product_name VARCHAR(255) NOT NULL,
         target_price DECIMAL(10,2) NOT NULL,
