@@ -151,13 +151,38 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
 
     set({ isLoading: true, error: null });
 
+    if (!sql) {
+      console.warn('⚠️ Database not available, using localStorage fallback');
+      
+      const localStorageKey = 'risevia-wishlist-fallback';
+      const localData = localStorage.getItem(localStorageKey);
+      let localItems: WishlistItem[] = [];
+      
+      if (localData) {
+        try {
+          localItems = JSON.parse(localData);
+        } catch {
+          localItems = [];
+        }
+      }
+
+      set({
+        sessionId: 'localStorage-fallback',
+        items: localItems,
+        stats: calculateStats(localItems),
+        isLoading: false,
+        error: null
+      });
+
+      toast.success('Wishlist loaded (offline mode)', {
+        description: 'Your wishlist will sync when database is available',
+        duration: 3000,
+      });
+      return;
+    }
+
     try {
       const sessionToken = state.sessionToken;
-
-      if (!sql) {
-        console.warn('⚠️ Database not available, using localStorage fallback');
-        throw new Error('Database not available');
-      }
 
       const sessionData = await sql`SELECT * FROM wishlist_sessions WHERE session_token = ${sessionToken}`;
 
