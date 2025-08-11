@@ -420,7 +420,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
                       : "border-gray-300 text-gray-600 hover:bg-gray-50"
                     }
                   >
-                    {segment === 'all' ? 'All' : segment.charAt(0).toUpperCase() + segment.slice(1).replace('_', ' ')}
+                    {segment === 'all' ? 'All' : (segment && typeof segment === 'string' ? segment.charAt(0).toUpperCase() + segment.slice(1).replace('_', ' ') : '')}
                   </Button>
                 ))}
               </div>
@@ -428,7 +428,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredCustomers.slice(0, 10).map((customer, index) => (
+              {(filteredCustomers && Array.isArray(filteredCustomers) ? filteredCustomers.slice(0, 10) : []).map((customer, index) => (
                 <div key={customer.customerId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white text-sm font-bold mr-4">
@@ -477,7 +477,7 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {analytics.reactivationOpportunities.slice(0, 6).map((customer) => (
+              {(analytics.reactivationOpportunities && Array.isArray(analytics.reactivationOpportunities) ? analytics.reactivationOpportunities.slice(0, 6) : []).map((customer) => (
                 <div key={customer.customerId} className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-risevia-black">

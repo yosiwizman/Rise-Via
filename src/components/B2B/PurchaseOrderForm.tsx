@@ -149,7 +149,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
               <div>
                 <p className="text-sm font-medium">Benefits:</p>
                 <ul className="text-xs text-gray-600 list-disc list-inside">
-                  {tierInfo.benefits.slice(0, 2).map((benefit, index) => (
+                  {(tierInfo.benefits && Array.isArray(tierInfo.benefits) ? tierInfo.benefits.slice(0, 2) : []).map((benefit, index) => (
                     <li key={index}>{benefit}</li>
                   ))}
                 </ul>

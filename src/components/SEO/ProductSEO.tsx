@@ -22,7 +22,7 @@ export const ProductSEO = ({ product, canonical }: ProductSEOProps) => {
     document.title = `${product.name} - Premium THCA Cannabis | RiseViA`;
     
     const metaDescription = document.querySelector('meta[name="description"]');
-    const description = `${product.name} - ${product.strainType} strain with ${product.thcaPercentage}% THCA. ${product.description.substring(0, 120)}...`;
+    const description = `${product.name} - ${product.strainType} strain with ${product.thcaPercentage}% THCA. ${product.description && typeof product.description === 'string' ? product.description.substring(0, 120) : ''}...`;
     
     if (metaDescription) {
       metaDescription.setAttribute('content', description);

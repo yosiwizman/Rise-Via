@@ -83,11 +83,13 @@ export const DashboardMetrics: React.FC = () => {
         todaySales: Math.round(revenueMetrics.dailyRevenue),
         todayOrders: Math.round(revenueMetrics.dailyRevenue / Math.max(revenueMetrics.averageOrderValue, 1)),
         totalCustomers: customerAnalytics.totalCustomers,
-        lowStockProducts: inventoryAnalytics.lowStockAlerts.slice(0, 5).map(item => ({
-          id: item.productId,
-          name: item.productName,
-          inventory: item.currentStock
-        })),
+        lowStockProducts: (inventoryAnalytics.lowStockAlerts && Array.isArray(inventoryAnalytics.lowStockAlerts)) 
+          ? inventoryAnalytics.lowStockAlerts.slice(0, 5).map(item => ({
+              id: item.productId,
+              name: item.productName,
+              inventory: item.currentStock
+            }))
+          : [],
         pendingOrders: Math.floor(Math.random() * 20) + 5,
         activeProducts: inventoryAnalytics.totalProducts,
         totalRevenue: Math.round(revenueMetrics.totalRevenue),

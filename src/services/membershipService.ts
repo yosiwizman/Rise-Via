@@ -151,6 +151,11 @@ export const membershipService = {
    * Generate referral code for customer
    */
   generateReferralCode(firstName: string, lastName: string, customerId: string): string {
+    if (!firstName || typeof firstName !== 'string' || !lastName || typeof lastName !== 'string' || !customerId || typeof customerId !== 'string') {
+      console.warn('⚠️ generateReferralCode called with invalid parameters:', { firstName, lastName, customerId });
+      return 'INVALID';
+    }
+    
     const namePrefix = (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
     const idSuffix = customerId.substring(customerId.length - 4);
     const randomSuffix = Math.random().toString(36).substring(2, 4).toUpperCase();

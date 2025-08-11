@@ -21,12 +21,12 @@ export { sql };
 
 export async function query(text: string, params: (string | number | boolean | Date | null | undefined)[] = []) {
   if (!sql) {
-    console.warn('⚠️ Database not available, returning mock data for query:', text.substring(0, 60) + '...');
+    console.warn('⚠️ Database not available, returning mock data for query:', (text && typeof text === 'string') ? text.substring(0, 60) + '...' : 'undefined query');
     return { rows: [], error: null };
   }
   
   try {
-    console.log('🔵 Executing Neon query:', text.substring(0, 60) + '...');
+    console.log('🔵 Executing Neon query:', (text && typeof text === 'string') ? text.substring(0, 60) + '...' : 'undefined query');
     const startTime = Date.now();
     
     const result = await sql(text, params);
@@ -133,7 +133,7 @@ export const authDb = {
 
 export const wishlistDb = {
   async getOrCreateSession(token: string) {
-    console.log('🔵 Getting/creating wishlist session:', token.substring(0, 10) + '...');
+    console.log('🔵 Getting/creating wishlist session:', (token && typeof token === 'string') ? token.substring(0, 10) + '...' : 'undefined token');
     
     const { rows: existing } = await query(
       'SELECT * FROM wishlist_sessions WHERE session_token = $1',
@@ -155,7 +155,7 @@ export const wishlistDb = {
   },
 
   async getItems(sessionToken: string) {
-    console.log('🔵 Getting wishlist items for session:', sessionToken.substring(0, 10) + '...');
+    console.log('🔵 Getting wishlist items for session:', (sessionToken && typeof sessionToken === 'string') ? sessionToken.substring(0, 10) + '...' : 'undefined token');
     const session = await this.getOrCreateSession(sessionToken);
     if (!session) return [];
     

@@ -183,7 +183,7 @@ export const AdminPage = () => {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</CardTitle>
+              <CardTitle>{activeTab && typeof activeTab === 'string' ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : 'Unknown'}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">This section is under development.</p>

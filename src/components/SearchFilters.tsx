@@ -166,7 +166,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <SelectContent>
                       {STRAIN_TYPES.map(type => (
                         <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                          {type && typeof type === 'string' ? type.charAt(0).toUpperCase() + type.slice(1) : type}
                         </SelectItem>
                       ))}
                     </SelectContent>

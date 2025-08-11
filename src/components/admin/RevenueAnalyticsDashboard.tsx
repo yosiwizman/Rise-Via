@@ -217,7 +217,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
             }
           >
             <Calendar className="w-4 h-4 mr-2" />
-            {period.charAt(0).toUpperCase() + period.slice(1)}
+            {period && typeof period === 'string' ? period.charAt(0).toUpperCase() + period.slice(1) : period}
           </Button>
         ))}
       </motion.div>
@@ -230,7 +230,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         <MetricCard
-          title={`${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Revenue`}
+          title={`${selectedPeriod && typeof selectedPeriod === 'string' ? selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1) : selectedPeriod} Revenue`}
           value={formatCurrency(getCurrentPeriodRevenue())}
           change={formatPercentage(metrics.trends.revenueGrowth)}
           trend={metrics.trends.revenueGrowth >= 0 ? 'up' : 'down'}
@@ -283,7 +283,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {metrics.revenueByProduct.slice(0, 8).map((product, index) => (
+                {metrics.revenueByProduct && Array.isArray(metrics.revenueByProduct) ? metrics.revenueByProduct.slice(0, 8).map((product, index) => (
                   <div key={product.productId} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-6 h-6 bg-gradient-to-r from-risevia-purple to-risevia-teal rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
@@ -308,7 +308,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : null}
               </div>
             </CardContent>
           </Card>
@@ -428,7 +428,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {metrics.seasonalData.slice(-6).map((period) => {
+              {metrics.seasonalData && Array.isArray(metrics.seasonalData) ? metrics.seasonalData.slice(-6).map((period) => {
                 const TrendIcon = period.trend === 'up' ? TrendingUp : 
                                 period.trend === 'down' ? TrendingDown : BarChart3;
                 const trendColor = period.trend === 'up' ? 'text-green-500' : 
@@ -450,7 +450,7 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
+              }) : null}
             </div>
           </CardContent>
         </Card>

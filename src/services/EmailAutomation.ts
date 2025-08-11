@@ -279,7 +279,7 @@ class EmailAutomationService {
 
   async triggerWelcomeSeries(customerEmail: string, customerName: string): Promise<void> {
     try {
-      const welcomeEmails = this.templates.filter(t => t && t.id && t.id.startsWith('welcome_'));
+      const welcomeEmails = this.templates.filter(t => t && t.id && typeof t.id === 'string' && t.id.startsWith('welcome_'));
       
       for (let i = 0; i < welcomeEmails.length; i++) {
         const delay = i * 2 * 24 * 60 * 60 * 1000;

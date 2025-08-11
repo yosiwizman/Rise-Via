@@ -24,7 +24,7 @@ export const BulkProductUpload: React.FC = () => {
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
       
-      const products = lines.slice(1).map((line, lineIndex) => {
+      const products = (lines && Array.isArray(lines) ? lines.slice(1) : []).map((line, lineIndex) => {
         const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
         const product: Record<string, unknown> = {};
         
@@ -112,7 +112,7 @@ export const BulkProductUpload: React.FC = () => {
 
       setResults({ 
         success: successCount, 
-        errors: errors.slice(0, 10),
+        errors: (errors && Array.isArray(errors) ? errors.slice(0, 10) : []),
         total: products.length 
       });
     } catch (error: unknown) {

@@ -260,7 +260,7 @@ export const InventoryManagementDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics.lowStockAlerts.slice(0, 8).map((item) => (
+                {(analytics.lowStockAlerts && Array.isArray(analytics.lowStockAlerts) ? analytics.lowStockAlerts.slice(0, 8) : []).map((item) => (
                   <div key={item.productId} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                     <div className="flex items-center">
                       <div className="text-red-500 mr-3">
@@ -306,7 +306,7 @@ export const InventoryManagementDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics.reorderRecommendations.slice(0, 8).map((recommendation) => (
+                {(analytics.reorderRecommendations && Array.isArray(analytics.reorderRecommendations) ? analytics.reorderRecommendations.slice(0, 8) : []).map((recommendation) => (
                   <div key={recommendation.productId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center">
                       <div className="text-risevia-teal mr-3">
@@ -412,7 +412,7 @@ export const InventoryManagementDashboard: React.FC = () => {
                       : "border-gray-300 text-gray-600 hover:bg-gray-50"
                     }
                   >
-                    {category === 'all' ? 'All' : category.charAt(0).toUpperCase() + category.slice(1)}
+                    {category === 'all' ? 'All' : (category && typeof category === 'string' ? category.charAt(0).toUpperCase() + category.slice(1) : '')}
                   </Button>
                 ))}
               </div>

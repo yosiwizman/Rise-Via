@@ -58,6 +58,11 @@ function generateSlug(title: string): string {
 }
 
 function generateExcerpt(content: string, maxLength: number = 160): string {
+  if (!content || typeof content !== 'string') {
+    console.warn('⚠️ generateExcerpt called with invalid content:', typeof content, content);
+    return '';
+  }
+  
   const plainText = content.replace(/[#*`_~]/g, '').replace(/\n+/g, ' ');
   if (plainText.length <= maxLength) return plainText;
   return plainText.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';

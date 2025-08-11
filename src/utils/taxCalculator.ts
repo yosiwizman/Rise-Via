@@ -56,7 +56,10 @@ export const taxCalculator = {
   },
 
   getLocalTaxRate(stateCode: string, zipCode?: string): number {
-    if (!zipCode) return 0;
+    if (!zipCode || typeof zipCode !== 'string') {
+      console.warn('⚠️ taxCalculator.getLocalTaxRate called with invalid zipCode:', typeof zipCode, zipCode);
+      return 0;
+    }
 
     const localTaxRates: Record<string, Record<string, number>> = {
       'CA': {

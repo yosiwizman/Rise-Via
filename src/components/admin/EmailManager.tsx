@@ -315,7 +315,7 @@ export const EmailManager = () => {
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{template.subject}</p>
                   <div className="text-xs text-gray-500 mb-3">
-                    {template.body.substring(0, 100)}...
+                    {template.body && typeof template.body === 'string' ? template.body.substring(0, 100) : ''}...
                   </div>
                   <Button
                     size="sm"

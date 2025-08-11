@@ -279,7 +279,7 @@ export const LabResultsManager: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">COA QR Code</h3>
             <div className="flex justify-center mb-4">
               <div className="w-48 h-48 bg-gray-100 flex items-center justify-center">
-                QR Code: {showQRModal.substring(0, 20)}...
+                QR Code: {showQRModal && typeof showQRModal === 'string' ? showQRModal.substring(0, 20) : ''}...
               </div>
             </div>
             <Button

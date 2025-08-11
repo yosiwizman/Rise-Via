@@ -93,7 +93,7 @@ export const ProductManager: React.FC = () => {
 
   const handleBulkPriceAdjustment = () => {
     const adjustment = prompt('Enter price adjustment (e.g., +5, -10, *1.1):');
-    if (!adjustment) return;
+    if (!adjustment || typeof adjustment !== 'string') return;
 
     const operator = adjustment[0];
     const value = parseFloat(adjustment.slice(1));

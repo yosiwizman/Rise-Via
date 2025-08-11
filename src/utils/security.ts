@@ -19,15 +19,23 @@ export class SecurityUtils {
    * Sanitizes user input by removing potentially dangerous characters
    */
   static sanitizeInput(input: string): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string' || input === null || input === undefined) {
+      console.warn('⚠️ SecurityUtils.sanitizeInput called with invalid input:', typeof input, input);
+      return '';
+    }
     
-    return input
-      .trim()
-      .replace(/[<>]/g, '') // Remove angle brackets
-      .replace(/javascript:/gi, '') // Remove javascript: protocol
-      .replace(/on\w+=/gi, '') // Remove event handlers
-      .replace(/data:/gi, '') // Remove data: protocol
-      .substring(0, 1000); // Limit length
+    try {
+      return input
+        .trim()
+        .replace(/[<>]/g, '') // Remove angle brackets
+        .replace(/javascript:/gi, '') // Remove javascript: protocol
+        .replace(/on\w+=/gi, '') // Remove event handlers
+        .replace(/data:/gi, '') // Remove data: protocol
+        .substring(0, 1000); // Limit length
+    } catch (error) {
+      console.error('❌ Error in SecurityUtils.sanitizeInput:', error, 'Input:', input);
+      return '';
+    }
   }
 
   /**

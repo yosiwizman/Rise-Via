@@ -196,7 +196,7 @@ export const OrderManager: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
+            {status && typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : status} ({count})
           </button>
         ))}
       </div>

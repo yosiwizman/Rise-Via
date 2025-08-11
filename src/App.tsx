@@ -87,7 +87,7 @@ function App() {
         setCurrentPage('contact');
       } else if (path === '/blog') {
         setCurrentPage('blog');
-      } else if (path.startsWith('/blog/')) {
+      } else if (path && typeof path === 'string' && path.startsWith('/blog/')) {
         const slug = path.replace('/blog/', '');
         setBlogSlug(slug);
         setCurrentPage('blog-post');
