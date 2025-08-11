@@ -106,7 +106,7 @@ export const authService = {
     return user ? { user } : null;
   },
 
-  async onAuthStateChange(callback: (event: string, session: { user: User } | null) => void) {
+  onAuthStateChange(callback: (event: string, session: { user: User } | null) => void) {
     const handleStorageChange = () => {
       this.getCurrentUser().then(user => {
         callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user } : null);
