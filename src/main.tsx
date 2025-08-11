@@ -10,8 +10,22 @@ if (typeof window !== 'undefined') {
 
 PerformanceMonitor.init();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+try {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+} catch (error) {
+  console.error('❌ Fatal error during app initialization:', error);
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div style="padding: 20px; color: red; font-family: Arial, sans-serif;">
+        <h2>Fatal Error</h2>
+        <p>The application failed to initialize: ${error instanceof Error ? error.message : String(error)}</p>
+        <p>Please check the browser console for more details.</p>
+      </div>
+    `;
+  }
+}

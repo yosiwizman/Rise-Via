@@ -2,13 +2,22 @@ import { neon } from '@neondatabase/serverless';
 
 const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
 
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+const isValidDatabaseUrl = DATABASE_URL && typeof DATABASE_URL === 'string' && DATABASE_URL.startsWith('postgresql://');
 
 if (!isValidDatabaseUrl) {
   console.warn('⚠️ No valid database URL provided. Running in development mode with mock data.');
 }
 
-export const sql = isValidDatabaseUrl ? neon(DATABASE_URL!) : null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let sql: any = null;
+try {
+  sql = isValidDatabaseUrl ? neon(DATABASE_URL!) : null;
+} catch (error) {
+  console.error('❌ Failed to initialize Neon database connection in neon.ts:', error);
+  sql = null;
+}
+
+export { sql };
 
 export async function query(text: string, params: (string | number | boolean | Date | null | undefined)[] = []) {
   if (!sql) {
