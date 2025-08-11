@@ -1,6 +1,11 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+const sql = process.env.DATABASE_URL 
+  ? neon(process.env.DATABASE_URL)
+  : (strings: TemplateStringsArray, ...values: unknown[]) => {
+      console.log('Mock SQL Query (password-reset API): DATABASE_URL not configured, using mock');
+      return Promise.resolve([]);
+    };
 
 export const config = {
   runtime: 'edge',
