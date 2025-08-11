@@ -279,6 +279,8 @@ export class RevenueAnalyticsService {
       monthlyData.set(monthKey, existing);
     });
 
+    let sortedMonths: Array<[string, any]> = [];
+    
     try {
       const monthlyArray = Array.from(monthlyData.entries());
       if (!Array.isArray(monthlyArray)) {
@@ -286,7 +288,7 @@ export class RevenueAnalyticsService {
         return [];
       }
       
-      const sortedMonths = monthlyArray
+      sortedMonths = monthlyArray
         .sort(([a], [b]) => a.localeCompare(b))
         .slice(-12);
     } catch (error) {
@@ -294,7 +296,7 @@ export class RevenueAnalyticsService {
       return [];
     }
 
-    return sortedMonths.map(([period, data], index) => {
+    return sortedMonths.map(([period, data]: [string, any], index: number) => {
       const previousData = index > 0 ? sortedMonths[index - 1][1] : null;
       let trend: 'up' | 'down' | 'stable' = 'stable';
       

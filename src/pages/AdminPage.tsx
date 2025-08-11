@@ -183,14 +183,17 @@ export const AdminPage = () => {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>{activeTab && typeof activeTab === 'string' ? (
+              <CardTitle>{(() => {
+                if (!activeTab || typeof activeTab !== 'string') {
+                  return 'Unknown';
+                }
                 try {
                   return activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
                 } catch (error) {
                   console.warn('⚠️ Error processing activeTab in AdminPage:', error, 'activeTab:', activeTab);
                   return 'Unknown';
                 }
-              )() : 'Unknown'}</CardTitle>
+              })()}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">This section is under development.</p>
