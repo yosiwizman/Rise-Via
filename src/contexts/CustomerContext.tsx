@@ -73,6 +73,7 @@ interface CustomerContextType {
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCustomer = () => {
   const context = useContext(CustomerContext);
   if (!context) {

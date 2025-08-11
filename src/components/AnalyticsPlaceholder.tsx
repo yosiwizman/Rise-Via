@@ -9,6 +9,7 @@ interface AnalyticsEvent {
   value?: number;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAnalytics = () => {
   const trackEvent = (eventData: AnalyticsEvent) => {
     if (typeof window !== 'undefined' && (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag) {
@@ -166,4 +167,10 @@ export const AnalyticsProvider = ({ children }: { children: React.ReactNode }) =
   }, []);
 
   return <>{children}</>;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const analyticsConfig = {
+  trackingId: 'GA_MEASUREMENT_ID',
+  enableDebug: false
 };

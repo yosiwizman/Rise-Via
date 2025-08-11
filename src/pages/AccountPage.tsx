@@ -97,7 +97,7 @@ export const AccountPage = () => {
       setOrders([]);
       setLoyaltyTransactions([]);
     }
-  }, [customer?.id]);
+  }, [customer?.id, customer?.customer_profiles]);
 
   useEffect(() => {
     if (isAuthenticated && customer) {
