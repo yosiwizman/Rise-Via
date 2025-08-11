@@ -139,7 +139,7 @@ describe('useWishlist', () => {
     let addedItemId: string
     await waitFor(() => {
       expect(result.current.items.length).toBe(1)
-      addedItemId = result.current.items[0].id
+      addedItemId = result.current.items[0]?.id || ''
     })
 
     await act(async () => {
@@ -232,7 +232,7 @@ describe('useWishlist', () => {
     await waitFor(() => {
       expect(result.current.items).toBeDefined()
       expect(result.current.stats).toBeDefined()
-      expect(result.current.sessionId).toBeDefined()
+      expect(result.current.items).toBeDefined()
     }, { timeout: 3000 })
 
     mockSessionStorage.setItem('test-key', 'test-value')

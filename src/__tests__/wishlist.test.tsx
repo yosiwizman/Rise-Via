@@ -44,7 +44,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     expect(result.current.items).toBeDefined()
@@ -56,7 +56,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     const testProduct = {
@@ -78,7 +78,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     await act(async () => {
@@ -92,7 +92,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     expect(result.current.isInWishlist('product-1')).toBe(false)
@@ -103,7 +103,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     expect(result.current.getWishlistCount()).toBe(1)
@@ -113,7 +113,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     expect(result.current.stats).toHaveProperty('totalItems')
@@ -127,7 +127,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.loading).toBe(false)
     })
 
     await act(async () => {
