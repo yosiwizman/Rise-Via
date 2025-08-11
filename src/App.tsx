@@ -119,12 +119,24 @@ function App() {
       setShowStateBlocker(true);
     }
 
-    priceTrackingService.startPriceTracking();
-    blogScheduler.start();
-
-    initializeTables().catch(error => {
-      console.error('Database initialization failed:', error);
-    });
+    const initializeApp = async () => {
+      try {
+        console.log('🔧 Initializing database tables...');
+        const success = await initializeTables();
+        if (success) {
+          console.log('✅ Database tables initialized successfully');
+        } else {
+          console.error('❌ Database initialization failed');
+        }
+      } catch (error) {
+        console.error('❌ Database initialization error:', error);
+      }
+      
+      priceTrackingService.startPriceTracking();
+      blogScheduler.start();
+    };
+    
+    initializeApp();
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
