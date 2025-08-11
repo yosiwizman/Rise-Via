@@ -18,6 +18,7 @@ import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
 import { blogScheduler } from './services/blogScheduler';
+import { initializeTables } from './lib/database';
 import RegisterPage from './pages/RegisterPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
@@ -120,6 +121,10 @@ function App() {
 
     priceTrackingService.startPriceTracking();
     blogScheduler.start();
+
+    initializeTables().catch(error => {
+      console.error('Database initialization failed:', error);
+    });
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';

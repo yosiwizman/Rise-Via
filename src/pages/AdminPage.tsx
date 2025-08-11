@@ -22,7 +22,7 @@ import { AIContentGenerator } from '../components/admin/AIContentGenerator';
 import { EmailManager } from '../components/admin/EmailManager';
 import { LabResultsManager } from '../components/admin/LabResultsManager';
 import { ComplianceReports } from './admin/ComplianceReports';
-import { PopupManager } from '../components/admin/PopupManager';
+import { PopupManager } from '../components/PopupManager';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -182,7 +182,7 @@ export const AdminPage = () => {
         return <ComplianceReports />;
       
       case 'popups':
-        return <PopupManager />;
+        return <PopupManager currentPage="admin" />;
       
       default:
         return (
