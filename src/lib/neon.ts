@@ -1,12 +1,43 @@
-import { neon } from '@neondatabase/serverless';
 
-const databaseUrl = import.meta.env.DATABASE_URL;
+export const mockDatabase = {
+  admin_users: [
+    {
+      id: '1',
+      email: 'admin@rise-via.com',
+      password_hash: '$2a$12$LQv3c1yqBWVHxkd0LQ4YCOuLQv3c1yqBWVHxkd0LQ4YCOuLQv3c1y',
+      role: 'admin',
+      first_name: 'Admin',
+      last_name: 'User',
+      permissions: {
+        products: { create: true, read: true, update: true, delete: true },
+        orders: { create: true, read: true, update: true, delete: true },
+        customers: { create: true, read: true, update: true, delete: true },
+        inventory: { create: true, read: true, update: true, delete: true },
+        reports: { view: true, export: true, advanced: true },
+        settings: { api: true, users: true, system: true },
+        media: { upload: true, manage: true, delete: true }
+      },
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
+  ],
+  api_settings: [],
+  system_settings: [],
+  customers: [],
+  customer_profiles: []
+};
 
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL environment variable is required');
-}
-
-export const sql = neon(databaseUrl);
+export const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query:', query, values);
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export const dbHelpers = {
   async findOne(tableName: string, conditions: Record<string, any>) {
