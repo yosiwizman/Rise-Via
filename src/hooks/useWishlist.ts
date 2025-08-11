@@ -159,9 +159,10 @@ export const useWishlist = () => {
           return a.price - b.price;
         case 'dateAdded':
           return b.dateAdded - a.dateAdded;
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
+        }
         default:
           return 0;
       }
