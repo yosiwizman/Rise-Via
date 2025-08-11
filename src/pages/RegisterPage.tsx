@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
+import { createSecureInputHandler, FIELD_LIMITS, validateSecureInput, generateCSRFToken } from '../utils/formSecurity';
+import { SecurityUtils } from '../utils/security';
 
 interface RegisterPageProps {
   onNavigate: (page: string) => void;
@@ -20,6 +22,32 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
+
+  useEffect(() => {
+    setCsrfToken(generateCSRFToken());
+  }, []);
+
+  const secureInputHandler = createSecureInputHandler(setFormData, {
+    firstName: FIELD_LIMITS.firstName,
+    lastName: FIELD_LIMITS.lastName,
+    email: FIELD_LIMITS.email,
+    password: FIELD_LIMITS.password,
+    confirmPassword: FIELD_LIMITS.password,
+    phone: FIELD_LIMITS.phone
+  });
+
+  const handleSecureInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      secureInputHandler(e);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +59,16 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
     
     if (!formData.acceptTerms) {
       setError('You must accept the Terms of Service');
+      return;
+    }
+
+    if (!validateSecureInput(formData.email, 'email')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (formData.phone && !validateSecureInput(formData.phone, 'phone')) {
+      setError('Please enter a valid phone number');
       return;
     }
     
@@ -46,8 +84,17 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
     
     setLoading(true);
     setError('');
+
+    const sanitizedData = {
+      ...formData,
+      firstName: SecurityUtils.sanitizeInput(formData.firstName),
+      lastName: SecurityUtils.sanitizeInput(formData.lastName),
+      email: SecurityUtils.sanitizeInput(formData.email),
+      phone: SecurityUtils.sanitizeInput(formData.phone),
+      csrfToken: csrfToken
+    };
     
-    const result = await register(formData);
+    const result = await register(sanitizedData);
     
     if (result.success) {
       onNavigate('account');
@@ -70,12 +117,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
           )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            <input type="hidden" name="csrfToken" value={csrfToken} />
             <div className="grid grid-cols-2 gap-4">
               <input
                 type="text"
                 placeholder="First Name"
                 value={formData.firstName}
-                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                onChange={handleSecureInputChange}
+                maxLength={FIELD_LIMITS.firstName}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
               />
@@ -84,7 +133,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
                 type="text"
                 placeholder="Last Name"
                 value={formData.lastName}
-                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                onChange={handleSecureInputChange}
+                maxLength={FIELD_LIMITS.lastName}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
               />
@@ -94,7 +144,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
               type="email"
               placeholder="Email Address"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={handleSecureInputChange}
+              maxLength={FIELD_LIMITS.email}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
@@ -103,7 +154,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
               type="tel"
               placeholder="Phone Number (optional)"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              onChange={handleSecureInputChange}
+              maxLength={FIELD_LIMITS.phone}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             
@@ -111,7 +163,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
               type="password"
               placeholder="Password (min 6 characters)"
               value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              onChange={handleSecureInputChange}
+              maxLength={FIELD_LIMITS.password}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               minLength={6}
               required
@@ -121,7 +174,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
               type="password"
               placeholder="Confirm Password"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              onChange={handleSecureInputChange}
+              maxLength={FIELD_LIMITS.password}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
@@ -131,7 +185,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
                 <input
                   type="checkbox"
                   checked={formData.ageVerified}
-                  onChange={(e) => setFormData({...formData, ageVerified: e.target.checked})}
+                  onChange={handleSecureInputChange}
                   className="mt-1 rounded text-purple-600 focus:ring-purple-500"
                   required
                 />
@@ -142,7 +196,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
                 <input
                   type="checkbox"
                   checked={formData.acceptTerms}
-                  onChange={(e) => setFormData({...formData, acceptTerms: e.target.checked})}
+                  onChange={handleSecureInputChange}
                   className="mt-1 rounded text-purple-600 focus:ring-purple-500"
                   required
                 />

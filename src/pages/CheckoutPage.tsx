@@ -11,6 +11,8 @@ import { ProductWarnings } from '../components/ProductWarnings';
 import { PaymentMethodSelector } from '../components/PaymentMethodSelector';
 import { ShippingInfo } from '../components/ShippingInfo';
 import { useCart } from '../hooks/useCart';
+import { FIELD_LIMITS, validateSecureInput } from '../utils/formSecurity';
+import { SecurityUtils } from '../utils/security';
 
 interface CheckoutPageProps {
   onNavigate: (page: string) => void;
@@ -38,9 +40,27 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
   const [orderSuccess] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    if (!validateSecureInput(value, name === 'email' ? 'email' : name === 'phone' ? 'phone' : 'text')) {
+      return;
+    }
+    
+    const sanitizedValue = SecurityUtils.sanitizeInput(value);
+    const fieldLimit = name === 'email' ? FIELD_LIMITS.email : 
+                      name === 'firstName' ? FIELD_LIMITS.firstName :
+                      name === 'lastName' ? FIELD_LIMITS.lastName :
+                      name === 'address' ? FIELD_LIMITS.address :
+                      name === 'city' ? FIELD_LIMITS.name :
+                      name === 'state' ? 50 :
+                      name === 'zipCode' ? 10 :
+                      name === 'phone' ? FIELD_LIMITS.phone : 1000;
+    
+    const limitedValue = sanitizedValue.substring(0, fieldLimit);
+    
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: limitedValue
     }));
   };
 
@@ -125,6 +145,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
+                      maxLength={FIELD_LIMITS.firstName}
                       className="bg-risevia-black border-risevia-purple/30 text-white"
                       required
                     />
@@ -136,6 +157,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
+                      maxLength={FIELD_LIMITS.lastName}
                       className="bg-risevia-black border-risevia-purple/30 text-white"
                       required
                     />
@@ -150,6 +172,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
+                    maxLength={FIELD_LIMITS.email}
                     className="bg-risevia-black border-risevia-purple/30 text-white"
                     required
                   />
@@ -162,6 +185,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
+                    maxLength={FIELD_LIMITS.address}
                     className="bg-risevia-black border-risevia-purple/30 text-white"
                     required
                   />
@@ -175,6 +199,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
+                      maxLength={FIELD_LIMITS.name}
                       className="bg-risevia-black border-risevia-purple/30 text-white"
                       required
                     />
@@ -186,6 +211,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                       name="state"
                       value={formData.state}
                       onChange={handleInputChange}
+                      maxLength={50}
                       className="bg-risevia-black border-risevia-purple/30 text-white"
                       required
                     />
@@ -197,6 +223,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                       name="zipCode"
                       value={formData.zipCode}
                       onChange={handleInputChange}
+                      maxLength={10}
                       className="bg-risevia-black border-risevia-purple/30 text-white"
                       required
                     />
@@ -211,6 +238,7 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
+                    maxLength={FIELD_LIMITS.phone}
                     className="bg-risevia-black border-risevia-purple/30 text-white"
                     required
                   />

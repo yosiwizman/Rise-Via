@@ -48,9 +48,19 @@ export class ErrorBoundary extends Component<Props, State> {
       error: undefined,
       errorInfo: undefined
     });
+    setTimeout(() => {
+      if (this.state.hasError) {
+        window.location.reload();
+      }
+    }, 100);
   };
 
   handleReload = () => {
+    this.setState({
+      hasError: false,
+      error: undefined,
+      errorInfo: undefined
+    });
     window.location.reload();
   };
 

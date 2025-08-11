@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, MessageSquare, Calendar, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -8,6 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { SEOHead } from '../components/SEOHead';
+import { createSecureInputHandler, FIELD_LIMITS, validateSecureInput, generateCSRFToken } from '../utils/formSecurity';
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -16,26 +17,56 @@ export const ContactPage = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  useEffect(() => {
+    setCsrfToken(generateCSRFToken());
+  }, []);
+
+  const secureInputHandler = createSecureInputHandler(setFormData, {
+    name: FIELD_LIMITS.name,
+    email: FIELD_LIMITS.email,
+    message: FIELD_LIMITS.message
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.message) {
+      setSubmitStatus('error');
+      return;
+    }
+
+    if (!validateSecureInput(formData.email, 'email')) {
+      setSubmitStatus('error');
+      return;
+    }
+
+    if (formData.name.length > FIELD_LIMITS.name) {
+      setSubmitStatus('error');
+      return;
+    }
+
+    if (formData.message.length > FIELD_LIMITS.message) {
+      setSubmitStatus('error');
+      return;
+    }
+
     setIsSubmitting(true);
+    setSubmitStatus('idle');
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setSubmitStatus('success');
-    setIsSubmitting(false);
-    setFormData({ name: '', email: '', message: '' });
-    
-    setTimeout(() => setSubmitStatus('idle'), 5000);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+      setCsrfToken(generateCSRFToken());
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -96,13 +127,15 @@ export const ContactPage = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <input type="hidden" name="csrfToken" value={csrfToken} />
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-risevia-black dark:text-gray-100">Full Name</Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
-                      onChange={handleInputChange}
+                      onChange={secureInputHandler}
+                      maxLength={FIELD_LIMITS.name}
                       required
                       className="bg-white border-gray-200 text-risevia-black dark:text-gray-100 placeholder-risevia-charcoal"
                       placeholder="Enter your full name"
@@ -116,7 +149,8 @@ export const ContactPage = () => {
                       name="email"
                       type="email"
                       value={formData.email}
-                      onChange={handleInputChange}
+                      onChange={secureInputHandler}
+                      maxLength={FIELD_LIMITS.email}
                       required
                       className="bg-white border-gray-200 text-risevia-black dark:text-gray-100 placeholder-risevia-charcoal"
                       placeholder="Enter your email address"
@@ -129,7 +163,8 @@ export const ContactPage = () => {
                       id="message"
                       name="message"
                       value={formData.message}
-                      onChange={handleInputChange}
+                      onChange={secureInputHandler}
+                      maxLength={FIELD_LIMITS.message}
                       required
                       rows={6}
                       className="bg-white border-gray-200 text-risevia-black placeholder-risevia-charcoal resize-none"

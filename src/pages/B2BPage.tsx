@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
+import { FIELD_LIMITS, validateSecureInput, generateCSRFToken } from '../utils/formSecurity';
+import { SecurityUtils } from '../utils/security';
 
 export const B2BPage = () => {
   const [formData, setFormData] = useState({
@@ -20,24 +22,47 @@ export const B2BPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
+
+  useEffect(() => {
+    setCsrfToken(generateCSRFToken());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateSecureInput(formData.email, 'email')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    if (!validateSecureInput(formData.phone, 'phone')) {
+      alert('Please enter a valid phone number');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      alert('Password must be at least 8 characters long');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const customerData = await customerService.create({
-        email: formData.email,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone: formData.phone
-      });
+      const sanitizedData = {
+        email: SecurityUtils.sanitizeInput(formData.email),
+        first_name: SecurityUtils.sanitizeInput(formData.firstName),
+        last_name: SecurityUtils.sanitizeInput(formData.lastName),
+        phone: SecurityUtils.sanitizeInput(formData.phone)
+      };
+
+      const customerData = await customerService.create(sanitizedData);
 
       if (customerData) {
         await customerService.updateCustomerProfile(customerData.id, {
           is_b2b: true,
-          business_name: formData.businessName,
-          business_license: formData.businessLicense,
+          business_name: SecurityUtils.sanitizeInput(formData.businessName),
+          business_license: SecurityUtils.sanitizeInput(formData.businessLicense),
           membership_tier: 'SILVER',
           segment: 'B2B'
         } as {
@@ -62,8 +87,28 @@ export const B2BPage = () => {
     }
   };
 
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'email' && !validateSecureInput(value, 'email')) {
+      return;
+    }
+    if (field === 'phone' && !validateSecureInput(value, 'phone')) {
+      return;
+    }
+    
+    const sanitizedValue = SecurityUtils.sanitizeInput(value);
+    const fieldLimit = field === 'email' ? FIELD_LIMITS.email :
+                      field === 'firstName' ? FIELD_LIMITS.firstName :
+                      field === 'lastName' ? FIELD_LIMITS.lastName :
+                      field === 'password' ? FIELD_LIMITS.password :
+                      field === 'phone' ? FIELD_LIMITS.phone :
+                      field === 'businessName' ? FIELD_LIMITS.businessName :
+                      field === 'businessLicense' ? FIELD_LIMITS.licenseNumber :
+                      field === 'taxExemptId' ? FIELD_LIMITS.licenseNumber : 1000;
+    
+    const limitedValue = sanitizedValue.substring(0, fieldLimit);
+    
+    setFormData(prev => ({ ...prev, [field]: limitedValue }));
   };
 
   if (submitted) {
@@ -157,6 +202,7 @@ export const B2BPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <input type="hidden" name="csrfToken" value={csrfToken} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name *</Label>
@@ -165,6 +211,7 @@ export const B2BPage = () => {
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    maxLength={FIELD_LIMITS.firstName}
                     required
                   />
                 </div>
@@ -175,6 +222,7 @@ export const B2BPage = () => {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    maxLength={FIELD_LIMITS.lastName}
                     required
                   />
                 </div>
@@ -188,6 +236,7 @@ export const B2BPage = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
+                    maxLength={FIELD_LIMITS.email}
                     required
                   />
                 </div>
@@ -198,6 +247,7 @@ export const B2BPage = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
+                    maxLength={FIELD_LIMITS.phone}
                     required
                   />
                 </div>
@@ -210,6 +260,7 @@ export const B2BPage = () => {
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
+                  maxLength={FIELD_LIMITS.password}
                   required
                 />
               </div>
@@ -221,6 +272,7 @@ export const B2BPage = () => {
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
+                  maxLength={FIELD_LIMITS.businessName}
                   required
                 />
               </div>
@@ -233,6 +285,7 @@ export const B2BPage = () => {
                     type="text"
                     value={formData.businessLicense}
                     onChange={(e) => handleInputChange('businessLicense', e.target.value)}
+                    maxLength={FIELD_LIMITS.licenseNumber}
                     required
                   />
                 </div>
@@ -243,6 +296,7 @@ export const B2BPage = () => {
                     type="text"
                     value={formData.taxExemptId}
                     onChange={(e) => handleInputChange('taxExemptId', e.target.value)}
+                    maxLength={FIELD_LIMITS.licenseNumber}
                   />
                 </div>
               </div>
