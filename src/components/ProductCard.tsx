@@ -81,13 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         onToggleWishlist(product.id);
       } else {
         await addToWishlist({
-          name: product.name,
-          price: numericPrice,
-          image: product.images[0] || '/placeholder-product.jpg',
-          category: product.category,
-          thcContent: product.thc_percentage?.toString(),
-          cbdContent: product.cbd_percentage?.toString(),
-          effects: []
+          id: product.id
         });
       }
     } catch (error) {

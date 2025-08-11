@@ -8,7 +8,7 @@ import { Badge } from '../../ui/badge';
 import { Shield, Lock, Eye, AlertTriangle, Activity } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (SecuritySettings):', query, values);
     
@@ -60,8 +60,8 @@ const sql = Object.assign(
 );
 
 const SecuritySettings: React.FC = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [auditLogs, setAuditLogs] = useState<Array<{ action: string; description: string; user_email: string; created_at: string; status: string }>>([]);
   const [, setLoading] = useState(false);
 
   const securityFeatures = [
@@ -114,8 +114,8 @@ const SecuritySettings: React.FC = () => {
         WHERE category = 'security'
       `;
       
-      const settingsMap: Record<string, any> = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, unknown> = {};
+      (data as Array<{ key: string; value: unknown }>).forEach((setting: { key: string; value: unknown }) => {
         settingsMap[setting.key] = setting.value;
       });
       
@@ -152,13 +152,13 @@ const SecuritySettings: React.FC = () => {
         LIMIT 10
       `;
       
-      setAuditLogs(logs);
+      setAuditLogs(logs as Array<{ action: string; description: string; user_email: string; created_at: string; status: string }>);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
     }
   };
 
-  const saveSecuritySetting = async (key: string, value: any) => {
+  const saveSecuritySetting = async (key: string, value: unknown) => {
     setLoading(true);
     try {
       await sql`
@@ -247,7 +247,7 @@ const SecuritySettings: React.FC = () => {
                 type="number"
                 min="5"
                 max="480"
-                defaultValue={settings.session_timeout_minutes || '60'}
+                defaultValue={String(settings.session_timeout_minutes || '60')}
                 onBlur={(e) => saveSecuritySetting('session_timeout_minutes', parseInt(e.target.value))}
               />
             </div>
@@ -259,7 +259,7 @@ const SecuritySettings: React.FC = () => {
                 type="number"
                 min="3"
                 max="10"
-                defaultValue={settings.max_failed_attempts || '5'}
+                defaultValue={String(settings.max_failed_attempts || '5')}
                 onBlur={(e) => saveSecuritySetting('max_failed_attempts', parseInt(e.target.value))}
               />
             </div>
@@ -271,7 +271,7 @@ const SecuritySettings: React.FC = () => {
                 type="number"
                 min="5"
                 max="1440"
-                defaultValue={settings.lockout_duration || '30'}
+                defaultValue={String(settings.lockout_duration || '30')}
                 onBlur={(e) => saveSecuritySetting('lockout_duration', parseInt(e.target.value))}
               />
             </div>
@@ -281,7 +281,7 @@ const SecuritySettings: React.FC = () => {
               <Input
                 id="allowed_ips"
                 placeholder="192.168.1.1, 10.0.0.1"
-                defaultValue={settings.allowed_ips || ''}
+                defaultValue={String(settings.allowed_ips || '')}
                 onBlur={(e) => saveSecuritySetting('allowed_ips', e.target.value)}
               />
               <p className="text-xs text-gray-500">Leave empty to allow all IPs</p>

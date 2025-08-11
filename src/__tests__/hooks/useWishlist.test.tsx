@@ -105,6 +105,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
+      id: 'test-product-1',
       name: 'Test Product',
       price: 29.99,
       image: 'test.jpg',
@@ -125,6 +126,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
+      id: 'test-product-2',
       name: 'Test Product',
       price: 29.99,
       image: 'test.jpg',
@@ -156,6 +158,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
+      id: 'test-product-3',
       name: 'Test Product',
       price: 29.99,
       image: 'test.jpg',
@@ -177,6 +180,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
+      id: 'test-product-4',
       name: 'Test Product',
       price: 29.99,
       image: 'test.jpg',
@@ -205,6 +209,7 @@ describe('useWishlist', () => {
     const { result } = renderHook(() => useWishlist())
     
     const testProduct = {
+      id: 'test-product-5',
       name: 'Test Product',
       price: 29.99,
       image: 'test.jpg',

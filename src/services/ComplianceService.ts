@@ -1,5 +1,5 @@
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (ComplianceService):', query, values);
     
@@ -159,7 +159,21 @@ class ComplianceService {
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = (result as any[]).map((row: any) => ({
+      const complianceData: StateCompliance[] = (result as Array<{
+        state: string;
+        is_legal: boolean;
+        age_requirement: number;
+        max_possession: string;
+        home_grow_allowed: boolean;
+        public_consumption: boolean;
+        driving_limit: string;
+        retail_sales_allowed: boolean;
+        delivery_allowed: boolean;
+        online_ordering_allowed: boolean;
+        tax_rate: string;
+        license_required: boolean;
+        last_updated: string | Date;
+      }>).map((row) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -314,7 +328,18 @@ class ComplianceService {
 
       const result = await query;
 
-      return (result as any[]).map((row: any) => ({
+      return (result as unknown as Array<{
+        id: string;
+        type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+        severity: 'low' | 'medium' | 'high' | 'critical';
+        title: string;
+        description: string;
+        action_required: boolean;
+        deadline?: Date;
+        affected_states: string;
+        created_at: Date;
+        resolved_at?: Date;
+      }>).map((row) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
@@ -353,7 +378,7 @@ class ComplianceService {
         ) RETURNING id
       `;
 
-      return (result as any[])[0]?.id;
+      return (result as unknown as Array<{ id: string }>)[0]?.id;
     } catch (error) {
       console.error('Error creating compliance alert:', error);
       throw new Error('Failed to create compliance alert');
@@ -423,7 +448,11 @@ class ComplianceService {
       WHERE user_id = ${userId} OR session_id = ${sessionId}
       LIMIT 1
     `;
-    const existingLimit = (existingLimitResult as any[])[0];
+    const existingLimit = (existingLimitResult as unknown as Array<{
+      last_purchase_date: string;
+      daily_amount: number;
+      monthly_amount: number;
+    }>)[0];
 
     const today = new Date().toDateString();
     const dailyLimit = 1000;
@@ -479,7 +508,11 @@ class ComplianceService {
       ORDER BY created_at DESC
     `;
 
-    const typedEvents = (events as any[]) || [];
+    const typedEvents = (events as unknown as Array<{
+      event_type: string;
+      compliance_result: boolean;
+      risk_score: number;
+    }>) || [];
     
     const report = {
       totalEvents: typedEvents.length,

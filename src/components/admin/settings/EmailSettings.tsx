@@ -8,7 +8,7 @@ import { Switch } from '../../ui/switch';
 import { Mail, Send, Settings, Zap } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (EmailSettings):', query, values);
     
@@ -31,7 +31,7 @@ const sql = Object.assign(
 );
 
 const EmailSettings: React.FC = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [, setLoading] = useState(false);
 
   const emailTemplates = [
@@ -103,8 +103,8 @@ const EmailSettings: React.FC = () => {
         WHERE category = 'email'
       `;
       
-      const settingsMap: Record<string, any> = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, unknown> = {};
+      data.forEach((setting: { key: string; value: unknown }) => {
         settingsMap[setting.key] = setting.value;
       });
       
@@ -114,7 +114,7 @@ const EmailSettings: React.FC = () => {
     }
   };
 
-  const saveEmailSettings = async (key: string, value: any) => {
+  const saveEmailSettings = async (key: string, value: unknown) => {
     setLoading(true);
     try {
       await sql`
@@ -172,7 +172,7 @@ const EmailSettings: React.FC = () => {
                   <Label htmlFor="from_name">From Name</Label>
                   <Input
                     id="from_name"
-                    defaultValue={settings.from_name || 'Rise-Via Cannabis'}
+                    defaultValue={String(settings.from_name || 'Rise-Via Cannabis')}
                     onBlur={(e) => saveEmailSettings('from_name', e.target.value)}
                   />
                 </div>
@@ -182,7 +182,7 @@ const EmailSettings: React.FC = () => {
                   <Input
                     id="from_email"
                     type="email"
-                    defaultValue={settings.from_email || 'noreply@rise-via.com'}
+                    defaultValue={String(settings.from_email || 'noreply@rise-via.com')}
                     onBlur={(e) => saveEmailSettings('from_email', e.target.value)}
                   />
                 </div>
@@ -192,7 +192,7 @@ const EmailSettings: React.FC = () => {
                   <Input
                     id="reply_to"
                     type="email"
-                    defaultValue={settings.reply_to || 'support@rise-via.com'}
+                    defaultValue={String(settings.reply_to || 'support@rise-via.com')}
                     onBlur={(e) => saveEmailSettings('reply_to', e.target.value)}
                   />
                 </div>
@@ -202,7 +202,7 @@ const EmailSettings: React.FC = () => {
                   <Input
                     id="support_email"
                     type="email"
-                    defaultValue={settings.support_email || 'support@rise-via.com'}
+                    defaultValue={String(settings.support_email || 'support@rise-via.com')}
                     onBlur={(e) => saveEmailSettings('support_email', e.target.value)}
                   />
                 </div>

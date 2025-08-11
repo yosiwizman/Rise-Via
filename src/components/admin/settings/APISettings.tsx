@@ -8,7 +8,7 @@ import { Switch } from '../../ui/switch';
 import { Eye, EyeOff, Save, TestTube } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (APISettings):', query, values);
     
@@ -39,7 +39,7 @@ interface APIConfig {
   id?: string;
   service_name: string;
   api_key_encrypted: string;
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
   is_active: boolean;
 }
 
@@ -103,7 +103,7 @@ const APISettings: React.FC = () => {
     }
   };
 
-  const saveAPIConfig = async (serviceName: string, config: Record<string, any>) => {
+  const saveAPIConfig = async (serviceName: string, config: Record<string, unknown>) => {
     setLoading(true);
     try {
       const existingConfig = configs.find(c => c.service_name === serviceName);
@@ -140,9 +140,10 @@ const APISettings: React.FC = () => {
     }));
   };
 
-  const getConfigValue = (serviceName: string, key: string) => {
+  const getConfigValue = (serviceName: string, key: string): string => {
     const config = configs.find(c => c.service_name === serviceName);
-    return config?.configuration?.[key] || '';
+    const value = config?.configuration?.[key];
+    return typeof value === 'string' ? value : String(value || '');
   };
 
   return (
@@ -195,7 +196,7 @@ const APISettings: React.FC = () => {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
-                  const config: Record<string, any> = {};
+                  const config: Record<string, unknown> = {};
                   
                   service.fields.forEach(field => {
                     config[field.key] = formData.get(field.key) || field.default || '';
@@ -219,7 +220,7 @@ const APISettings: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-risevia-purple"
                               required={field.required}
                             >
-                              {(field as any).options?.map((option: string) => (
+                              {(field as { options?: string[] }).options?.map((option: string) => (
                                 <option key={option} value={option}>{option}</option>
                               ))}
                             </select>

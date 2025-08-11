@@ -94,11 +94,7 @@ export const ShopPage = () => {
       const product = products.find(p => p.id === productId);
       if (product) {
         addToWishlist({
-          name: product.name,
-          price: typeof product.prices === 'object' ? product.prices.gram : product.price || 0,
-          image: product.images?.[0] || `https://via.placeholder.com/400x300/4A5568/FFFFFF?text=${encodeURIComponent(product.name)}`,
-          category: product.category || '',
-          effects: product.effects || []
+          id: product.id
         });
       }
     }

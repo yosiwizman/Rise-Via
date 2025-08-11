@@ -7,7 +7,7 @@ import { Switch } from '../../ui/switch';
 import { Globe, Clock, DollarSign, Shield, Save } from 'lucide-react';
 
 const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
+  (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
     console.log('Mock SQL Query (SystemSettings):', query, values);
     
@@ -34,7 +34,7 @@ const sql = Object.assign(
 );
 
 const SystemSettings: React.FC = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
 
   const timezones = [
@@ -64,8 +64,8 @@ const SystemSettings: React.FC = () => {
         WHERE category = 'system' OR category IS NULL
       `;
       
-      const settingsMap: Record<string, any> = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, unknown> = {};
+      data.forEach((setting: { key: string; value: unknown }) => {
         settingsMap[setting.key] = setting.value;
       });
       
@@ -75,7 +75,7 @@ const SystemSettings: React.FC = () => {
     }
   };
 
-  const saveSystemSettings = async (key: string, value: any) => {
+  const saveSystemSettings = async (key: string, value: unknown) => {
     setLoading(true);
     try {
       await sql`
@@ -158,7 +158,7 @@ const SystemSettings: React.FC = () => {
                 <Input
                   id="site_name"
                   name="site_name"
-                  defaultValue={settings.site_name || 'Rise-Via Cannabis'}
+                  defaultValue={String(settings.site_name || 'Rise-Via Cannabis')}
                 />
               </div>
               
@@ -168,7 +168,7 @@ const SystemSettings: React.FC = () => {
                   id="contact_email"
                   name="contact_email"
                   type="email"
-                  defaultValue={settings.contact_email || 'info@rise-via.com'}
+                  defaultValue={String(settings.contact_email || 'info@rise-via.com')}
                 />
               </div>
               
@@ -177,7 +177,7 @@ const SystemSettings: React.FC = () => {
                 <Input
                   id="site_description"
                   name="site_description"
-                  defaultValue={settings.site_description || 'Premium cannabis products delivered to your door'}
+                  defaultValue={String(settings.site_description || 'Premium cannabis products delivered to your door')}
                 />
               </div>
               
@@ -186,7 +186,7 @@ const SystemSettings: React.FC = () => {
                 <Input
                   id="contact_phone"
                   name="contact_phone"
-                  defaultValue={settings.contact_phone || '(555) 123-4567'}
+                  defaultValue={String(settings.contact_phone || '(555) 123-4567')}
                 />
               </div>
               
@@ -195,7 +195,7 @@ const SystemSettings: React.FC = () => {
                 <Input
                   id="business_address"
                   name="business_address"
-                  defaultValue={settings.business_address || '123 Cannabis St, Denver, CO 80202'}
+                  defaultValue={String(settings.business_address || '123 Cannabis St, Denver, CO 80202')}
                 />
               </div>
             </div>
@@ -216,7 +216,7 @@ const SystemSettings: React.FC = () => {
                 <select
                   id="timezone"
                   name="timezone"
-                  defaultValue={settings.timezone || 'America/Denver'}
+                  defaultValue={String(settings.timezone || 'America/Denver')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-risevia-purple"
                 >
                   {timezones.map(tz => (
@@ -230,7 +230,7 @@ const SystemSettings: React.FC = () => {
                 <select
                   id="currency"
                   name="currency"
-                  defaultValue={settings.currency || 'USD'}
+                  defaultValue={String(settings.currency || 'USD')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-risevia-purple"
                 >
                   {currencies.map(currency => (
@@ -262,7 +262,7 @@ const SystemSettings: React.FC = () => {
                   step="0.01"
                   min="0"
                   max="100"
-                  defaultValue={settings.tax_rate || '8.25'}
+                  defaultValue={String(settings.tax_rate || '8.25')}
                 />
               </div>
               
@@ -274,7 +274,7 @@ const SystemSettings: React.FC = () => {
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={settings.shipping_fee || '9.99'}
+                  defaultValue={String(settings.shipping_fee || '9.99')}
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ const SystemSettings: React.FC = () => {
                   id="allowed_states"
                   name="allowed_states"
                   placeholder="CO, CA, WA, OR"
-                  defaultValue={settings.allowed_states || 'CO, CA, WA, OR'}
+                  defaultValue={String(settings.allowed_states || 'CO, CA, WA, OR')}
                 />
               </div>
             </div>
