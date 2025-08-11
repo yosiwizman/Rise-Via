@@ -59,7 +59,16 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
-    chunkSizeWarningLimit: 500
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        format: 'es',
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          neon: ['@neondatabase/serverless']
+        }
+      }
+    }
   },
   server: {
     allowedHosts: true,
