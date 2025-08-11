@@ -14,18 +14,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false,
-        drop_debugger: false
-      },
-      mangle: {
-        keep_fnames: true,
-        properties: false
-      }
-    },
+    sourcemap: true,
+    minify: false,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
