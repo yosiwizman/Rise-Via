@@ -12,6 +12,7 @@ import { ProductManager } from '../components/admin/ProductManager';
 import { OrderManager } from '../components/admin/OrderManager';
 import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
+import AdminSettings from '../components/admin/settings/AdminSettings';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -188,6 +189,9 @@ export const AdminPage = () => {
             </CardContent>
           </Card>
         );
+      
+      case 'settings':
+        return <AdminSettings />;
       
       default:
         return (

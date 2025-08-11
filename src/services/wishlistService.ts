@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { sql } from '../lib/neon'
 
 const getSessionToken = () => {
   let token = localStorage.getItem('wishlist_session_token')
@@ -12,101 +12,120 @@ const getSessionToken = () => {
 export const wishlistService = {
   async getOrCreateSession() {
     const token = getSessionToken()
+    
+    const existingSessions = await sql`
+      SELECT * FROM wishlist_sessions 
+      WHERE session_token = ${token}
+    `;
 
-    const { data: existingSession } = await supabase
-      .from('wishlist_sessions')
-      .select('*')
-      .eq('session_token', token)
-      .single()
+    if (existingSessions.length > 0) return existingSessions[0];
 
-    if (existingSession) return existingSession
+    const newSessions = await sql`
+      INSERT INTO wishlist_sessions (session_token, created_at)
+      VALUES (${token}, NOW())
+      RETURNING *
+    `;
 
-    const { data: newSession, error } = await supabase
-      .from('wishlist_sessions')
-      .insert({ session_token: token })
-      .select()
-      .single()
-
-    if (error) console.error('Error creating session:', error)
-    return newSession
+    return newSessions[0];
   },
 
   async getWishlistItems() {
     const session = await this.getOrCreateSession()
     if (!session) return []
 
-    const { data } = await supabase
-      .from('wishlist_items')
-      .select('*')
-      .eq('session_id', session.id)
+    const items = await sql`
+      SELECT * FROM wishlist_items 
+      WHERE session_id = ${session.id}
+    `;
 
-    return data || []
+    return items || []
   },
 
   async getWishlist() {
     const session = await this.getOrCreateSession()
     if (!session) return { data: [], error: null }
 
-    const { data, error } = await supabase
-      .from('wishlist_items')
-      .select('product_id')
-      .eq('session_id', session.id)
+    try {
+      const items = await sql`
+        SELECT product_id FROM wishlist_items 
+        WHERE session_id = ${session.id}
+      `;
 
-    if (error) return { data: [], error }
-    return { data: data?.map(item => item.product_id) || [], error: null }
+      return { data: items.map((item: any) => item.product_id) || [], error: null }
+    } catch (error) {
+      return { data: [], error }
+    }
   },
 
   async addToWishlist(productId: string) {
     const session = await this.getOrCreateSession()
     if (!session) return { error: { message: 'Failed to create session' } }
 
-    const { error } = await supabase
-      .from('wishlist_items')
-      .insert({
-        session_id: session.id,
-        product_id: productId
-      })
+    try {
+      await sql`
+        INSERT INTO wishlist_items (session_id, product_id, created_at)
+        VALUES (${session.id}, ${productId}, NOW())
+      `;
 
-    return { error }
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
   },
 
   async removeFromWishlist(productId: string) {
     const session = await this.getOrCreateSession()
-    if (!session) return { error: { message: 'Failed to create session' } }
+    if (!session) return { error: { message: 'Failed to get session' } }
 
-    const { error } = await supabase
-      .from('wishlist_items')
-      .delete()
-      .eq('session_id', session.id)
-      .eq('product_id', productId)
+    try {
+      await sql`
+        DELETE FROM wishlist_items 
+        WHERE session_id = ${session.id} AND product_id = ${productId}
+      `;
 
-    return { error }
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
   },
 
   async isInWishlist(productId: string): Promise<boolean> {
     const session = await this.getOrCreateSession()
     if (!session) return false
 
-    const { data } = await supabase
-      .from('wishlist_items')
-      .select('id')
-      .eq('session_id', session.id)
-      .eq('product_id', productId)
-      .single()
+    const items = await sql`
+      SELECT id FROM wishlist_items 
+      WHERE session_id = ${session.id} AND product_id = ${productId}
+    `;
 
-    return !!data
+    return items.length > 0
   },
 
   async migrateSessionWishlist(userId: string) {
-    const { data: sessionItems } = await supabase
-      .from('wishlist_items')
-      .select('product_id')
-      .eq('session_id', (await this.getOrCreateSession())?.id)
-    
-    if (sessionItems && sessionItems.length > 0) {
-      console.log(`Migrating ${sessionItems.length} wishlist items for user ${userId}`)
+    const session = await this.getOrCreateSession();
+    if (!session) return;
+
+    const sessionItems = await sql`
+      SELECT product_id FROM wishlist_items 
+      WHERE session_id = ${session.id}
+    `;
+
+    if (!sessionItems?.length) return;
+
+    try {
+      for (const item of sessionItems) {
+        await sql`
+          INSERT INTO wishlist_items (user_id, product_id, created_at)
+          VALUES (${userId}, ${item.product_id}, NOW())
+        `;
+      }
+
+      await sql`
+        DELETE FROM wishlist_items 
+        WHERE session_id = ${session.id}
+      `;
+    } catch (error) {
+      console.error('Migration failed:', error);
     }
-    
-    return { success: true }
   }
 }

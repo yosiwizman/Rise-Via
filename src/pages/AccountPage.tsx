@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-import { supabase } from '../lib/supabase';
+import { sql } from '../lib/neon';
 
 interface Order {
   id: string;
@@ -49,29 +49,20 @@ export const AccountPage = () => {
     try {
       if (!customer?.id) return;
 
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
+      const ordersData = await sql`
+        SELECT * FROM orders 
+        WHERE customer_id = ${customer.id} 
+        ORDER BY created_at DESC
+      `;
 
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('loyalty_transactions')
-        .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
+      const transactionsData = await sql`
+        SELECT * FROM loyalty_transactions 
+        WHERE customer_id = ${customer.id} 
+        ORDER BY created_at DESC
+      `;
 
-      if (!ordersError && ordersData) {
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
-
-      if (!transactionsError && transactionsData) {
-        setLoyaltyTransactions(transactionsData);
-      } else {
-        setLoyaltyTransactions([]);
-      }
+      setOrders(ordersData as Order[]);
+      setLoyaltyTransactions(transactionsData as LoyaltyTransaction[]);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const mockMembershipTier = {
@@ -103,26 +94,16 @@ export const AccountPage = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('customer_profiles')
-        .update({ 
-          loyalty_points: currentPoints - points 
-        })
-        .eq('customer_id', customer?.id);
+      await sql`
+        UPDATE customer_profiles 
+        SET loyalty_points = ${currentPoints - points}
+        WHERE customer_id = ${customer?.id}
+      `;
 
-      if (error) {
-        alert('Failed to redeem points');
-        return;
-      }
-
-      await supabase
-        .from('loyalty_transactions')
-        .insert([{
-          customer_id: customer?.id,
-          type: 'REDEEMED',
-          points: -points,
-          description: `Redeemed ${points} points for $${points / 20} discount`
-        }]);
+      await sql`
+        INSERT INTO loyalty_transactions (customer_id, type, points, description, created_at)
+        VALUES (${customer?.id}, 'REDEEMED', ${-points}, ${`Redeemed ${points} points for $${points / 20} discount`}, NOW())
+      `;
 
       alert(`Successfully redeemed ${points} points for $${points / 20} discount!`);
       setRedeemPoints('');

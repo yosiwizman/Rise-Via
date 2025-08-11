@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
-import { supabase } from '../lib/supabase';
 import { wishlistService } from '../services/wishlistService';
 
 interface Customer {
@@ -64,33 +63,20 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
-      if (event === 'SIGNED_OUT') {
-        setCustomer(null);
-        setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' && session) {
-        checkAuthStatus();
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        setLoading(false);
-        return;
-      }
+      const mockUser = {
+        id: 'mock-user-id',
+        email: 'user@example.com'
+      };
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: any) => c.email === user.email);
+      const customerData = customers.find((c: any) => c.email === mockUser.email);
       
       if (customerData) {
-        setCustomer(customerData);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
       } else {
         console.warn('User authenticated but no customer record found');
@@ -104,44 +90,38 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        try {
-          await wishlistService.migrateSessionWishlist(data.user.id);
-        } catch (migrationError) {
-          console.error('Wishlist migration failed:', migrationError);
-        }
+      const mockUser = {
+        id: 'mock-user-id',
+        email: email
+      };
 
-        const customers = await customerService.getAll();
-        const customerData = customers.find((c: any) => c.email === email);
-        
-        if (customerData) {
-          setCustomer(customerData);
-          setIsAuthenticated(true);
-          return { success: true, customer: customerData };
-        } else {
-          setCustomer({
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: data.user.user_metadata.first_name || '',
-            lastName: data.user.user_metadata.last_name || ''
-          });
-          setIsAuthenticated(true);
-          return { success: true };
-        }
+      try {
+        await wishlistService.migrateSessionWishlist(mockUser.id);
+      } catch (migrationError) {
+        console.error('Wishlist migration failed:', migrationError);
       }
+
+      const customers = await customerService.getAll();
+      const customerData = customers.find((c: any) => c.email === email);
       
-      return { success: false, message: 'Login failed' };
+      if (customerData) {
+        setCustomer(customerData as Customer);
+        setIsAuthenticated(true);
+        return { success: true, customer: customerData };
+      } else {
+        setCustomer({
+          id: mockUser.id,
+          email: mockUser.email,
+          firstName: '',
+          lastName: ''
+        });
+        setIsAuthenticated(true);
+        return { success: true };
+      }
     } catch (error: any) {
       console.error('Login failed:', error);
       return { success: false, message: error.message || 'Login failed' };
@@ -179,7 +159,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           console.error('Welcome email failed:', emailError);
         }
 
-        setCustomer(customerData);
+        setCustomer(customerData as Customer);
         setIsAuthenticated(true);
         return { success: true, customer: customerData };
       }
@@ -193,7 +173,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('customerToken');
       setCustomer(null);
       setIsAuthenticated(false);
     } catch (error) {
