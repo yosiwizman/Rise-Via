@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 
 interface RenderOptions {
-  wrapper?: React.ComponentType<any>
+  wrapper?: React.ComponentType<{ children: React.ReactNode }>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -18,12 +18,20 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-const mockRender = (_ui: ReactElement, _options?: Omit<RenderOptions, 'wrapper'>) => {
+const mockRender = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _ui?: ReactElement, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _options?: Omit<RenderOptions, 'wrapper'>
+) => {
   const container = document.createElement('div')
   document.body.appendChild(container)
   return { 
     container,
-    rerender: (_newUi: ReactElement) => {
+    rerender: (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _newUi: ReactElement
+    ) => {
     }
   }
 }
@@ -127,21 +135,21 @@ export const fireEvent = {
   }
 }
 
-export const waitFor = async (callback: () => void, _options?: { timeout?: number }) => {
+export const waitFor = async (callback: () => void, options?: { timeout?: number }) => {
   return new Promise<void>(resolve => {
     setTimeout(() => {
       try {
         callback()
         resolve()
-      } catch (e) {
+      } catch {
         resolve()
       }
-    }, 100)
+    }, options?.timeout || 100)
   })
 }
 
-export const renderHook = (hook: () => any) => {
-  let result: any
+export const renderHook = <T,>(hook: () => T) => {
+  let result: T = {} as T
   const TestComponent = () => {
     result = hook()
     return null
