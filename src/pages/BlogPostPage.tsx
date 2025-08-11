@@ -81,9 +81,9 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
 
   const renderContent = (content: string) => {
     return content.split('\n').map((paragraph, index) => {
-      if (paragraph.trim() === '') return null;
+      if (!paragraph || paragraph.trim() === '') return null;
       
-      if (paragraph.startsWith('# ')) {
+      if (paragraph && paragraph.startsWith('# ')) {
         return (
           <h1 key={index} className="text-3xl font-bold mb-6 text-white">
             {paragraph.replace('# ', '')}
@@ -91,7 +91,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
         );
       }
       
-      if (paragraph.startsWith('## ')) {
+      if (paragraph && paragraph.startsWith('## ')) {
         return (
           <h2 key={index} className="text-2xl font-semibold mb-4 text-risevia-teal">
             {paragraph.replace('## ', '')}
@@ -99,7 +99,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
         );
       }
       
-      if (paragraph.startsWith('### ')) {
+      if (paragraph && paragraph.startsWith('### ')) {
         return (
           <h3 key={index} className="text-xl font-semibold mb-3 text-risevia-purple">
             {paragraph.replace('### ', '')}
@@ -107,7 +107,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
         );
       }
       
-      if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+      if (paragraph && paragraph.startsWith('**') && paragraph.endsWith('**')) {
         return (
           <p key={index} className="text-lg font-bold mb-4 text-white">
             {paragraph.replace(/\*\*/g, '')}
@@ -115,7 +115,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
         );
       }
       
-      if (paragraph.startsWith('• ') || paragraph.startsWith('- ')) {
+      if (paragraph && (paragraph.startsWith('• ') || paragraph.startsWith('- '))) {
         return (
           <li key={index} className="text-gray-300 mb-2 ml-4">
             {paragraph.replace(/^[•-]\s/, '')}
