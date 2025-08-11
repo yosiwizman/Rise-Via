@@ -216,9 +216,13 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg touch-optimized"
               onClick={() => {
                 console.log('🚀 Proceeding to checkout...');
-                if (onNavigate) {
-                  onNavigate('checkout');
-                  onClose();
+                try {
+                  if (onNavigate) {
+                    onNavigate('checkout');
+                    onClose();
+                  }
+                } catch (error) {
+                  console.error('Checkout navigation error:', error);
                 }
               }}
             >
