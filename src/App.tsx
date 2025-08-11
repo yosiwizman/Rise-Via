@@ -16,6 +16,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import { blogScheduler } from './services/blogScheduler';
 import RegisterPage from './pages/RegisterPage';
 
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
@@ -42,9 +43,12 @@ const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: 
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
 const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [blogSlug, setBlogSlug] = useState<string>('');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -81,6 +85,12 @@ function App() {
         setCurrentPage('orders');
       } else if (path === '/contact') {
         setCurrentPage('contact');
+      } else if (path === '/blog') {
+        setCurrentPage('blog');
+      } else if (path.startsWith('/blog/')) {
+        const slug = path.replace('/blog/', '');
+        setBlogSlug(slug);
+        setCurrentPage('blog-post');
       } else if (path === '/wishlist') {
         setCurrentPage('wishlist');
       } else if (path === '/account') {
@@ -108,6 +118,7 @@ function App() {
     }
 
     priceTrackingService.startPriceTracking();
+    blogScheduler.start();
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
@@ -223,6 +234,7 @@ function App() {
 
     return () => {
       priceTrackingService.stopPriceTracking();
+      blogScheduler.stop();
     };
   }, []);
 
@@ -257,6 +269,23 @@ function App() {
         return <OrderTrackingPage />;
       case 'contact':
         return <ContactPage />;
+      case 'blog':
+        return <BlogPage onNavigate={(page: string, _productId?: string, slug?: string) => {
+          if (page === 'blog-post' && slug) {
+            setBlogSlug(slug);
+            setCurrentPage('blog-post');
+            window.history.pushState({}, '', `/blog/${slug}`);
+          } else {
+            setCurrentPage(page);
+          }
+        }} />;
+      case 'blog-post':
+        return <BlogPostPage slug={blogSlug} onNavigate={(page: string) => {
+          setCurrentPage(page);
+          if (page === 'blog') {
+            window.history.pushState({}, '', '/blog');
+          }
+        }} />;
       case 'shipping':
         return <ShippingPage />;
       case 'lab-results':

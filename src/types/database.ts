@@ -37,3 +37,22 @@ export interface LabResult {
   qr_code: string;
   created_at: Date;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  author_name: string;
+  keywords: string[];
+  tone: string;
+  target_length: number;
+  status: 'draft' | 'scheduled' | 'published' | 'archived';
+  published_at?: Date;
+  scheduled_at?: Date;
+  view_count: number;
+  meta_description?: string;
+  created_at: Date;
+  updated_at: Date;
+}
