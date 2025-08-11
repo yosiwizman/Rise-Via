@@ -76,6 +76,11 @@ export class WishlistAnalyticsService {
         case 'add':
           metrics.addToWishlistEvents++;
           if (item?.category) {
+            if (!Array.isArray(metrics.topCategories)) {
+              console.warn('⚠️ metrics.topCategories is not an array, initializing:', typeof metrics.topCategories, metrics.topCategories);
+              metrics.topCategories = [];
+            }
+            
             const categoryIndex = metrics.topCategories.findIndex(c => c.category === item.category);
             if (categoryIndex >= 0) {
               metrics.topCategories[categoryIndex].count++;
@@ -194,8 +199,13 @@ export class WishlistAnalyticsService {
   public getAnalyticsEvents(limit: number = 100): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
+      if (!Array.isArray(events)) {
+        console.warn('⚠️ Analytics events is not an array:', typeof events, events);
+        return [];
+      }
       return events.slice(-limit);
-    } catch {
+    } catch (error) {
+      console.error('❌ Error in getAnalyticsEvents:', error);
       return [];
     }
   }

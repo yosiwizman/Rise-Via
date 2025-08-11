@@ -98,11 +98,21 @@ export class SearchService {
    * Tokenize text for indexing
    */
   private tokenize(text: string): string[] {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(token => token.length > 2);
+    if (!text || typeof text !== 'string') {
+      console.warn('⚠️ searchService.tokenize called with invalid text:', typeof text, text);
+      return [];
+    }
+    
+    try {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter(token => token && typeof token === 'string' && token.length > 2);
+    } catch (error) {
+      console.error('❌ Error in searchService.tokenize:', error, 'Text:', text);
+      return [];
+    }
   }
 
   /**
