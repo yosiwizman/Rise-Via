@@ -9,12 +9,12 @@
 
 ### 1. Database Integration
 **Current State**: Using JSON files for product data
-**Target State**: Full Supabase integration
+**Target State**: Full Neon integration
 **Priority**: High
 **Effort**: Medium (1-2 weeks)
 
 **Tasks:**
-- [ ] Migrate product data from JSON to Supabase
+- [ ] Migrate product data from JSON to Neon
 - [ ] Implement product CRUD operations
 - [ ] Add database migrations
 - [ ] Update components to use database queries
@@ -62,7 +62,7 @@
 **Effort**: Medium (1-2 weeks)
 
 **Tasks:**
-- [ ] Implement Supabase Auth
+- [ ] Implement Neon Auth
 - [ ] Add user registration/login
 - [ ] Create user dashboard
 - [ ] Add protected routes
@@ -165,7 +165,7 @@
 
 1. **Product Migration**
    - Export current products.json data
-   - Create Supabase product schema
+   - Create Neon product schema
    - Import data with proper relationships
    - Update components to use database
 
@@ -188,7 +188,7 @@
 - Add essential tests
 
 ### Sprint 2: Database Migration
-- Migrate to Supabase
+- Migrate to Neon
 - Implement user authentication
 - Add order management
 

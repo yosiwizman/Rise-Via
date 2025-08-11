@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,15 +6,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_KEY;
+const neonUrl = process.env.VITE_NEON_DATABASE_URL;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase configuration');
+if (!neonUrl) {
+  console.error('Missing Neon database configuration');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const sql = neon(neonUrl);
 
 const generateSlug = (name) => {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -118,9 +117,9 @@ const createDatabaseTables = async () => {
   `;
 
   try {
-    await supabase.rpc('exec_sql', { sql: createProductsTable });
-    await supabase.rpc('exec_sql', { sql: createInventoryLogsTable });
-    await supabase.rpc('exec_sql', { sql: createInventoryAlertsTable });
+    await sql(createProductsTable);
+    await sql(createInventoryLogsTable);
+    await sql(createInventoryAlertsTable);
     console.log('✅ Database tables created successfully');
   } catch (error) {
     console.error('❌ Error creating tables:', error);
@@ -189,16 +188,22 @@ const importStrains = async () => {
     const batchSize = 10;
     for (let i = 0; i < products.length; i += batchSize) {
       const batch = products.slice(i, i + batchSize);
-      const { error } = await supabase
-        .from('products')
-        .insert(batch);
       
-      if (error) {
+      try {
+        const values = batch.map(product => 
+          `('${product.sample_id}', '${product.name}', '${product.slug}', '${product.category}', '${product.strain_type}', ${product.thca_percentage}, '${product.batch_id}', ${product.volume_available}, '${product.description}', '${JSON.stringify(product.effects)}', '${JSON.stringify(product.flavors)}', '${JSON.stringify(product.prices)}', '${JSON.stringify(product.images)}', ${product.featured}, '${product.status}')`
+        ).join(', ');
+        
+        await sql(`
+          INSERT INTO products (sample_id, name, slug, category, strain_type, thca_percentage, batch_id, volume_available, description, effects, flavors, prices, images, featured, status)
+          VALUES ${values}
+        `);
+        
+        console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(products.length / batchSize)}`);
+      } catch (error) {
         console.error(`❌ Error inserting batch ${Math.floor(i / batchSize) + 1}:`, error);
         throw error;
       }
-      
-      console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(products.length / batchSize)}`);
     }
     
     console.log(`🎉 Successfully imported ${products.length} strains!`);

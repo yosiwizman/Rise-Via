@@ -58,16 +58,14 @@ ETA: 1 hour remaining
 
 ## Database Strategy Decision
 
-**DECISION**: Maintain hybrid Supabase + Neon approach
-- **Supabase**: Main e-commerce (products, cart, orders, auth)
-- **Neon**: Wishlist functionality with session persistence
-- **Rationale**: Both systems working well, good separation of concerns
+**DECISION**: Use Neon PostgreSQL as the primary database
+- **Neon**: All database functionality (products, cart, orders, auth, wishlist)
+- **Rationale**: Simplified architecture, single database provider, better performance
 
 ### Implementation Status:
-- ✅ Supabase client configured (`src/lib/supabase.ts`)
 - ✅ Neon client configured (`src/lib/neon.ts`)
 - ✅ Environment variables documented
-- ⚠️ PR #24 (Supabase migration) has CI failures - assess separately
+- ✅ Supabase references removed from codebase
 
 ---
 
@@ -79,7 +77,7 @@ ETA: 1 hour remaining
 
 ### Needs Investigation:
 - **PR #27**: Admin panel (Vercel deployment failed)
-- **PR #24**: Supabase migration (CI failures, large scope)
+- **PR #24**: Database migration (CI failures, large scope)
 
 ### Coordination Protocol:
 1. Infrastructure session creates PR first (lower risk)

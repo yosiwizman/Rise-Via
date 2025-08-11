@@ -26,10 +26,8 @@ vercel --prod
 
 #### Required Variables
 ```bash
-# Supabase Configuration
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_SUPABASE_SERVICE_KEY=your_supabase_service_key
+# Neon Database Configuration (Primary)
+VITE_NEON_DATABASE_URL=postgresql://username:password@host/database?sslmode=require
 
 # Neon Database Configuration
 VITE_NEON_DATABASE_URL=postgresql://username:password@host/database?sslmode=require
@@ -57,11 +55,11 @@ PROJECT_ID=your_vercel_project_id
 
 ### Database Setup
 
-#### Supabase Setup
-1. Create Supabase project
-2. Run migrations in `supabase/migrations/`
-3. Configure Row Level Security policies
-4. Set up authentication providers
+#### Database Setup (Neon Only)
+1. Create Neon project
+2. Run database schema setup
+3. Configure connection pooling
+4. Set up database credentials
 
 #### Neon Setup
 1. Create Neon project
@@ -73,7 +71,7 @@ PROJECT_ID=your_vercel_project_id
 - **Vercel Analytics**: Built-in performance monitoring
 - **Error Tracking**: Browser console errors logged
 - **Uptime Monitoring**: Vercel deployment status
-- **Database Monitoring**: Supabase and Neon dashboards
+- **Database Monitoring**: Neon dashboard
 
 ### Troubleshooting
 

@@ -36,9 +36,9 @@
 - Update documentation as needed
 
 ### Database Strategy
-- **Supabase**: Main e-commerce functionality (products, cart, orders)
-- **Neon**: Wishlist functionality with session-based persistence
-- Both integrations are maintained in parallel
+- **Neon**: Primary PostgreSQL database for all functionality (products, cart, orders, wishlist)
+- Session-based persistence with fallback to local storage
+- Single database integration for simplified architecture
 
 ### Testing
 - Unit tests: `npm test`

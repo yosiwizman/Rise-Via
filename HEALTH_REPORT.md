@@ -7,7 +7,7 @@ Generated on: Sat Aug  9 14:40:25 UTC 2025
 - **Security Vulnerabilities**: 4 moderate severity vulnerabilities in esbuild/vite dependencies
 - **TypeScript Errors**: Missing "type-check" script in package.json
 - **ESLint Violations**: 72 problems (58 errors, 14 warnings)
-- **Test Failures**: 9/9 tests failed due to Supabase authentication issues
+- **Test Failures**: 9/9 tests failed due to Neon authentication issues
 - **Build Warnings**: Large bundle size (822KB main chunk) and CSS import ordering
 
 ### 📊 Key Metrics
@@ -20,7 +20,7 @@ Generated on: Sat Aug  9 14:40:25 UTC 2025
 - **Outdated Dependencies**: 19 packages need updates
 
 ### 🚨 Immediate Action Required
-1. Fix Supabase authentication setup in test environment
+1. Fix Neon authentication setup in test environment
 2. Add missing "type-check" script to package.json
 3. Address security vulnerabilities with `npm audit fix`
 4. Reduce bundle size through code splitting
@@ -254,7 +254,7 @@ Reparsing as ES module because module syntax was detected. This incurs a perform
 To eliminate this warning, add "type": "module" to /home/ubuntu/repos/Rise-Via/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 stderr | src/__tests__/error-boundary.test.tsx > ErrorBoundary > renders children when there is no error
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -264,7 +264,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -285,26 +285,26 @@ Visit https://reactjs.org/link/error-boundaries to learn more about error bounda
 
  ❯ src/__tests__/error-boundary.test.tsx  (3 tests | 3 failed) 80ms
    ❯ src/__tests__/error-boundary.test.tsx > ErrorBoundary > renders children when there is no error
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/error-boundary.test.tsx > ErrorBoundary > renders error UI when there is an error
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/error-boundary.test.tsx > ErrorBoundary > allows retry functionality
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
  ❯ src/__tests__/routes.test.tsx  (6 tests | 6 failed) 262ms
    ❯ src/__tests__/routes.test.tsx > Critical Routes > renders HomePage without crashing
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/routes.test.tsx > Critical Routes > renders ShopPage without crashing
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/routes.test.tsx > Critical Routes > renders AdminPage without crashing
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/routes.test.tsx > Critical Routes > HomePage contains expected content
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/routes.test.tsx > Critical Routes > ShopPage contains shop-related content
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
    ❯ src/__tests__/routes.test.tsx > Critical Routes > AdminPage contains admin-related content
-     → supabase.auth.onAuthStateChange is not a function
+     → suneon.auth.onAuthStateChange is not a function
 stderr | src/__tests__/routes.test.tsx > Critical Routes > renders HomePage without crashing
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -314,7 +314,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -334,7 +334,7 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 stderr | src/__tests__/routes.test.tsx > Critical Routes > renders ShopPage without crashing
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -344,7 +344,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -355,7 +355,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -365,7 +365,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -376,7 +376,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -386,7 +386,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -397,7 +397,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -407,7 +407,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -418,7 +418,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -428,7 +428,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -439,7 +439,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -449,7 +449,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -460,7 +460,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -470,7 +470,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -481,7 +481,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -491,7 +491,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -502,7 +502,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -512,7 +512,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -523,7 +523,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -533,7 +533,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -544,7 +544,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -554,7 +554,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -565,7 +565,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -575,7 +575,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -586,7 +586,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -596,7 +596,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -607,7 +607,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -617,7 +617,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -628,7 +628,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -638,7 +638,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -649,7 +649,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -659,7 +659,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -979,7 +979,7 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 stderr | src/__tests__/routes.test.tsx > Critical Routes > renders AdminPage without crashing
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -989,7 +989,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1009,7 +1009,7 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 stderr | src/__tests__/routes.test.tsx > Critical Routes > HomePage contains expected content
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1019,7 +1019,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1039,7 +1039,7 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 stderr | src/__tests__/routes.test.tsx > Critical Routes > ShopPage contains shop-related content
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1049,7 +1049,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1060,7 +1060,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1070,7 +1070,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1081,7 +1081,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1091,7 +1091,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1102,7 +1102,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1112,7 +1112,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1123,7 +1123,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1133,7 +1133,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1144,7 +1144,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1154,7 +1154,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1165,7 +1165,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1175,7 +1175,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1186,7 +1186,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1196,7 +1196,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1207,7 +1207,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1217,7 +1217,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1228,7 +1228,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1238,7 +1238,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1249,7 +1249,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1259,7 +1259,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1270,7 +1270,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1280,7 +1280,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1291,7 +1291,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1301,7 +1301,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1312,7 +1312,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1322,7 +1322,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1333,7 +1333,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1343,7 +1343,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_2__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/hooks/useWishlist.ts:15:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1354,7 +1354,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_2__.supabase.auth.onAuthStateChang
     at flushPassiveEffects (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27023:14)
     at /home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:26808:9
     at flushActQueue (/home/ubuntu/repos/Rise-Via/node_modules/react/cjs/react.development.js:2667:24)
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1364,7 +1364,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1684,7 +1684,7 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 stderr | src/__tests__/routes.test.tsx > Critical Routes > AdminPage contains admin-related content
-Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function]
+Error: Uncaught [TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function]
     at reportException (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
     at innerInvokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
     at invokeEventListeners (/home/ubuntu/repos/Rise-Via/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
@@ -1694,7 +1694,7 @@ Error: Uncaught [TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChang
     at Object.invokeGuardedCallbackDev (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
     at invokeGuardedCallback (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
     at reportUncaughtErrorInDEV (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:22877:5)
-    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.supabase.auth.onAuthStateChange is not a function
+    at captureCommitPhaseError (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:27165:5) TypeError: __vite_ssr_import_5__.neon.auth.onAuthStateChange is not a function
     at /home/ubuntu/repos/Rise-Via/src/contexts/CustomerContext.tsx:68:54
     at commitHookEffectListMount (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
     at commitPassiveMountOnFiber (/home/ubuntu/repos/Rise-Via/node_modules/react-dom/cjs/react-dom.development.js:24970:11)
@@ -1719,11 +1719,11 @@ Visit https://reactjs.org/link/error-boundaries to learn more about error bounda
  FAIL  src/__tests__/error-boundary.test.tsx > ErrorBoundary > renders children when there is no error
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > renders AdminPage without crashing
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > AdminPage contains admin-related content
-TypeError: supabase.auth.onAuthStateChange is not a function
+TypeError: neon.auth.onAuthStateChange is not a function
  ❯ src/contexts/CustomerContext.tsx:68:54
      66|     checkAuthStatus();
      67|     
-     68|     const { data: { subscription } } = supabase.auth.onAuthStateChange…
+     68|     const { data: { subscription } } = neonse.auth.onAuthStateChange…
        |                                                      ^
      69|       if (event === 'SIGNED_OUT') {
      70|         setCustomer(null);
@@ -1743,11 +1743,11 @@ TypeError: supabase.auth.onAuthStateChange is not a function
  FAIL  src/__tests__/error-boundary.test.tsx > ErrorBoundary > allows retry functionality
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > renders HomePage without crashing
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > HomePage contains expected content
-TypeError: supabase.auth.onAuthStateChange is not a function
+TypeError: neon.auth.onAuthStateChange is not a function
  ❯ src/contexts/CustomerContext.tsx:68:54
      66|     checkAuthStatus();
      67|     
-     68|     const { data: { subscription } } = supabase.auth.onAuthStateChange…
+     68|     const { data: { subscription } } = neonse.auth.onAuthStateChange…
        |                                                      ^
      69|       if (event === 'SIGNED_OUT') {
      70|         setCustomer(null);
@@ -1765,11 +1765,11 @@ TypeError: supabase.auth.onAuthStateChange is not a function
 
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > renders ShopPage without crashing
  FAIL  src/__tests__/routes.test.tsx > Critical Routes > ShopPage contains shop-related content
-TypeError: supabase.auth.onAuthStateChange is not a function
+TypeError: neon.auth.onAuthStateChange is not a function
  ❯ src/hooks/useWishlist.ts:15:54
      13|     loadWishlist()
      14|     
-     15|     const { data: { subscription } } = supabase.auth.onAuthStateChange…
+     15|     const { data: { subscription } } = neonse.auth.onAuthStateChange…
        |                                                      ^
      16|       if (event === 'SIGNED_IN' && session?.user) {
      17|         await wishlistService.migrateSessionWishlist(session.user.id)
@@ -1791,7 +1791,7 @@ Vitest caught 30 unhandled errors during the test run.
 This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1812,7 +1812,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1833,7 +1833,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1854,7 +1854,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1875,7 +1875,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1896,7 +1896,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1917,7 +1917,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1938,7 +1938,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1959,7 +1959,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -1980,7 +1980,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2001,7 +2001,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2022,7 +2022,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2043,7 +2043,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2064,7 +2064,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2085,7 +2085,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2106,7 +2106,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2127,7 +2127,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2148,7 +2148,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2169,7 +2169,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2190,7 +2190,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2211,7 +2211,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2232,7 +2232,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2253,7 +2253,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2274,7 +2274,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2295,7 +2295,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2316,7 +2316,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2337,7 +2337,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2358,7 +2358,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2379,7 +2379,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2400,7 +2400,7 @@ TypeError: supabase.from(...).select(...).eq(...).single is not a function
 This error originated in "src/__tests__/routes.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
 
 ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-TypeError: supabase.from(...).select(...).eq(...).single is not a function
+TypeError: neon.from(...).select(...).eq(...).single is not a function
  ❯ Object.getOrCreateSession src/services/wishlistService.ts:20:8
      18|       .select('*')
      19|       .eq('session_token', token)
@@ -2441,7 +2441,7 @@ Cancelling test run. Press CTRL+c again to exit forcefully.
 ```
 Package                 Current   Wanted   Latest  Location                             Depended by
 @eslint/js               9.32.0   9.33.0   9.33.0  node_modules/@eslint/js              Rise-Via
-@supabase/supabase-js    2.53.0   2.54.0   2.54.0  node_modules/@supabase/supabase-js   Rise-Via
+@neondatabase/serverless    0.9.0   0.9.5   0.9.5  node_modules/@neondatabase/serverless   Rise-Via
 @testing-library/react   14.3.1   14.3.1   16.3.0  node_modules/@testing-library/react  Rise-Via
 @types/node              24.2.0   24.2.1   24.2.1  node_modules/@types/node             Rise-Via
 @types/react            18.3.23  18.3.23   19.1.9  node_modules/@types/react            Rise-Via
