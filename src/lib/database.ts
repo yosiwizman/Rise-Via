@@ -34,6 +34,10 @@ export async function initializeTables() {
   
   try {
     // Products table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS products (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -55,6 +59,10 @@ export async function initializeTables() {
     `;
 
     // Users table  
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,6 +78,10 @@ export async function initializeTables() {
     `;
 
     // Customers table (for legacy compatibility)
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS customers (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -83,6 +95,10 @@ export async function initializeTables() {
     `;
 
     // Customer profiles table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS customer_profiles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -105,6 +121,10 @@ export async function initializeTables() {
     `;
 
     // Wishlist sessions table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS wishlist_sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -116,6 +136,10 @@ export async function initializeTables() {
     `;
 
     // Wishlist items table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS wishlist_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -135,6 +159,10 @@ export async function initializeTables() {
     `;
 
     // Orders table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS orders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -158,6 +186,10 @@ export async function initializeTables() {
     `;
 
     // Order items table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS order_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -172,6 +204,10 @@ export async function initializeTables() {
     `;
 
     // Cart items table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -185,6 +221,10 @@ export async function initializeTables() {
     `;
 
     // Loyalty transactions table
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -197,6 +237,10 @@ export async function initializeTables() {
     `;
 
     // Activity logs table (for admin dashboard)
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -209,6 +253,10 @@ export async function initializeTables() {
       )
     `;
 
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS price_alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -225,15 +273,31 @@ export async function initializeTables() {
     `;
 
     // Create indexes for better performance
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
 
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS blog_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -255,6 +319,10 @@ export async function initializeTables() {
       )
     `;
 
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`
       CREATE TABLE IF NOT EXISTS blog_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -277,6 +345,10 @@ export async function initializeTables() {
     `;
 
     // Create indexes for blog posts
+    if (!sql) {
+      console.warn('⚠️ Database connection lost during initialization');
+      return false;
+    }
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)`;
