@@ -23,11 +23,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: mode === 'development',
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor': ['react', 'react-dom', 'react-router-dom'],
-            'neon': ['@neondatabase/serverless'],
-            'ui': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs'],
-            'stripe': ['@stripe/react-stripe-js', '@stripe/stripe-js'],
+          manualChunks: (id) => {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react';
+            }
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
           }
         }
       },
