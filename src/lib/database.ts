@@ -45,7 +45,7 @@ export async function initializeTables() {
         inventory INTEGER DEFAULT 0,
         description TEXT,
         effects TEXT[],
-        active BOOLEAN DEFAULT true,
+        status VARCHAR(50) DEFAULT 'active',
         images TEXT[],
         strain_type VARCHAR(50),
         terpenes TEXT[],
@@ -226,7 +226,7 @@ export async function initializeTables() {
 
     // Create indexes for better performance
     await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_status ON products(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
