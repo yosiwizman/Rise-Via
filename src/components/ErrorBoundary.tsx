@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { ErrorHandler } from '../utils/errorHandling';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { env } from '../config/env';
 
 interface Props {
   children: ReactNode;
@@ -93,7 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </p>
               </div>
 
-              {import.meta.env.DEV && this.state.error && (
+              {!env.IS_PRODUCTION && this.state.error && (
                 <details className="bg-gray-800 p-3 rounded text-xs text-gray-300">
                   <summary className="cursor-pointer font-medium text-red-400 mb-2">
                     Error Details (Development)

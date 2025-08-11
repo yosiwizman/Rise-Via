@@ -1,3 +1,5 @@
+import { env } from '../config/env';
+
 export interface ErrorInfo {
   componentStack: string;
   errorBoundary?: string;
@@ -36,7 +38,7 @@ export class ErrorHandler {
       ...context
     };
 
-    if (import.meta.env.DEV) {
+    if (!env.IS_PRODUCTION) {
       console.error('Error caught by ErrorHandler:', error);
       console.error('Error details:', errorDetails);
       if (errorInfo?.componentStack) {

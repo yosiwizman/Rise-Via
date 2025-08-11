@@ -8,6 +8,7 @@ import { AeropayProvider } from './payments/Aeropay';
 import { HypurProvider } from './payments/Hypur';
 import { SecurityUtils } from '../utils/security';
 import { ComplianceManager } from '../utils/compliance';
+import { env } from '../config/env';
 
 export interface PaymentProcessor {
   name: string;
@@ -52,10 +53,10 @@ export class PaymentService {
   private hypur: HypurProvider;
 
   constructor() {
-    const testMode = import.meta.env.VITE_APP_ENV === 'development';
-    this.posabit = new POSaBITProvider(import.meta.env.VITE_POSABIT_API_KEY || '', testMode);
-    this.aeropay = new AeropayProvider(import.meta.env.VITE_AEROPAY_API_KEY || '', testMode);
-    this.hypur = new HypurProvider(import.meta.env.VITE_HYPUR_API_KEY || '', testMode);
+    const testMode = !env.IS_PRODUCTION;
+    this.posabit = new POSaBITProvider(env.STRIPE_PUBLISHABLE_KEY || '', testMode);
+    this.aeropay = new AeropayProvider(env.STRIPE_PUBLISHABLE_KEY || '', testMode);
+    this.hypur = new HypurProvider(env.STRIPE_PUBLISHABLE_KEY || '', testMode);
   }
 
   /**
@@ -111,17 +112,17 @@ export class PaymentService {
       {
         name: 'POSaBIT',
         type: 'POS Integration',
-        isAvailable: !!import.meta.env.VITE_POSABIT_API_KEY
+        isAvailable: !!env.STRIPE_PUBLISHABLE_KEY
       },
       {
         name: 'Aeropay',
         type: 'ACH',
-        isAvailable: !!import.meta.env.VITE_AEROPAY_API_KEY
+        isAvailable: !!env.STRIPE_PUBLISHABLE_KEY
       },
       {
         name: 'Hypur',
         type: 'Digital Wallet',
-        isAvailable: !!import.meta.env.VITE_HYPUR_API_KEY
+        isAvailable: !!env.STRIPE_PUBLISHABLE_KEY
       }
     ];
   }

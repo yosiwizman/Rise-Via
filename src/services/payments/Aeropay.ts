@@ -1,4 +1,5 @@
 import { PaymentProvider, Customer, PaymentResult, RefundResult } from './PaymentProvider';
+import { env } from '../../config/env';
 
 export class AeropayProvider implements PaymentProvider {
   name = 'Aeropay';
@@ -29,7 +30,7 @@ export class AeropayProvider implements PaymentProvider {
         },
         body: JSON.stringify({
           amount: Math.round(amount * 100),
-          merchantId: import.meta.env.VITE_AEROPAY_MERCHANT_ID || 'default',
+          merchantId: env.AEROPAY_MERCHANT_ID || 'default',
           uuid: crypto.randomUUID(),
           customer_email: customer.email,
           customer_name: customer.name,

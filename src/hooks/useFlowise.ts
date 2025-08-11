@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { env } from '../config/env';
 
 interface FlowiseResponse {
   text: string;
@@ -23,8 +24,8 @@ export const useFlowise = () => {
     setError(null);
 
     try {
-      const flowiseUrl = import.meta.env.VITE_FLOWISE_URL || 'http://localhost:3000';
-      const apiKey = import.meta.env.VITE_FLOWISE_API_KEY;
+      const flowiseUrl = env.FLOURISH_API_URL || 'http://localhost:3000';
+      const apiKey = env.FLOURISH_API_KEY;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export const useFlowise = () => {
 
   const testConnection = useCallback(async (): Promise<boolean> => {
     try {
-      const flowiseUrl = import.meta.env.VITE_FLOWISE_URL || 'http://localhost:3000';
+      const flowiseUrl = env.FLOURISH_API_URL || 'http://localhost:3000';
       const response = await fetch(`${flowiseUrl}/api/v1/ping`);
       return response.ok;
     } catch {

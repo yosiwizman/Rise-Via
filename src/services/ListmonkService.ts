@@ -1,3 +1,5 @@
+import { env } from '../config/env';
+
 interface ListmonkSubscriber {
   email: string;
   name: string;
@@ -36,9 +38,9 @@ class ListmonkService {
   private password: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_LISTMONK_URL || 'http://localhost:9000';
-    this.username = import.meta.env.VITE_LISTMONK_USERNAME || 'admin';
-    this.password = import.meta.env.VITE_LISTMONK_PASSWORD || 'admin';
+    this.baseUrl = env.FLOURISH_API_URL || 'http://localhost:9000';
+    this.username = 'admin';
+    this.password = 'admin';
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {

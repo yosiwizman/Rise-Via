@@ -1,4 +1,5 @@
 import React from 'react';
+import { env } from '../config/env';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -17,7 +18,7 @@ export const HealthCheck: React.FC = () => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    environment: import.meta.env?.MODE || 'development',
+    environment: env.IS_PRODUCTION ? 'production' : 'development',
     checks: {
       build: true,
       dependencies: true,
