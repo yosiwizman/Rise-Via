@@ -6,11 +6,7 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy, Bell, Trash2 } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-import { orderService } from '../services/orderService';
-import { customerService } from '../services/customerService';
-import { membershipService, MEMBERSHIP_TIERS } from '../services/membershipService';
-import { priceAlertsService, PriceAlert } from '../services/priceAlertsService';
-import { safeToFixed } from '../utils/formatters';
+import { sql } from '../lib/neon';
 
 interface Order {
   id: string;
@@ -47,392 +43,258 @@ export const AccountPage = () => {
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
   const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
   const [redeemPoints, setRedeemPoints] = useState('');
-  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
   const fetchCustomerData = useCallback(async () => {
     try {
       if (!customer?.id) return;
 
-      const ordersData = await orderService.getOrdersByCustomer(customer.id);
-      const transactionsData = await customerService.getLoyaltyTransactions(customer.id);
-      const alertsData = await priceAlertsService.getCustomerAlerts(customer.id);
+      const ordersData = await sql`
+        SELECT * FROM orders 
+        WHERE customer_id = ${customer.id} 
+        ORDER BY created_at DESC
+      `;
+
+      const transactionsData = await sql`
+        SELECT * FROM loyalty_transactions 
+        WHERE customer_id = ${customer.id} 
+        ORDER BY created_at DESC
+      `;
 
       setOrders(ordersData || []);
       setLoyaltyTransactions(transactionsData || []);
-      setPriceAlerts(alertsData || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
-      const tierInfo = membershipService.getTierInfo(tierName);
-      
-      if (tierInfo) {
-        setMembershipTier({
-          name: `${tierInfo.name} Member`,
-          benefits: tierInfo.benefits
-        });
-      }
-    } catch {
-      // Silent fail per code standards
+      const tierInfo = { name: tierName, benefits: [] };
+      setMembershipTier(tierInfo);
+    } catch (error) {
+      console.error('Failed to fetch customer data:', error);
+      setOrders([]);
+      setLoyaltyTransactions([]);
     }
-  }, [customer?.id, customer?.customer_profiles]);
+  }, [customer?.id]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      startTransition(() => {
-        fetchCustomerData();
-      });
-    }
-  }, [isAuthenticated, fetchCustomerData]);
-
-  const handleRedeemPoints = async () => {
-    try {
-      const points = parseInt(redeemPoints);
-      if (points < 100 || points % 100 !== 0) {
-        alert('Points must be redeemed in increments of 100 (minimum 100 points)');
-        return;
-      }
-
-      const currentPoints = customer?.customer_profiles?.[0]?.loyalty_points || 0;
-      if (points > currentPoints) {
-        alert('Insufficient points available');
-        return;
-      }
-
-      const discountAmount = points / 20; // 100 points = $5
-      const updatedProfile = await customerService.updateCustomerProfile(customer!.id!, { 
-        loyalty_points: currentPoints - points 
-      });
-
-      if (!updatedProfile) {
-        alert('Failed to redeem points');
-        return;
-      }
-
-      await customerService.addLoyaltyTransaction({
-        customer_id: customer!.id!,
-        type: 'REDEEMED',
-        points: -points,
-        description: `Redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount`
-      });
-
-      alert(`Successfully redeemed ${points} points for $${(typeof discountAmount === 'number' ? discountAmount : parseFloat(discountAmount) || 0).toFixed(2)} discount! Use code LOYALTY${points} at checkout.`);
-      setRedeemPoints('');
+    if (isAuthenticated && customer) {
       fetchCustomerData();
-    } catch {
-      alert('Failed to redeem points');
     }
-  };
+  }, [isAuthenticated, customer, fetchCustomerData]);
 
   const copyReferralCode = () => {
-    const referralCode = customer?.customer_profiles?.[0]?.referral_code || customer?.profile?.referralCode;
-    if (referralCode) {
-      navigator.clipboard.writeText(referralCode);
-      alert('Referral code copied to clipboard!');
-    }
+    const referralCode = customer?.customer_profiles?.[0]?.referral_code || 'RISEVIA2024';
+    navigator.clipboard.writeText(referralCode);
   };
 
-  const handleDeleteAlert = async (alertId: string) => {
-    try {
-      const success = await priceAlertsService.deleteAlert(alertId);
-      if (success) {
-        setPriceAlerts(prev => prev.filter(alert => alert.id !== alertId));
-        window.alert('Price alert removed successfully!');
-      } else {
-        window.alert('Failed to remove price alert');
-      }
-    } catch {
-      window.alert('Failed to remove price alert');
-    }
-  };
-
-  const getTierIcon = (tier: string) => {
-    switch (tier) {
-      case 'PLATINUM': return <Crown className="w-5 h-5 text-purple-600" />;
-      case 'GOLD': return <Crown className="w-5 h-5 text-yellow-600" />;
-      case 'SILVER': return <Star className="w-5 h-5 text-gray-600" />;
-      default: return <User className="w-5 h-5 text-green-600" />;
-    }
-  };
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'PLATINUM': return 'bg-purple-100 text-purple-800';
-      case 'GOLD': return 'bg-yellow-100 text-yellow-800';
-      case 'SILVER': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-green-100 text-green-800';
-    }
-  };
-
-  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
-
-  if (!isAuthenticated) {
+  if (loading) {
     return (
-      <div className="container mx-auto p-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Please log in to view your account</h1>
-        <Button onClick={() => window.location.href = '/login'}>
-          Go to Login
-        </Button>
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-risevia-purple mx-auto mb-4"></div>
+          <p className="text-risevia-charcoal">Loading your account...</p>
+        </div>
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <User className="w-16 h-16 mx-auto text-risevia-purple mb-4" />
+            <CardTitle className="text-2xl">Account Access Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-6">
+              Please log in to view your account information, order history, and loyalty rewards.
+            </p>
+            <Button onClick={() => window.location.href = '/login'} className="w-full">
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentPoints = customer?.customer_profiles?.[0]?.loyalty_points || 0;
+  const lifetimeValue = customer?.customer_profiles?.[0]?.lifetime_value || 0;
+  const totalOrders = customer?.customer_profiles?.[0]?.total_orders || 0;
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50 p-4">
       <SEOHead
         title="My Account - RiseViA"
-        description="Manage your RiseViA account, view orders, and track loyalty points"
+        description="Manage your RiseViA account, view order history, and track loyalty rewards"
       />
-
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">My Account</h1>
-        <div className="text-right">
-          <div className="text-sm text-gray-600">Welcome back,</div>
-          <div className="font-semibold">{customer?.first_name} {customer?.last_name}</div>
+      
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">My Account</h1>
+          <p className="text-xl text-gray-600">
+            Welcome back, {customer?.first_name || 'Valued Customer'}!
+          </p>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Membership Status</CardTitle>
-            {getTierIcon(customer?.customer_profiles?.[0]?.membership_tier || customer?.profile?.membershipTier || 'GREEN')}
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Badge className={getTierColor(customer?.customer_profiles?.[0]?.membership_tier || customer?.profile?.membershipTier || 'GREEN')}>
-                {membershipTier?.name || 'Green Member'}
-              </Badge>
-              <div className="text-sm text-gray-600">
-                Lifetime Value: ${safeToFixed(customer?.customer_profiles?.[0]?.lifetime_value || customer?.profile?.lifetimeValue || 0)}
-              </div>
-              <div className="text-sm text-gray-600">
-                Total Orders: {customer?.customer_profiles?.[0]?.total_orders || customer?.profile?.totalOrders || 0}
-              </div>
-              
-              {/* Tier Progress */}
-              <div className="mt-3">
-                <div className="text-xs font-medium text-gray-700 mb-1">Next Tier Progress:</div>
-                {(() => {
-                  const currentValue = customer?.customer_profiles?.[0]?.lifetime_value || 0;
-                  const currentTierName = customer?.customer_profiles?.[0]?.membership_tier || 'GREEN';
-                  const currentTierIndex = MEMBERSHIP_TIERS.findIndex(t => t.name === currentTierName);
-                  const nextTier = MEMBERSHIP_TIERS[currentTierIndex + 1];
-                  
-                  if (!nextTier) {
-                    return <div className="text-xs text-purple-600 font-medium">🎉 Maximum tier achieved!</div>;
-                  }
-                  
-                  const progress = (currentValue / nextTier.threshold) * 100;
-                  const remaining = nextTier.threshold - currentValue;
-                  
-                  return (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span>{nextTier.name}</span>
-                        <span>${safeToFixed(remaining, 0)} to go</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-risevia-purple to-risevia-teal h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(progress, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {membershipTier?.benefits && (
-                <div className="mt-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">Benefits:</div>
-                  {membershipTier.benefits.map((benefit: string, index: number) => (
-                    <div key={index} className="text-xs text-gray-600">• {benefit}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Loyalty Points</CardTitle>
-            <Gift className="w-4 h-4 ml-auto" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="text-2xl font-bold text-risevia-purple">
-                {customer?.customer_profiles?.[0]?.loyalty_points || customer?.profile?.loyaltyPoints || 0}
-              </div>
-              <div className="text-sm text-gray-600">
-                Points available
-              </div>
-              <div className="space-y-2">
-                <Input
-                  type="number"
-                  placeholder="Points to redeem (min 100)"
-                  value={redeemPoints}
-                  onChange={(e) => setRedeemPoints(e.target.value)}
-                  min="100"
-                  step="100"
-                />
-                <Button 
-                  onClick={handleRedeemPoints}
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
-                  disabled={!redeemPoints || parseInt(redeemPoints) < 100}
-                >
-                  Redeem for ${safeToFixed(parseInt(redeemPoints || '0') / 20)} off
-                </Button>
-              </div>
-              <div className="text-xs text-gray-500">
-                100 points = $5 discount • {customer?.customer_profiles?.[0]?.membership_tier === 'PLATINUM' ? 'Double points on purchases!' : 'Earn 1 point per $1 spent'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Referral Program</CardTitle>
-            <User className="w-4 h-4 ml-auto" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="text-sm text-gray-600">Your referral code:</div>
-              <div className="flex items-center space-x-2">
-                <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
-                  {customer?.customer_profiles?.[0]?.referral_code || customer?.profile?.referralCode}
-                </code>
-                <Button size="sm" variant="outline" onClick={copyReferralCode}>
-                  <Copy className="w-3 h-3" />
-                </Button>
-              </div>
-              <div className="text-sm text-gray-600">
-                Referrals: {customer?.customer_profiles?.[0]?.total_referrals || customer?.profile?.totalReferrals || 0}
-              </div>
-              <div className="text-xs text-gray-500">
-                Earn 100 points for each successful referral!
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              Recent Orders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {orders.length === 0 ? (
-                <div className="text-center text-gray-500 py-4">
-                  No orders yet. Start shopping to see your orders here!
-                </div>
-              ) : (
-                orders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="border-b pb-3 last:border-b-0">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium">Order #{order.orderNumber || order.id}</div>
-                        <div className="text-sm text-gray-600">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {order.items?.length || 0} item(s)
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5" />
+                  Recent Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {orders.length > 0 ? (
+                  <div className="space-y-4">
+                    {orders.slice(0, 5).map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold">Order #{order.orderNumber || order.id.slice(0, 8)}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">${order.total.toFixed(2)}</p>
+                            <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                              {order.status}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium">${safeToFixed(order.total)}</div>
-                        <Badge variant="outline">{order.status}</Badge>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ) : (
+                  <p className="text-gray-600">No orders yet. Start shopping to see your order history!</p>
+                )}
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Gift className="w-5 h-5 mr-2" />
-              Points History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {loyaltyTransactions.length === 0 ? (
-                <div className="text-center text-gray-500 py-4">
-                  No points activity yet. Make a purchase to start earning points!
-                </div>
-              ) : (
-                loyaltyTransactions.slice(0, 10).map((transaction) => (
-                  <div key={transaction.id} className="flex justify-between items-center">
-                    <div>
-                      <div className="text-sm font-medium">{transaction.description}</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(transaction.created_at).toLocaleDateString()}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Loyalty Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loyaltyTransactions.length > 0 ? (
+                  <div className="space-y-3">
+                    {loyaltyTransactions.slice(0, 10).map((transaction) => (
+                      <div key={transaction.id} className="flex justify-between items-center py-2 border-b">
+                        <div>
+                          <p className="font-medium">{transaction.description}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(transaction.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className={`font-semibold ${transaction.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {transaction.points > 0 ? '+' : ''}{transaction.points} pts
+                        </div>
                       </div>
-                    </div>
-                    <div className={`font-medium ${
-                      transaction.type === 'EARNED' || transaction.type === 'BONUS' 
-                        ? 'text-green-600' 
-                        : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'EARNED' || transaction.type === 'BONUS' ? '+' : ''}
-                      {transaction.points}
-                    </div>
+                    ))}
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ) : (
+                  <p className="text-gray-600">No loyalty activity yet. Start earning points with your purchases!</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="w-5 h-5 mr-2" />
-              Price Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {priceAlerts.length === 0 ? (
-                <div className="text-center text-gray-500 py-4">
-                  No price alerts set. Visit product pages to set alerts when prices drop!
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Profile Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Name</label>
+                  <p className="font-semibold">{customer?.first_name} {customer?.last_name}</p>
                 </div>
-              ) : (
-                priceAlerts.slice(0, 5).map((alert) => (
-                  <div key={alert.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{alert.product_name}</div>
-                      <div className="text-xs text-gray-600">
-                        Alert when price drops to ${safeToFixed(alert.target_price)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Current: ${safeToFixed(alert.current_price)}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteAlert(alert.id)}
-                      className="ml-2"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Email</label>
+                  <p className="font-semibold">{customer?.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Member Since</label>
+                  <p className="font-semibold">
+                    {customer?.created_at ? new Date(customer.created_at).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="w-5 h-5" />
+                  Membership Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-risevia-purple mb-2">
+                    {membershipTier?.name || 'GREEN'}
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  <p className="text-sm text-gray-600">Current Tier</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-risevia-teal">{currentPoints}</div>
+                    <p className="text-sm text-gray-600">Points</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-risevia-purple">${lifetimeValue.toFixed(0)}</div>
+                    <p className="text-sm text-gray-600">Lifetime Value</p>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-xl font-bold">{totalOrders}</div>
+                  <p className="text-sm text-gray-600">Total Orders</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="w-5 h-5" />
+                  Referral Program
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Share your referral code and earn rewards when friends make their first purchase!
+                </p>
+                
+                <div className="flex gap-2">
+                  <Input 
+                    value={customer?.customer_profiles?.[0]?.referral_code || 'RISEVIA2024'}
+                    readOnly 
+                    className="font-mono"
+                  />
+                  <Button onClick={copyReferralCode} size="sm">
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-lg font-bold">
+                    {customer?.customer_profiles?.[0]?.total_referrals || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">Successful Referrals</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

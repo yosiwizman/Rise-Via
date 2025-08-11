@@ -17,11 +17,7 @@ import { BulkProductUpload } from '../components/admin/BulkProductUpload';
 import { OrderManager } from '../components/admin/OrderManager';
 import { InventoryManager } from '../components/admin/InventoryManager';
 import { ActivityLogs } from '../components/admin/ActivityLogs';
-import { PaymentSettings } from '../components/admin/PaymentSettings';
-import { AIContentGenerator } from '../components/admin/AIContentGenerator';
-import { EmailManager } from '../components/admin/EmailManager';
-import { LabResultsManager } from '../components/admin/LabResultsManager';
-import { ComplianceReports } from './admin/ComplianceReports';
+import AdminSettings from '../components/admin/settings/AdminSettings';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -156,15 +152,6 @@ export const AdminPage = () => {
       case 'activity':
         return <ActivityLogs />;
       
-      case 'payments':
-        return <PaymentSettings />;
-      
-      case 'ai-content':
-        return <AIContentGenerator />;
-      
-      case 'email':
-        return <EmailManager />;
-      
       case 'uploads':
         return (
           <div className="space-y-6">
@@ -173,11 +160,8 @@ export const AdminPage = () => {
           </div>
         );
       
-      case 'lab-results':
-        return <LabResultsManager />;
-
-      case 'compliance':
-        return <ComplianceReports />;
+      case 'settings':
+        return <AdminSettings />;
       
       default:
         return (

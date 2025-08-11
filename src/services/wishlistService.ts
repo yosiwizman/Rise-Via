@@ -27,41 +27,31 @@ export interface WishlistItem {
 export const wishlistService = {
   async getOrCreateSession() {
     const token = getSessionToken()
-
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning null for session');
-      return null;
-    }
-
-    const sessions = await sql`
+    
+    const existingSessions = await sql`
       SELECT * FROM wishlist_sessions 
       WHERE session_token = ${token}
-    `
+    `;
 
-    if (sessions.length > 0) return sessions[0]
+    if (existingSessions.length > 0) return existingSessions[0];
 
     const newSessions = await sql`
-      INSERT INTO wishlist_sessions (session_token)
-      VALUES (${token})
+      INSERT INTO wishlist_sessions (session_token, created_at)
+      VALUES (${token}, NOW())
       RETURNING *
-    `
+    `;
 
-    return newSessions.length > 0 ? newSessions[0] : null
+    return newSessions[0];
   },
 
   async getWishlistItems() {
     const session = await this.getOrCreateSession()
     if (!session) return []
 
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning empty array for wishlist items');
-      return [];
-    }
-
     const items = await sql`
       SELECT * FROM wishlist_items 
       WHERE session_id = ${session.id}
-    `
+    `;
 
     return items || []
   },
@@ -70,17 +60,13 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return { data: [], error: null }
 
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning empty wishlist');
-      return { data: [], error: null };
-    }
-
     try {
       const items = await sql`
         SELECT product_id FROM wishlist_items 
         WHERE session_id = ${session.id}
-      `
-      return { data: items?.map((item: Record<string, unknown>) => (item.product_id as string)) || [], error: null }
+      `;
+
+      return { data: items.map((item: any) => item.product_id) || [], error: null }
     } catch (error) {
       return { data: [], error }
     }
@@ -90,16 +76,12 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return { error: { message: 'Failed to create session' } }
 
-    if (!sql) {
-      console.warn('⚠️ Database not available, cannot add to wishlist');
-      return { error: { message: 'Database not available' } };
-    }
-
     try {
       await sql`
-        INSERT INTO wishlist_items (session_id, product_id)
-        VALUES (${session.id}, ${productId})
-      `
+        INSERT INTO wishlist_items (session_id, product_id, created_at)
+        VALUES (${session.id}, ${productId}, NOW())
+      `;
+
       return { error: null }
     } catch (error) {
       return { error }
@@ -108,18 +90,14 @@ export const wishlistService = {
 
   async removeFromWishlist(productId: string) {
     const session = await this.getOrCreateSession()
-    if (!session) return { error: { message: 'Failed to create session' } }
-
-    if (!sql) {
-      console.warn('⚠️ Database not available, cannot remove from wishlist');
-      return { error: { message: 'Database not available' } };
-    }
+    if (!session) return { error: { message: 'Failed to get session' } }
 
     try {
       await sql`
         DELETE FROM wishlist_items 
         WHERE session_id = ${session.id} AND product_id = ${productId}
-      `
+      `;
+
       return { error: null }
     } catch (error) {
       return { error }
@@ -130,37 +108,39 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return false
 
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning false for wishlist check');
-      return false;
-    }
-
     const items = await sql`
       SELECT id FROM wishlist_items 
       WHERE session_id = ${session.id} AND product_id = ${productId}
-    `
+    `;
 
     return items.length > 0
   },
 
   async migrateSessionWishlist(userId: string) {
-    const session = await this.getOrCreateSession()
-    if (!session) return { success: false }
-
-    if (!sql) {
-      console.warn('⚠️ Database not available, cannot migrate wishlist');
-      return { success: false };
-    }
+    const session = await this.getOrCreateSession();
+    if (!session) return;
 
     const sessionItems = await sql`
       SELECT product_id FROM wishlist_items 
       WHERE session_id = ${session.id}
-    `
-    
-    if (sessionItems && sessionItems.length > 0) {
-      console.log(`Migrating ${sessionItems.length} wishlist items for user ${userId}`)
+    `;
+
+    if (!sessionItems?.length) return;
+
+    try {
+      for (const item of sessionItems) {
+        await sql`
+          INSERT INTO wishlist_items (user_id, product_id, created_at)
+          VALUES (${userId}, ${item.product_id}, NOW())
+        `;
+      }
+
+      await sql`
+        DELETE FROM wishlist_items 
+        WHERE session_id = ${session.id}
+      `;
+    } catch (error) {
+      console.error('Migration failed:', error);
     }
-    
-    return { success: true }
   }
 }
