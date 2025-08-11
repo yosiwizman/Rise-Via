@@ -11,11 +11,19 @@ import { Badge } from '../ui/badge';
 import { emailAutomationService, type EmailTemplate, type AutomationWorkflow } from '../../services/EmailAutomation';
 import { emailService } from '../../services/emailService';
 
+interface EmailLog {
+  id: string;
+  to_email: string;
+  subject: string;
+  status: 'sent' | 'failed' | 'pending';
+  sent_at: string | null;
+}
+
 export const EmailManager = () => {
   const [activeTab, setActiveTab] = useState<'send' | 'templates' | 'automation' | 'logs'>('send');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
-  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [emailForm, setEmailForm] = useState({
@@ -44,7 +52,7 @@ export const EmailManager = () => {
       
       setTemplates(templatesData);
       setWorkflows(workflowsData);
-      setEmailLogs(logsData);
+      setEmailLogs(logsData as EmailLog[]);
     } catch (error) {
       console.error('Failed to load email data:', error);
     }
