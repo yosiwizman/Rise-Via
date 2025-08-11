@@ -238,16 +238,15 @@ export const useCartStore = create<CartStore>()(
 
 ## Database Patterns
 
-### Supabase Queries with Error Handling
+### Neon Database Queries with Error Handling
 ```typescript
 // services/products.ts
-import { supabase } from '@/config/supabase'
+import { sql } from '@/lib/neon'
 
 export async function getActiveProducts() {
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
+    const data = await sql`
+      SELECT 
         id,
         name,
         price,
@@ -255,11 +254,11 @@ export async function getActiveProducts() {
         images,
         thc_content,
         cbd_content
-      `)
-      .eq('active', true)
-      .order('created_at', { ascending: false })
+      FROM products 
+      WHERE active = true 
+      ORDER BY created_at DESC
+    `
     
-    if (error) throw error
     return { data, error: null }
   } catch (error) {
     console.error('Failed to fetch products:', error)
@@ -269,23 +268,33 @@ export async function getActiveProducts() {
 
 // With pagination
 export async function getProductsPaginated(page = 1, limit = 12) {
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  const offset = (page - 1) * limit
   
-  const { data, error, count } = await supabase
-    .from('products')
-    .select('*', { count: 'exact' })
-    .range(from, to)
-  
-  return {
-    data,
-    error,
-    pagination: {
-      page,
-      limit,
-      total: count || 0,
-      totalPages: Math.ceil((count || 0) / limit)
+  try {
+    const [data, countResult] = await Promise.all([
+      sql`
+        SELECT * FROM products 
+        ORDER BY created_at DESC 
+        LIMIT ${limit} OFFSET ${offset}
+      `,
+      sql`SELECT COUNT(*) as total FROM products`
+    ])
+    
+    const total = countResult[0]?.total || 0
+    
+    return {
+      data,
+      error: null,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     }
+  } catch (error) {
+    console.error('Failed to fetch paginated products:', error)
+    return { data: null, error }
   }
 }
 ```
@@ -485,13 +494,13 @@ export function validateProduct(data: unknown) {
 ```typescript
 // ✅ GOOD: Type-safe env vars
 const env = {
-  supabaseUrl: process.env.VITE_SUPABASE_URL!,
-  supabaseKey: process.env.VITE_SUPABASE_ANON_KEY!,
+  neonUrl: process.env.VITE_NEON_DATABASE_URL!,
+  resendKey: process.env.VITE_RESEND_API_KEY!,
   
   // Validate at startup
   validate() {
-    if (!this.supabaseUrl) throw new Error('Missing VITE_SUPABASE_URL')
-    if (!this.supabaseKey) throw new Error('Missing VITE_SUPABASE_ANON_KEY')
+    if (!this.neonUrl) throw new Error('Missing VITE_NEON_DATABASE_URL')
+    if (!this.resendKey) throw new Error('Missing VITE_RESEND_API_KEY')
   }
 }
 ```

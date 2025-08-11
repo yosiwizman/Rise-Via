@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { customerService } from '../../services/customerService'
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
+vi.mock('../../lib/neon', () => ({
+  neon: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         order: vi.fn(() => Promise.resolve({ data: [], error: null })),

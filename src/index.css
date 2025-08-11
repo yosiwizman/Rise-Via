@@ -43,3 +43,77 @@
   }
 }
 
+/* Enhanced UserWay widget hide functionality */
+.userway-container {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 50 !important;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.userway-hide-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 51;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.userway-hide-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.userway-container:hover .userway-hide-button {
+  opacity: 1;
+}
+
+.userway-minimized {
+  transform: translateX(calc(100% - 20px)) !important;
+  opacity: 0.6 !important;
+}
+
+.userway-minimized .userway-hide-button {
+  opacity: 1 !important;
+  background: rgba(74, 144, 226, 0.9);
+}
+
+.userway-minimized .userway-hide-button:hover {
+  background: rgba(74, 144, 226, 1);
+}
+
+/* Mobile adjustments for hide button */
+@media (max-width: 768px) {
+  .userway-container {
+    bottom: 100px !important;
+    right: 10px !important;
+  }
+  
+  .userway-hide-button {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    top: -10px;
+    right: -10px;
+  }
+  
+  .userway-minimized {
+    transform: translateX(calc(100% - 24px)) !important;
+  }
+}
+

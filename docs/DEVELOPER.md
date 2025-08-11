@@ -19,9 +19,7 @@ cp .env.example .env.local
 Create `.env.local` with required variables:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_SUPABASE_SERVICE_KEY=your_service_key
+VITE_NEON_DATABASE_URL=your_neon_database_url
 VITE_RESEND_API_KEY=your_resend_key
 ```
 
@@ -64,9 +62,9 @@ src/
 - **Local Storage**: Persistence layer
 
 ### Database
-- **Supabase**: PostgreSQL database
-- **Row Level Security**: Data access control
-- **Real-time**: Live updates for admin features
+- **Neon**: PostgreSQL database
+- **Serverless**: Auto-scaling database
+- **Branching**: Database branching for development
 
 ### Styling
 - **Tailwind CSS**: Utility-first CSS framework
@@ -239,20 +237,15 @@ export const Default: Story = {
 
 ## API Integration
 
-### Supabase Client
+### Neon Client
 ```typescript
-import { supabase } from '@/lib/supabase'
+import { neon } from '@/lib/neon'
 
 // Query data
-const { data, error } = await supabase
-  .from('table_name')
-  .select('*')
-  .eq('column', 'value')
+const data = await neon`SELECT * FROM table_name WHERE column = ${value}`
 
 // Insert data
-const { error } = await supabase
-  .from('table_name')
-  .insert(data)
+await neon`INSERT INTO table_name (column) VALUES (${data})`
 ```
 
 ### Error Handling
@@ -270,21 +263,25 @@ try {
 ```typescript
 export const productService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-    
-    return { data, error }
+    try {
+      const data = await neon`SELECT * FROM products`
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
   },
 
   async create(product: Product) {
-    const { data, error } = await supabase
-      .from('products')
-      .insert(product)
-      .select()
-      .single()
-    
-    return { data, error }
+    try {
+      const data = await neon`
+        INSERT INTO products (name, price, description) 
+        VALUES (${product.name}, ${product.price}, ${product.description})
+        RETURNING *
+      `
+      return { data: data[0], error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
   },
 }
 ```
@@ -340,9 +337,7 @@ const cleanHTML = DOMPurify.sanitize(userHTML)
 
 ### Environment Variables
 Set in Vercel dashboard:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_SUPABASE_SERVICE_KEY`
+- `VITE_NEON_DATABASE_URL`
 
 ### Build Optimization
 ```bash
@@ -431,7 +426,7 @@ logger.error('API Error', { error, context })
 - [React Documentation](https://react.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
-- [Supabase Documentation](https://supabase.com/docs)
+- [Neon Documentation](https://neon.tech/docs)
 
 ### Tools
 - [VS Code Extensions](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)

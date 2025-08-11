@@ -28,6 +28,7 @@ export const Navigation = ({ currentPage, onNavigate, setSearchOpen }: Navigatio
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'shop', label: 'Shop' },
+    { id: 'blog', label: 'Blog' },
     { id: 'learn', label: 'Learn' },
     { id: 'legal', label: 'Legal' },
     { id: 'contact', label: 'Contact' }

@@ -16,6 +16,7 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import { blogScheduler } from './services/blogScheduler';
 import RegisterPage from './pages/RegisterPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
@@ -41,9 +42,12 @@ import { LoginPage } from './pages/LoginPage';
 import { B2BPage } from './pages/B2BPage';
 import { HealthCheck } from './components/HealthCheck';
 import { PasswordResetPage } from './pages/PasswordResetPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [blogSlug, setBlogSlug] = useState<string>('');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [, setSearchOpen] = useState(false);
@@ -81,6 +85,12 @@ function App() {
         setCurrentPage('orders');
       } else if (path === '/contact') {
         setCurrentPage('contact');
+      } else if (path === '/blog') {
+        setCurrentPage('blog');
+      } else if (path.startsWith('/blog/')) {
+        const slug = path.replace('/blog/', '');
+        setBlogSlug(slug);
+        setCurrentPage('blog-post');
       } else if (path === '/wishlist') {
         setCurrentPage('wishlist');
       } else if (path === '/account') {
@@ -108,6 +118,7 @@ function App() {
     }
 
     priceTrackingService.startPriceTracking();
+    blogScheduler.start();
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
@@ -116,6 +127,8 @@ function App() {
     script.setAttribute('data-position', '6');
     script.async = true;
     script.onload = () => {
+      console.log('✅ ADA widget loaded!');
+      
       const positionWidget = () => {
         const selectors = [
           '[aria-label*="Accessibility"]',
@@ -218,11 +231,59 @@ function App() {
         positionWidget();
       });
       observer.observe(document.body, { childList: true, subtree: true });
+      
+      setTimeout(addUserWayHideButton, 2000);
     };
     document.head.appendChild(script);
 
+    const addUserWayHideButton = () => {
+      const widget = document.querySelector('[aria-label="Accessibility Menu"]');
+      if (widget && !widget.parentElement?.classList.contains('userway-container')) {
+        const container = document.createElement('div');
+        container.className = 'userway-container';
+        
+        const hideButton = document.createElement('button');
+        hideButton.className = 'userway-hide-button';
+        hideButton.innerHTML = '×';
+        hideButton.title = 'Minimize accessibility widget';
+        hideButton.setAttribute('aria-label', 'Minimize accessibility widget');
+        
+        hideButton.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isMinimized = container.classList.contains('userway-minimized');
+          
+          if (isMinimized) {
+            container.classList.remove('userway-minimized');
+            hideButton.innerHTML = '×';
+            hideButton.title = 'Minimize accessibility widget';
+            localStorage.setItem('userway-minimized', 'false');
+          } else {
+            container.classList.add('userway-minimized');
+            hideButton.innerHTML = '◀';
+            hideButton.title = 'Restore accessibility widget';
+            localStorage.setItem('userway-minimized', 'true');
+          }
+        };
+        
+        widget.parentNode?.insertBefore(container, widget);
+        container.appendChild(widget);
+        container.appendChild(hideButton);
+        
+        const isMinimized = localStorage.getItem('userway-minimized') === 'true';
+        if (isMinimized) {
+          container.classList.add('userway-minimized');
+          hideButton.innerHTML = '◀';
+          hideButton.title = 'Restore accessibility widget';
+        }
+        
+        console.log('✅ UserWay hide button added!');
+      }
+    };
+
     return () => {
       priceTrackingService.stopPriceTracking();
+      blogScheduler.stop();
     };
   }, []);
 
@@ -257,6 +318,23 @@ function App() {
         return <OrderTrackingPage />;
       case 'contact':
         return <ContactPage />;
+      case 'blog':
+        return <BlogPage onNavigate={(page: string, _productId?: string, slug?: string) => {
+          if (page === 'blog-post' && slug) {
+            setBlogSlug(slug);
+            setCurrentPage('blog-post');
+            window.history.pushState({}, '', `/blog/${slug}`);
+          } else {
+            setCurrentPage(page);
+          }
+        }} />;
+      case 'blog-post':
+        return <BlogPostPage slug={blogSlug} onNavigate={(page: string) => {
+          setCurrentPage(page);
+          if (page === 'blog') {
+            window.history.pushState({}, '', '/blog');
+          }
+        }} />;
       case 'shipping':
         return <ShippingPage />;
       case 'lab-results':

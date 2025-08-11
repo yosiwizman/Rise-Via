@@ -14,7 +14,7 @@
 - **Styling**: TailwindCSS 3.4, Framer Motion 12.23
 - **State Management**: Zustand 5.0 with React Context
 - **UI Components**: Radix UI, Lucide React icons, shadcn/ui
-- **Database**: Supabase PostgreSQL
+- **Database**: Neon PostgreSQL
 - **Payment Processing**: Stripe (in development)
 - **Email**: Resend API (configured)
 - **CDN**: Cloudinary for images and videos
@@ -59,7 +59,7 @@
 
 1. **Product Data**: Currently using JSON files (products.json, strains.json)
 2. **Payment Integration**: Stripe integration in development
-3. **Database**: Supabase configured but not fully integrated
+3. **Database**: Neon configured but not fully integrated
 4. **Testing**: Test suite configured but needs expansion
 5. **CI/CD**: Manual deployment, no automated testing pipeline
 
@@ -80,7 +80,7 @@
 - **State Management**: Zustand stores for cart and wishlist
 - **Local Storage**: Age verification, cart persistence
 
-### Planned Database (Supabase)
+### Planned Database (Neon)
 - Products catalog
 - Shopping cart (persistent)
 - User accounts
@@ -108,8 +108,7 @@ src/
 
 ## 🔑 Environment Variables Required
 
-- `VITE_SUPABASE_URL` - Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `VITE_NEON_DATABASE_URL` - Neon database connection URL
 - `VITE_RESEND_API_KEY` - Email service API key
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe payment processing
 - `VITE_CLOUDINARY_CLOUD_NAME` - Image/video CDN
@@ -128,7 +127,7 @@ src/
 ## 📆 Development Priorities
 
 1. Complete Stripe payment integration
-2. Implement Supabase database integration
+2. Implement Neon database integration
 3. Add user authentication system
 4. Enhance admin panel functionality
 5. Implement order management

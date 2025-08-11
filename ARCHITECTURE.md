@@ -15,16 +15,15 @@ Rise Via is a React 19 e-commerce platform for cannabis products built with mode
 - **Notifications**: Sonner (toast notifications)
 
 ### Backend & Database
-- **Primary Database**: Supabase (PostgreSQL)
+- **Database**: Neon (PostgreSQL)
   - Products catalog
   - Cart management
   - Order processing
   - User authentication
-- **Secondary Database**: Neon (PostgreSQL)
   - Wishlist functionality
   - Session-based persistence
-- **Authentication**: Supabase Auth
-- **File Storage**: Supabase Storage
+- **Authentication**: Neon Auth
+- **File Storage**: Cloudinary
 
 ### Infrastructure
 - **Hosting**: Vercel
@@ -35,29 +34,25 @@ Rise Via is a React 19 e-commerce platform for cannabis products built with mode
 
 ## Database Strategy
 
-### Hybrid Approach Rationale
-The system uses a hybrid database strategy for optimal performance and feature isolation:
+### Database Architecture
+The system uses Neon PostgreSQL for all data persistence:
 
-#### Supabase (Primary)
+#### Neon Database Schema
 ```
 ├── products (main catalog)
 ├── cart_items (shopping cart)
 ├── customers (user accounts)
 ├── orders (order management)
-└── auth.users (authentication)
-```
-
-#### Neon (Wishlist)
-```
 ├── wishlist_sessions (session tracking)
-└── wishlist_items (wishlist persistence)
+├── wishlist_items (wishlist persistence)
+└── auth_users (authentication)
 ```
 
 ### Benefits
-- **Performance**: Dedicated wishlist database reduces load on main e-commerce DB
-- **Scalability**: Independent scaling of wishlist vs main commerce features
-- **Reliability**: Fault isolation between systems
-- **Development**: Teams can work on features independently
+- **Performance**: Single database with optimized queries and indexing
+- **Scalability**: Neon's serverless PostgreSQL with automatic scaling
+- **Reliability**: Built-in connection pooling and fault tolerance
+- **Development**: Simplified architecture with single database connection
 
 ## Component Architecture
 
@@ -89,19 +84,12 @@ App.tsx
 ```
 
 ### State Management
-- **Cart State**: Supabase-backed with session persistence
+- **Cart State**: Neon-backed with session persistence
 - **Wishlist State**: Neon-backed with custom hooks
 - **UI State**: Local React state and Zustand stores
-- **Authentication**: Supabase Auth context
+- **Authentication**: Neon Auth context
 
 ## API Integration
-
-### Supabase Client
-```typescript
-// src/lib/supabase.ts
-export const supabase = createClient(url, anonKey);
-export const supabaseAdmin = createClient(url, serviceKey);
-```
 
 ### Neon Client
 ```typescript
@@ -122,7 +110,7 @@ src/services/
 ## Security Architecture
 
 ### Authentication
-- Supabase Auth with email/password
+- Neon Auth with email/password
 - Row Level Security (RLS) policies
 - JWT token-based sessions
 - Admin role-based access control
@@ -156,7 +144,7 @@ CREATE POLICY "Session-based wishlist access" ON wishlist_items FOR ALL TO anon,
 ### Database Optimization
 - Indexed queries on frequently accessed columns
 - Connection pooling for Neon
-- Supabase edge functions for complex operations
+- Neon serverless functions for complex operations
 - Caching strategies for product catalog
 
 ### Monitoring

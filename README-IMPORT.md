@@ -24,10 +24,8 @@ VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_API_KEY=prjHlRPNH0gFs1WGB3jcTdLTE-w
 VITE_CLOUDINARY_API_SECRET=your_api_secret
 
-# Supabase Configuration (if not already set)
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_SUPABASE_SERVICE_KEY=your_service_key
+# Neon Database Configuration (if not already set)
+VITE_NEON_DATABASE_URL=your_neon_database_url
 ```
 
 ### 2. Database Setup
@@ -156,7 +154,7 @@ const result = await cloudinaryService.uploadImage(file, folder);
 ### Import Issues
 
 If the import script fails:
-1. Check Supabase credentials
+1. Check Neon database credentials
 2. Verify database permissions
 3. Check console for specific errors
 
@@ -170,9 +168,9 @@ If image generation fails:
 ### Database Connection Issues
 
 If database operations fail:
-1. Check Supabase URL and keys
+1. Check Neon database URL and credentials
 2. Verify network connectivity
-3. Check service key permissions
+3. Check database connection permissions
 
 ## Development
 

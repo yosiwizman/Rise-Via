@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, FileText, Wand2, Copy, Download, Sparkles, AlertCircle } from 'lucide-react';
+import { Bot, FileText, Wand2, Copy, Download, Sparkles, AlertCircle, Calendar, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -10,12 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { aiService } from '../../services/AIService';
+import { blogService } from '../../services/blogService';
 import { ComplianceChecker } from './ComplianceChecker';
 
 export const AIContentGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
   const [activeTab, setActiveTab] = useState('product');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -217,6 +221,91 @@ Understanding ${blogForm.topic} is crucial for cannabis education and responsibl
     URL.revokeObjectURL(url);
   };
 
+  const handlePublishNow = async () => {
+    if (!generatedContent || !blogForm.topic) {
+      alert('Please generate blog content first');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const blogPost = await blogService.createPost({
+        title: blogForm.topic,
+        content: generatedContent,
+        keywords: blogForm.keywords.split(',').map(k => k.trim()).filter(k => k),
+        tone: blogForm.tone as 'educational' | 'promotional' | 'informative',
+        target_length: parseInt(blogForm.targetLength),
+        status: 'published'
+      });
+
+      if (blogPost) {
+        alert('Blog post published successfully!');
+        setGeneratedContent('');
+        setBlogForm({
+          topic: '',
+          keywords: '',
+          targetLength: '500',
+          tone: 'educational'
+        });
+      } else {
+        alert('Failed to publish blog post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to publish blog post:', error);
+      alert('Failed to publish blog post. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleSchedulePost = () => {
+    if (!generatedContent || !blogForm.topic) {
+      alert('Please generate blog content first');
+      return;
+    }
+    setShowScheduleModal(true);
+  };
+
+  const handleConfirmSchedule = async () => {
+    if (!scheduledDate) {
+      alert('Please select a date and time');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const blogPost = await blogService.createPost({
+        title: blogForm.topic,
+        content: generatedContent,
+        keywords: blogForm.keywords.split(',').map(k => k.trim()).filter(k => k),
+        tone: blogForm.tone as 'educational' | 'promotional' | 'informative',
+        target_length: parseInt(blogForm.targetLength),
+        status: 'scheduled',
+        scheduled_at: scheduledDate
+      });
+
+      if (blogPost) {
+        alert(`Blog post scheduled for ${new Date(scheduledDate).toLocaleString()}!`);
+        setGeneratedContent('');
+        setBlogForm({
+          topic: '',
+          keywords: '',
+          targetLength: '500',
+          tone: 'educational'
+        });
+        setShowScheduleModal(false);
+        setScheduledDate('');
+      } else {
+        alert('Failed to schedule blog post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to schedule blog post:', error);
+      alert('Failed to schedule blog post. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -376,23 +465,55 @@ Understanding ${blogForm.topic} is crucial for cannabis education and responsibl
                 />
               </div>
 
-              <Button 
-                onClick={handleGenerateBlog}
-                disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
-              >
-                {isGenerating ? (
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGenerateBlog}
+                  disabled={isGenerating}
+                  className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Blog Post
+                    </>
+                  )}
+                </Button>
+                
+                {generatedContent && (
                   <>
-                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Generate Blog Post
+                    <Button 
+                      onClick={handlePublishNow}
+                      disabled={isPublishing}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Publish Now
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={handleSchedulePost}
+                      disabled={isPublishing}
+                      variant="outline"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Schedule
+                    </Button>
                   </>
                 )}
-              </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="meta" className="space-y-4">
@@ -471,6 +592,46 @@ Understanding ${blogForm.topic} is crucial for cannabis education and responsibl
                 </CardContent>
               </Card>
             </motion.div>
+          )}
+
+          {showScheduleModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">Schedule Blog Post</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="scheduledDate" className="text-gray-700">Date & Time</Label>
+                    <Input
+                      id="scheduledDate"
+                      type="datetime-local"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="text-gray-900"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleConfirmSchedule}
+                      disabled={isPublishing || !scheduledDate}
+                      className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                    >
+                      {isPublishing ? 'Scheduling...' : 'Schedule Post'}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowScheduleModal(false);
+                        setScheduledDate('');
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
