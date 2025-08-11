@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -219,8 +219,10 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
                 try {
                   if (onNavigate) {
                     console.log('🔄 Navigating to checkout page...');
-                    onNavigate('checkout');
-                    onClose();
+                    startTransition(() => {
+                      onNavigate('checkout');
+                      onClose();
+                    });
                   } else {
                     console.error('❌ onNavigate function not available');
                   }
