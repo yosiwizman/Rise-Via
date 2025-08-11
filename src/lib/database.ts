@@ -82,13 +82,7 @@ export async function initializeTables() {
       )
     `;
 
-    // Customer profiles table (remove foreign key constraint)
-    await sql`
-      ALTER TABLE IF EXISTS customer_profiles 
-      DROP CONSTRAINT IF EXISTS customer_profiles_customer_id_fkey
-    `.catch(() => {
-    });
-    
+    // Customer profiles table - create without foreign key constraints
     await sql`
       CREATE TABLE IF NOT EXISTS customer_profiles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -177,13 +171,7 @@ export async function initializeTables() {
       )
     `;
 
-    // Cart items table (make user_id optional to avoid foreign key constraint issues)
-    await sql`
-      ALTER TABLE IF EXISTS cart_items 
-      DROP CONSTRAINT IF EXISTS cart_items_user_id_fkey
-    `.catch(() => {
-    });
-    
+    // Cart items table - create without foreign key constraints
     await sql`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -196,13 +184,7 @@ export async function initializeTables() {
       )
     `;
 
-    // Loyalty transactions table (remove foreign key constraint)
-    await sql`
-      ALTER TABLE IF EXISTS loyalty_transactions 
-      DROP CONSTRAINT IF EXISTS loyalty_transactions_customer_id_fkey
-    `.catch(() => {
-    });
-    
+    // Loyalty transactions table - create without foreign key constraints
     await sql`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -214,13 +196,7 @@ export async function initializeTables() {
       )
     `;
 
-    // Activity logs table (for admin dashboard)
-    await sql`
-      ALTER TABLE IF EXISTS activity_logs 
-      DROP CONSTRAINT IF EXISTS activity_logs_user_id_fkey
-    `.catch(() => {
-    });
-    
+    // Activity logs table (for admin dashboard) - create without foreign key constraints
     await sql`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -233,12 +209,6 @@ export async function initializeTables() {
       )
     `;
 
-    await sql`
-      ALTER TABLE IF EXISTS price_alerts 
-      DROP CONSTRAINT IF EXISTS price_alerts_customer_id_fkey
-    `.catch(() => {
-    });
-    
     await sql`
       CREATE TABLE IF NOT EXISTS price_alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
