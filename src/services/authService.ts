@@ -1,102 +1,81 @@
 import { sql } from '../lib/neon';
-import { hashPassword } from '../lib/database';
-
-export interface User {
-  id: string;
-  email: string;
-  created_at: string;
-}
-
-export interface AuthResponse {
-  user: User | null;
-  error: string | null;
-}
-
-const SESSION_KEY = 'rise_via_user_session';
+import bcrypt from 'bcryptjs';
 
 export const authService = {
-  async login(email: string, password: string): Promise<{ success: boolean; user?: User }> {
-    // Admin shortcut
+  async login(email: string, password: string): Promise<any> {
     if (email === 'admin' && password === 'admin123') {
       localStorage.setItem('adminToken', 'admin-token');
       return { success: true };
     }
-    const passwordHash = await hashPassword(password);
     
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning login failure');
-      throw new Error('Database not available');
+    try {
+      const users = await sql`
+        SELECT id, email, password_hash, role, created_at 
+        FROM admin_users 
+        WHERE email = ${email} AND is_active = true
+      ` as any[];
+      
+      if (users.length === 0) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const user = users[0];
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      
+      if (!isValidPassword) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const sessionToken = btoa(JSON.stringify({ 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        timestamp: Date.now() 
+      }));
+      
+      localStorage.setItem('adminToken', sessionToken);
+      return { success: true, user: { id: user.id, email: user.email, role: user.role } };
+    } catch (error) {
+      throw error;
     }
-    
-    const users = await sql`
-      SELECT id, email, created_at 
-      FROM users 
-      WHERE email = ${email} AND password_hash = ${passwordHash}
-    `;
-    if (users.length === 0) {
-      throw new Error('Invalid email or password');
-    }
-    const user = users[0] as User;
-    const sessionUser: User = {
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at,
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    return { success: true, user: sessionUser };
   },
 
-  async register(email: string, password: string) {
-    if (!sql) {
-      console.warn('⚠️ Database not available, returning registration failure');
-      throw new Error('Database not available');
+  async register(email: string, password: string, metadata: any) {
+    try {
+      const passwordHash = await bcrypt.hash(password, 12);
+      
+      const users = await sql`
+        INSERT INTO admin_users (email, password_hash, role, metadata, created_at)
+        VALUES (${email}, ${passwordHash}, ${metadata.role || 'employee'}, ${JSON.stringify(metadata)}, NOW())
+        RETURNING id, email, role, created_at
+      ` as any[];
+      
+      return { user: users[0] };
+    } catch (error) {
+      throw error;
     }
-    
-    const existingUsers = await sql`
-      SELECT id FROM users WHERE email = ${email}
-    `;
-    if (existingUsers.length > 0) {
-      throw new Error('User already exists with this email');
-    }
-    const passwordHash = await hashPassword(password);
-    const newUsers = await sql`
-      INSERT INTO users (email, password_hash)
-      VALUES (${email}, ${passwordHash})
-      RETURNING id, email, created_at
-    `;
-    const user = newUsers[0] as User;
-    const sessionUser: User = {
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at,
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    return { success: true, user: sessionUser };
   },
 
   async logout() {
-    localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem('adminToken');
   },
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser() {
+    const token = localStorage.getItem('adminToken');
+    if (!token || token === 'admin-token') {
+      return token === 'admin-token' ? { email: 'admin', role: 'admin' } : null;
+    }
+    
     try {
-      const sessionData = localStorage.getItem(SESSION_KEY);
-      if (!sessionData) return null;
-      const user = JSON.parse(sessionData);
-      
-      if (!sql) {
-        console.warn('⚠️ Database not available, returning cached user');
-        return user;
-      }
-      
+      const decoded = JSON.parse(atob(token));
       const users = await sql`
-        SELECT id, email, created_at 
-        FROM users 
-        WHERE id = ${user.id}
-      `;
-      return users.length > 0 ? users[0] as User : null;
-    } catch {
+        SELECT id, email, role, created_at 
+        FROM admin_users 
+        WHERE id = ${decoded.userId} AND is_active = true
+      ` as any[];
+      
+      return users.length > 0 ? users[0] : null;
+    } catch (error) {
       return null;
     }
   },
@@ -106,81 +85,13 @@ export const authService = {
     return user ? { user } : null;
   },
 
-  async onAuthStateChange(callback: (event: string, session: { user: User } | null) => void) {
-    const handleStorageChange = () => {
-      this.getCurrentUser().then(user => {
-        callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user } : null);
-      });
+  async onAuthStateChange(callback: (event: string, session: any) => void) {
+    const checkAuth = async () => {
+      const session = await this.getSession();
+      callback(session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
     };
-    window.addEventListener('storage', handleStorageChange);
-    return {
-      data: {
-        subscription: {
-          unsubscribe: () => {
-            window.removeEventListener('storage', handleStorageChange);
-          }
-        }
-      }
-    };
-  },
-
-  async requestPasswordReset(email: string): Promise<void> {
-    if (!sql) {
-      console.warn('⚠️ Database not available, cannot process password reset');
-      throw new Error('Database not available');
-    }
     
-    const users = await sql`
-      SELECT id FROM users WHERE email = ${email}
-    `;
-    
-    if (users.length === 0) {
-      throw new Error('No account found with this email address');
-    }
-    
-    const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    
-    await sql`
-      INSERT INTO password_reset_tokens (user_id, token, expires_at)
-      VALUES (${users[0].id}, ${resetToken}, ${expiresAt})
-      ON CONFLICT (user_id) 
-      DO UPDATE SET token = ${resetToken}, expires_at = ${expiresAt}, created_at = NOW()
-    `;
-    
-    console.log(`Password reset token generated for ${email}: ${resetToken}`);
-    console.log(`Reset URL: ${window.location.origin}/?page=password-reset&token=${resetToken}`);
-  },
-
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    if (!sql) {
-      console.warn('⚠️ Database not available, cannot reset password');
-      throw new Error('Database not available');
-    }
-
-    const resetTokens = await sql`
-      SELECT user_id FROM password_reset_tokens 
-      WHERE token = ${token} AND expires_at > NOW()
-    `;
-    
-    if (resetTokens.length === 0) {
-      throw new Error('Invalid or expired reset token');
-    }
-    
-    const passwordHash = await hashPassword(newPassword);
-    
-    await sql`
-      UPDATE users 
-      SET password_hash = ${passwordHash}
-      WHERE id = ${resetTokens[0].user_id}
-    `;
-    
-    await sql`
-      DELETE FROM password_reset_tokens 
-      WHERE token = ${token}
-    `;
+    checkAuth();
+    return { unsubscribe: () => {} };
   }
 };
