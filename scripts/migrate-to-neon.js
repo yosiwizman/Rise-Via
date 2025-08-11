@@ -110,9 +110,14 @@ async function createSchema() {
 }
 
 async function main() {
+  if (process.env.VERCEL || process.env.CI) {
+    console.log('Skipping migration in CI/build environment');
+    process.exit(0);  // Success exit
+  }
+
   if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL environment variable is required');
-    process.exit(1);
+    console.log('DATABASE_URL not set, skipping migration');
+    process.exit(0);  // Success exit, not failure
   }
 
   await createSchema();
