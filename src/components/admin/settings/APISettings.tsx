@@ -9,6 +9,10 @@ import { Eye, EyeOff, Save, TestTube } from 'lucide-react';
 
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (APISettings): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (APISettings):', query, values);
     

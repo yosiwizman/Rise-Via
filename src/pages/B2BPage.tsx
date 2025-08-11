@@ -8,6 +8,10 @@ import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (B2BPage): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (B2BPage):', query, values);
     

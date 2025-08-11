@@ -8,6 +8,10 @@ import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (AccountPage): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (AccountPage):', query, values);
     

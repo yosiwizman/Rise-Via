@@ -9,6 +9,10 @@ import { Plus, Edit, Shield, Users } from 'lucide-react';
 
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (UserRoleSettings): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (UserRoleSettings):', query, values);
     

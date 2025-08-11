@@ -9,6 +9,10 @@ import { Mail, Send, Settings, Zap } from 'lucide-react';
 
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (EmailSettings): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (EmailSettings):', query, values);
     

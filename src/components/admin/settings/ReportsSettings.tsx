@@ -7,6 +7,10 @@ import { BarChart3, Download, Calendar, TrendingUp, Users, Package } from 'lucid
 
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (!strings || !strings.length) {
+      console.log('Mock SQL Query (ReportsSettings): strings is undefined or empty');
+      return Promise.resolve([]);
+    }
     const query = strings.join('?');
     console.log('Mock SQL Query (ReportsSettings):', query, values);
     
