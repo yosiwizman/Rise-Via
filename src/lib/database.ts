@@ -171,11 +171,11 @@ export async function initializeTables() {
       )
     `;
 
-    // Cart items table
+    // Cart items table (make user_id optional to avoid foreign key constraint issues)
     await sql`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID,
         session_token VARCHAR(255),
         product_id VARCHAR(255) NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1,
@@ -233,27 +233,6 @@ export async function initializeTables() {
     await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS blog_posts (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        title VARCHAR(255) NOT NULL,
-        slug VARCHAR(255) UNIQUE NOT NULL,
-        content TEXT NOT NULL,
-        excerpt TEXT,
-        author_name VARCHAR(255) DEFAULT 'Rise-Via Team',
-        keywords TEXT[] DEFAULT '{}',
-        tone VARCHAR(50) DEFAULT 'educational',
-        target_length INTEGER DEFAULT 500,
-        status VARCHAR(20) DEFAULT 'draft',
-        published_at TIMESTAMP,
-        scheduled_at TIMESTAMP,
-        view_count INTEGER DEFAULT 0,
-        meta_description TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      )
-    `;
 
     await sql`
       CREATE TABLE IF NOT EXISTS blog_posts (
