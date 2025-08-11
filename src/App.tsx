@@ -53,12 +53,14 @@ function App() {
 
   useEffect(() => {
     startTransition(() => {
-      const path = window.location.pathname;
+      const path = window.location.pathname.toLowerCase();
       const urlParams = new URLSearchParams(window.location.search);
       const page = urlParams.get('page');
-      
+
       if (page === 'password-reset') {
         setCurrentPage('password-reset');
+      } else if (path === '/' || path === '/home') {
+        setCurrentPage('home');
       } else if (path === '/admin') {
         setCurrentPage('admin');
       } else if (path === '/shop') {
