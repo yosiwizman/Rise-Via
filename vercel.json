@@ -1,5 +1,23 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "VITE_DATABASE_URL": "@database-url",
+    "VITE_CLOUDINARY_CLOUD_NAME": "@cloudinary-cloud-name",
+    "VITE_CLOUDINARY_API_KEY": "@cloudinary-api-key"
+  },
+  "build": {
+    "env": {
+      "DATABASE_URL": "@database-url",
+      "VITE_DATABASE_URL": "@database-url"
+    }
+  }
 }

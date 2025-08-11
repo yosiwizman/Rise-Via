@@ -1,11 +1,56 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+vi.mock('import.meta', () => ({
+  env: {
+    VITE_DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
+    VITE_STRIPE_PUBLISHABLE_KEY: 'pk_test_123',
+    VITE_RESEND_API_KEY: 're_test_123',
+    MODE: 'test',
+  },
+}));
+
+vi.mock('@neondatabase/serverless', () => ({
+  neon: vi.fn(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    return vi.fn(async (query: string, _params?: any[]) => {
+      if (query.includes('SELECT')) {
+        return { rows: [], rowCount: 0 };
+      }
+      if (query.includes('INSERT')) {
+        return { rows: [{ id: 1 }], rowCount: 1 };
+      }
+      if (query.includes('UPDATE')) {
+        return { rows: [], rowCount: 1 };
+      }
+      if (query.includes('DELETE')) {
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+  }),
+  Pool: vi.fn().mockImplementation(() => ({
+    query: vi.fn(() => Promise.resolve({ rows: [], rowCount: 0 })),
+    connect: vi.fn(() => Promise.resolve({
+      query: vi.fn(() => Promise.resolve({ rows: [], rowCount: 0 })),
+      release: vi.fn(),
+    })),
+    end: vi.fn(),
+  })),
+}));
+
+vi.mock('@stripe/stripe-js', () => ({
+  loadStripe: vi.fn(() => Promise.resolve({
+    elements: vi.fn(() => ({
+      create: vi.fn(),
+      getElement: vi.fn(),
+    })),
+    confirmCardPayment: vi.fn(() => Promise.resolve({
+      paymentIntent: { status: 'succeeded' },
+    })),
+  })),
+}));
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -13,102 +58,19 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
-
-// Note: Supabase has been removed - using Neon database instead
-// The Neon mock is defined below
-
-// Neon mock
-vi.mock('./lib/neon', () => {
-  const mockSql = vi.fn()
-  
-  mockSql.mockImplementation((query) => {
-    const queryStr = Array.isArray(query) ? query.join('') : String(query)
-    
-    if (queryStr.includes('INSERT INTO customers')) {
-      return Promise.resolve([{ 
-        id: 1, 
-        first_name: 'John', 
-        last_name: 'Doe', 
-        email: 'john@example.com',
-        created_at: new Date().toISOString()
-      }])
-    }
-    
-    if (queryStr.includes('SELECT * FROM customers')) {
-      if (queryStr.includes('WHERE')) {
-        return Promise.resolve([{ 
-          id: 1, 
-          first_name: 'John', 
-          last_name: 'Doe', 
-          email: 'john@example.com' 
-        }])
-      }
-      return Promise.resolve([
-        { id: 1, first_name: 'John', last_name: 'Doe', email: 'john@example.com' },
-        { id: 2, first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com' }
-      ])
-    }
-    
-    if (queryStr.includes('UPDATE customers')) {
-      return Promise.resolve([{ 
-        id: 1, 
-        first_name: 'John Updated', 
-        last_name: 'Doe', 
-        email: 'john@example.com' 
-      }])
-    }
-    
-    if (queryStr.includes('INSERT INTO wishlist_sessions')) {
-      return Promise.resolve([{ 
-        id: 'session-1', 
-        session_token: 'test-token',
-        created_at: new Date().toISOString()
-      }])
-    }
-    
-    if (queryStr.includes('SELECT * FROM wishlist_sessions')) {
-      return Promise.resolve([{ 
-        id: 'session-1', 
-        session_token: 'test-token' 
-      }])
-    }
-    
-    if (queryStr.includes('INSERT INTO wishlist_items')) {
-      return Promise.resolve([{ 
-        id: 1, 
-        session_id: 'session-1', 
-        product_id: 'test-product',
-        created_at: new Date().toISOString()
-      }])
-    }
-    
-    if (queryStr.includes('DELETE FROM wishlist_items')) {
-      return Promise.resolve([])
-    }
-    
-    return Promise.resolve([])
-  })
-  
-  return { sql: mockSql }
-})
-
-Object.defineProperty(import.meta, 'env', {
-  value: {
-    MODE: 'test',
-    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
-  },
-  writable: true,
-})
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+global.localStorage = localStorageMock as any;
