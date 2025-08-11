@@ -48,14 +48,56 @@ export const AIContentGenerator = () => {
         name: productForm.name,
         strainType: productForm.strainType as 'sativa' | 'indica' | 'hybrid',
         thcPercentage: parseFloat(productForm.thcaPercentage),
-        cbdPercentage: 0, // Default CBD percentage
-        terpenes: [], // Default empty terpenes
+        cbdPercentage: 0,
+        terpenes: [],
         effects: productForm.effects.split(',').map(e => e.trim())
       });
-      setGeneratedContent(result);
+      
+      if (result && result.trim()) {
+        setGeneratedContent(result);
+      } else {
+        const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1)}**
+
+Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
+
+**Effects:** ${productForm.effects}
+
+**Key Features:**
+• Lab-tested for purity and potency
+• Federally compliant hemp-derived THCA
+• Third-party COA available
+• Discreet packaging and fast shipping
+
+**Important:** This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women. Keep out of reach of children and pets. Do not drive or operate machinery after use.
+
+*Must be 21+ to purchase. Please consume responsibly.*`;
+        
+        setGeneratedContent(fallbackContent);
+        console.warn('AI service returned empty result, using fallback content');
+      }
     } catch (error) {
       console.error('Product generation error:', error);
-      alert('Failed to generate product description. Please try again.');
+      
+      const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1)}**
+
+Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
+
+**Effects:** ${productForm.effects}
+
+**Key Features:**
+• Lab-tested for purity and potency
+• Federally compliant hemp-derived THCA
+• Third-party COA available
+• Discreet packaging and fast shipping
+
+**Important:** This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women. Keep out of reach of children and pets. Do not drive or operate machinery after use.
+
+*Must be 21+ to purchase. Please consume responsibly.*
+
+*Note: AI generation temporarily unavailable. This is a template description.*`;
+      
+      setGeneratedContent(fallbackContent);
+      alert('AI service temporarily unavailable. Generated template description instead.');
     } finally {
       setIsGenerating(false);
     }
@@ -75,10 +117,68 @@ export const AIContentGenerator = () => {
         targetLength: parseInt(blogForm.targetLength),
         tone: blogForm.tone as 'educational' | 'promotional' | 'informative'
       });
-      setGeneratedContent(result);
+      
+      if (result && result.trim()) {
+        setGeneratedContent(result);
+      } else {
+        const fallbackContent = `# ${blogForm.topic}
+
+## Introduction
+
+Welcome to our comprehensive guide on ${blogForm.topic}. In this ${blogForm.tone} article, we'll explore the key aspects of ${blogForm.keywords.split(',')[0]?.trim() || 'cannabis'} and provide valuable insights for our community.
+
+## Key Points
+
+Understanding ${blogForm.topic} is essential for anyone interested in cannabis education and responsible consumption. Here are the main topics we'll cover:
+
+• **Safety and Compliance**: Always prioritize safety and legal compliance
+• **Quality Standards**: Learn about lab testing and quality assurance
+• **Best Practices**: Discover recommended usage guidelines
+• **Community Insights**: Connect with fellow enthusiasts
+
+## Conclusion
+
+${blogForm.topic} represents an important aspect of cannabis education. We encourage all readers to stay informed, consume responsibly, and follow local regulations.
+
+**Keywords**: ${blogForm.keywords}
+
+---
+
+*Disclaimer: This content is for educational purposes only. Cannabis products have not been evaluated by the FDA. Keep out of reach of children and pets. Must be 21+ to purchase.*`;
+        
+        setGeneratedContent(fallbackContent);
+        console.warn('AI service returned empty result, using fallback content');
+      }
     } catch (error) {
       console.error('Blog generation error:', error);
-      alert('Failed to generate blog post. Please try again.');
+      
+      const fallbackContent = `# ${blogForm.topic}
+
+## Introduction
+
+Welcome to our guide on ${blogForm.topic}. This ${blogForm.tone} article covers important information about ${blogForm.keywords.split(',')[0]?.trim() || 'cannabis'}.
+
+## Key Information
+
+Understanding ${blogForm.topic} is crucial for cannabis education and responsible use.
+
+## Important Notes
+
+• Always follow local laws and regulations
+• Consume responsibly and safely
+• Keep products away from children and pets
+• Consult with healthcare providers when needed
+
+**Keywords**: ${blogForm.keywords}
+
+*Note: AI generation temporarily unavailable. This is a template blog post.*
+
+---
+
+*Disclaimer: This content is for educational purposes only. Must be 21+ to purchase cannabis products.*`;
+      
+      setGeneratedContent(fallbackContent);
+      alert('AI service temporarily unavailable. Generated template blog post instead.');
     } finally {
       setIsGenerating(false);
     }
