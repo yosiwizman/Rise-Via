@@ -8,6 +8,7 @@ interface EnvConfig {
   RESEND_API_KEY: string;
   FLOURISH_API_KEY: string;
   FLOURISH_API_URL: string;
+  AEROPAY_MERCHANT_ID: string;
   IS_PRODUCTION: boolean;
 }
 
@@ -42,6 +43,7 @@ export const env: EnvConfig = {
   RESEND_API_KEY: getEnvVar('VITE_RESEND_API_KEY', 're_'),
   FLOURISH_API_KEY: getEnvVar('VITE_FLOURISH_API_KEY', ''),
   FLOURISH_API_URL: getEnvVar('VITE_FLOURISH_API_URL', 'https://flourishsoftware.com/api/v1'),
+  AEROPAY_MERCHANT_ID: getEnvVar('VITE_AEROPAY_MERCHANT_ID', 'default'),
   IS_PRODUCTION: getEnvVar('NODE_ENV', 'development') === 'production'
 };
 
