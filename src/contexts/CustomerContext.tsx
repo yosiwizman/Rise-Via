@@ -92,9 +92,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔵 CustomerContext: Starting useEffect');
     checkAuthStatus();
 
+    console.log('🔵 CustomerContext: Setting up auth state change listener');
     const authHandler = authService.onAuthStateChange((event: string, session: unknown) => {
+      console.log('🔵 CustomerContext: Auth state change event:', event);
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
         setIsAuthenticated(false);
@@ -103,8 +106,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
     });
 
+    console.log('🔵 CustomerContext: Auth handler created:', authHandler);
+
     return () => {
+      console.log('🔵 CustomerContext: Cleanup function called');
       if (authHandler?.data?.subscription?.unsubscribe) {
+        console.log('🔵 CustomerContext: Calling unsubscribe');
         authHandler.data.subscription.unsubscribe();
       }
     };

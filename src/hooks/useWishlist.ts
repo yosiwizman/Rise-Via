@@ -155,6 +155,7 @@ export const useWishlist = create<WishlistStore>()((set, get) => ({
       const sessionToken = state.sessionToken;
 
       if (!sql) {
+        console.warn('⚠️ Database not available, using localStorage fallback');
         throw new Error('Database not available');
       }
 
