@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Cannabis compliance
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://risevia.com/sitemap.xml
+
+# Crawl delay for responsible crawling
+Crawl-delay: 1

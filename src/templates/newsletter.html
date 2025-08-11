@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rise Via Newsletter</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #10b981; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .news-section { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .button { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 Rise Via Newsletter</h1>
+            <p>{{newsletter_date}}</p>
+        </div>
+        <div class="content">
+            <p>Hi {{customer_name}},</p>
+            <p>Welcome to this month's Rise Via newsletter! Here's what's new in the world of premium THCA.</p>
+            
+            <div class="news-section">
+                <h3>🆕 New Arrivals</h3>
+                <p>We've added {{new_strains_count}} new premium strains to our collection this month:</p>
+                {{new_strains_list}}
+            </div>
+            
+            <div class="news-section">
+                <h3>📚 Cannabis Education</h3>
+                <h4>{{education_topic}}</h4>
+                <p>{{education_content}}</p>
+                <p><a href="{{learn_more_url}}">Learn More →</a></p>
+            </div>
+            
+            <div class="news-section">
+                <h3>💡 Customer Spotlight</h3>
+                <p>{{customer_spotlight}}</p>
+            </div>
+            
+            <div class="news-section">
+                <h3>🎯 This Month's Special</h3>
+                <p>{{monthly_special}}</p>
+                <p style="text-align: center;">
+                    <a href="{{special_url}}" class="button">Shop Special Offer</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Follow us on social media for daily updates!</p>
+            <p>The Rise Via Team</p>
+            <p><a href="{{unsubscribe_url}}">Unsubscribe</a> | <a href="{{preferences_url}}">Update Preferences</a></p>
+        </div>
+    </div>
+</body>
+</html>

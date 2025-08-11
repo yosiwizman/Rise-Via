@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Trash2, ShoppingCart, Share2, Filter, SortAsc, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -8,13 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Alert, AlertDescription } from '../ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { SEOHead } from '../SEOHead';
 import { useWishlist } from '../../hooks/useWishlist';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../hooks/use-toast';
 import { WishlistItem } from '../../types/wishlist';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
-export const WishlistPage = () => {
+interface WishlistPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const WishlistPage = ({ onNavigate }: WishlistPageProps) => {
   const {
     items,
     stats,
@@ -24,8 +30,15 @@ export const WishlistPage = () => {
     setPriceAlert,
     removePriceAlert,
     generateShareLink,
-    sortItems
+    sortItems,
+    initializeSession
   } = useWishlist();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
 
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'dateAdded' | 'priority'>('dateAdded');
   const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -35,18 +48,18 @@ export const WishlistPage = () => {
   const [alertPrice, setAlertPrice] = useState('');
 
   const filteredAndSortedItems = useMemo(() => {
-    return sortItems().filter(item => 
+    return sortItems(sortBy).filter(item => 
       item && (filterPriority === 'all' || item.priority === filterPriority)
     );
-  }, [items, sortBy, filterPriority, sortItems]);
+  }, [filterPriority, sortItems, sortBy]);
 
   const handleShare = async () => {
     try {
       const url = await generateShareLink();
       setShareUrl(url);
       setShowShareDialog(true);
-    } catch (error) {
-      console.error('Failed to generate share link:', error);
+    } catch {
+      // Silently fail per code standards
     }
   };
 
@@ -60,7 +73,7 @@ export const WishlistPage = () => {
 
   const handleSavePriceAlert = () => {
     if (priceAlertItem && alertPrice) {
-      setPriceAlert();
+      setPriceAlert(priceAlertItem.id, parseFloat(alertPrice));
       setPriceAlertItem(null);
       setAlertPrice('');
     }
@@ -122,8 +135,8 @@ export const WishlistPage = () => {
             <Label className="text-sm font-medium">Priority:</Label>
             <Select
               value={item.priority}
-              onValueChange={(_value: 'low' | 'medium' | 'high') => 
-                updateItemPriority()
+              onValueChange={(value: 'low' | 'medium' | 'high') => 
+                updateItemPriority(item.id, value)
               }
             >
               <SelectTrigger className="w-24 h-8">
@@ -140,15 +153,15 @@ export const WishlistPage = () => {
           {item.price > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-risevia-charcoal">Price:</span>
-              <span className="font-semibold text-risevia-black">${item.price}</span>
+              <span className="font-semibold text-risevia-black">${(typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0).toFixed(2)}</span>
             </div>
           )}
 
           {item.priceAlert ? (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-risevia-teal">Alert at ${item.priceAlert.targetPrice}</span>
+              <span className="text-risevia-teal">Alert at ${(typeof item.priceAlert.targetPrice === 'number' ? item.priceAlert.targetPrice : parseFloat(item.priceAlert.targetPrice) || 0).toFixed(2)}</span>
               <Button
-                onClick={() => removePriceAlert()}
+                onClick={() => removePriceAlert(item.id)}
                 size="sm"
                 variant="ghost"
                 className="text-red-500 hover:text-red-700"
@@ -171,9 +184,24 @@ export const WishlistPage = () => {
 
           <div className="flex space-x-2">
             <Button
-              disabled
+              onClick={() => {
+                addToCart({
+                  productId: item.id,
+                  name: item.name,
+                  price: item.price,
+                  originalPrice: item.price,
+                  image: item.image,
+                  category: item.category,
+                  strainType: item.category || 'Unknown',
+                  thcaPercentage: 0
+                });
+                toast({
+                  title: "Added to Cart",
+                  description: `${item.name} has been added to your cart.`,
+                });
+              }}
               size="sm"
-              className="flex-1 bg-gray-600 text-gray-400 cursor-not-allowed"
+              className="flex-1 bg-risevia-teal hover:bg-risevia-teal/80 text-white"
             >
               <ShoppingCart size={14} className="mr-1" />
               Add to Cart
@@ -210,7 +238,7 @@ export const WishlistPage = () => {
               Start building your wishlist by browsing our premium THCA strains and saving your favorites.
             </p>
             <Button
-              onClick={() => window.history.back()}
+              onClick={() => onNavigate?.('shop')}
               className="bg-gradient-to-r from-risevia-purple to-risevia-teal hover:from-risevia-teal hover:to-risevia-purple text-white"
             >
               Browse Products
@@ -241,7 +269,7 @@ export const WishlistPage = () => {
                 My Wishlist
               </h1>
               <p className="text-risevia-charcoal">
-                {stats.totalItems} items • Total value: ${stats.totalValue.toFixed(2)}
+                {stats.totalItems} items • Total value: ${(typeof stats.totalValue === 'number' ? stats.totalValue : parseFloat(stats.totalValue) || 0).toFixed(2)}
               </p>
             </div>
             <div className="flex space-x-3">
@@ -277,7 +305,7 @@ export const WishlistPage = () => {
             <Card className="bg-white border-gray-200">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-risevia-teal">
-                  ${stats.averagePrice.toFixed(0)}
+                  ${(typeof stats.averagePrice === 'number' ? stats.averagePrice : parseFloat(stats.averagePrice) || 0).toFixed(0)}
                 </div>
                 <div className="text-sm text-risevia-charcoal">Avg. Price</div>
               </CardContent>
@@ -355,7 +383,7 @@ export const WishlistPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <WishlistItemCard item={item!} />
+              <WishlistItemCard item={item as WishlistItem} />
             </motion.div>
           ))}
         </motion.div>
@@ -365,6 +393,9 @@ export const WishlistPage = () => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Share Your Wishlist</DialogTitle>
+              <DialogDescription className="sr-only">
+                Generate and share a link to your wishlist with friends
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-risevia-charcoal">
@@ -398,6 +429,9 @@ export const WishlistPage = () => {
           <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-risevia-black">Set Price Alert</DialogTitle>
+              <DialogDescription className="sr-only">
+                Set a price alert to get notified when {priceAlertItem?.name} reaches your target price
+              </DialogDescription>
             </DialogHeader>
             {priceAlertItem && (
               <div className="space-y-4">

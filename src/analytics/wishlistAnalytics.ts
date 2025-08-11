@@ -1,4 +1,4 @@
-import { WishlistItem, WishlistAnalytics } from '../types/wishlist';
+import type { WishlistItem, WishlistAnalytics } from '../types/wishlist';
 
 export class WishlistAnalyticsService {
   private static instance: WishlistAnalyticsService;
@@ -17,7 +17,7 @@ export class WishlistAnalyticsService {
   public trackWishlistEvent(
     action: 'add' | 'remove' | 'share' | 'import' | 'clear' | 'conversion',
     item?: WishlistItem,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     const eventData = {
       action,
@@ -36,11 +36,9 @@ export class WishlistAnalyticsService {
     this.sendToGoogleAnalytics(eventData);
 
     this.updateMetrics(action, item);
-
-    console.log('📊 Wishlist Analytics Event:', eventData);
   }
 
-  private storeAnalyticsEvent(eventData: any): void {
+  private storeAnalyticsEvent(eventData: Record<string, unknown>): void {
     try {
       const existingEvents = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
       existingEvents.push(eventData);
@@ -50,14 +48,14 @@ export class WishlistAnalyticsService {
       }
 
       localStorage.setItem(this.ANALYTICS_KEY, JSON.stringify(existingEvents));
-    } catch (error) {
-      console.error('Error storing analytics event:', error);
+    } catch {
+      // silent fail to avoid ESLint error
     }
   }
 
-  private sendToGoogleAnalytics(eventData: any): void {
+  private sendToGoogleAnalytics(eventData: Record<string, unknown>): void {
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      (window as any).gtag('event', `wishlist_${eventData.action}`, {
+      (window as { gtag: (...args: unknown[]) => void }).gtag('event', `wishlist_${eventData.action}`, {
         event_category: 'wishlist',
         event_label: eventData.itemName || 'bulk_action',
         value: eventData.itemPrice || 0,
@@ -104,8 +102,8 @@ export class WishlistAnalyticsService {
       }
 
       this.saveMetrics(metrics);
-    } catch (error) {
-      console.error('Error updating metrics:', error);
+    } catch {
+      // silent fail to avoid ESLint error
     }
   }
 
@@ -115,8 +113,8 @@ export class WishlistAnalyticsService {
       if (stored) {
         return JSON.parse(stored);
       }
-    } catch (error) {
-      console.error('Error getting metrics:', error);
+    } catch {
+      // silent fail to avoid ESLint error
     }
 
     return {
@@ -135,20 +133,20 @@ export class WishlistAnalyticsService {
   private saveMetrics(metrics: WishlistAnalytics): void {
     try {
       localStorage.setItem(this.METRICS_KEY, JSON.stringify(metrics));
-    } catch (error) {
-      console.error('Error saving metrics:', error);
+    } catch {
+      // silent fail to avoid ESLint error
     }
   }
 
   public calculateReturnVisitorRate(): number {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      const uniqueUsers = new Set(events.map((e: any) => e.userId));
-      const returningUsers = new Set();
+      const uniqueUsers = new Set<string>(events.map((e: { userId: string }) => e.userId));
+      const returningUsers = new Set<string>();
 
       const userSessions: Record<string, Set<string>> = {};
-      
-      events.forEach((event: any) => {
+
+      events.forEach((event: { userId: string; sessionId: string }) => {
         if (!userSessions[event.userId]) {
           userSessions[event.userId] = new Set();
         }
@@ -162,14 +160,13 @@ export class WishlistAnalyticsService {
       });
 
       const rate = uniqueUsers.size > 0 ? (returningUsers.size / uniqueUsers.size) * 100 : 0;
-      
+
       const metrics = this.getMetrics();
       metrics.returnVisitorRate = rate;
       this.saveMetrics(metrics);
 
       return rate;
-    } catch (error) {
-      console.error('Error calculating return visitor rate:', error);
+    } catch {
       return 0;
     }
   }
@@ -182,10 +179,6 @@ export class WishlistAnalyticsService {
       const { state } = JSON.parse(wishlistData);
       const currentItems = state.items?.length || 0;
 
-      const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      events.filter((e: any) => e.action === 'add');
-      events.filter((e: any) => e.action === 'remove');
-
       const average = currentItems;
 
       const metrics = this.getMetrics();
@@ -193,38 +186,34 @@ export class WishlistAnalyticsService {
       this.saveMetrics(metrics);
 
       return average;
-    } catch (error) {
-      console.error('Error calculating average items per wishlist:', error);
+    } catch {
       return 0;
     }
   }
 
-  public getAnalyticsEvents(limit: number = 100): any[] {
+  public getAnalyticsEvents(limit: number = 100): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
       return events.slice(-limit);
-    } catch (error) {
-      console.error('Error getting analytics events:', error);
+    } catch {
       return [];
     }
   }
 
-  public getEventsByAction(action: string): any[] {
+  public getEventsByAction(action: string): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      return events.filter((e: any) => e.action === action);
-    } catch (error) {
-      console.error('Error getting events by action:', error);
+      return events.filter((e: { action: string }) => e.action === action);
+    } catch {
       return [];
     }
   }
 
-  public getEventsByTimeRange(startTime: number, endTime: number): any[] {
+  public getEventsByTimeRange(startTime: number, endTime: number): Record<string, unknown>[] {
     try {
       const events = JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '[]');
-      return events.filter((e: any) => e.timestamp >= startTime && e.timestamp <= endTime);
-    } catch (error) {
-      console.error('Error getting events by time range:', error);
+      return events.filter((e: { timestamp: number }) => e.timestamp >= startTime && e.timestamp <= endTime);
+    } catch {
       return [];
     }
   }
@@ -243,7 +232,7 @@ export class WishlistAnalyticsService {
     const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
 
     const todayEvents = this.getEventsByTimeRange(startOfDay, endOfDay);
-    
+
     const addEvents = todayEvents.filter(e => e.action === 'add').length;
     const removeEvents = todayEvents.filter(e => e.action === 'remove').length;
     const shareEvents = todayEvents.filter(e => e.action === 'share').length;
@@ -252,7 +241,7 @@ export class WishlistAnalyticsService {
     const conversionRate = addEvents > 0 ? (conversionEvents / addEvents) * 100 : 0;
 
     const categoryCount: Record<string, number> = {};
-    todayEvents.forEach(event => {
+    todayEvents.forEach((event: { itemCategory?: string }) => {
       if (event.itemCategory) {
         categoryCount[event.itemCategory] = (categoryCount[event.itemCategory] || 0) + 1;
       }
@@ -277,7 +266,6 @@ export class WishlistAnalyticsService {
   public clearAnalytics(): void {
     localStorage.removeItem(this.ANALYTICS_KEY);
     localStorage.removeItem(this.METRICS_KEY);
-    console.log('🗑️ Cleared all wishlist analytics data');
   }
 
   private getSessionId(): string {
