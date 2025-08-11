@@ -163,7 +163,7 @@ class WholesalePricingService {
         ORDER BY created_at DESC
       `;
 
-      return orders.map(order => ({
+      return orders.map((order: any) => ({
         id: order.id,
         customerId: order.customer_id,
         orderNumber: order.order_number,
