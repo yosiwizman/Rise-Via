@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
-
 const sql = Object.assign(
   (strings: TemplateStringsArray, ...values: any[]) => {
     const query = strings.join('?');

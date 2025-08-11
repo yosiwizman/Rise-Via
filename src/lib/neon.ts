@@ -1,4 +1,3 @@
-
 export const mockDatabase = {
   admin_users: [
     {

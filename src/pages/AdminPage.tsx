@@ -163,6 +163,9 @@ export const AdminPage = () => {
       case 'settings':
         return <AdminSettings />;
       
+      case 'settings':
+        return <AdminSettings />;
+      
       default:
         return (
           <Card>
