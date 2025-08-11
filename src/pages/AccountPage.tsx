@@ -83,17 +83,9 @@ export const AccountPage = () => {
     try {
       if (!customer?.id) return;
 
-      const ordersData = await sql`
-        SELECT * FROM orders 
-        WHERE customer_id = ${customer.id} 
-        ORDER BY created_at DESC
-      `;
+      const ordersData = await sql('SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC', customer.id);
 
-      const transactionsData = await sql`
-        SELECT * FROM loyalty_transactions 
-        WHERE customer_id = ${customer.id} 
-        ORDER BY created_at DESC
-      `;
+      const transactionsData = await sql('SELECT * FROM loyalty_transactions WHERE customer_id = ? ORDER BY created_at DESC', customer.id);
 
       setOrders(ordersData || []);
       setLoyaltyTransactions(transactionsData || []);

@@ -1,13 +1,9 @@
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: any[]) => {
-    const query = strings.join('?');
-    console.log('Mock SQL Query (database.ts):', query, values);
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+const sql = function(query: string, ...values: any[]) {
+  console.log('Mock SQL Query (database.ts):', query, values);
+  return Promise.resolve([{ success: true }]);
+};
+
+sql.unsafe = (str: string) => str;
 
 export async function testConnection() {
   if (!sql) {
@@ -16,7 +12,7 @@ export async function testConnection() {
   }
   
   try {
-    const result = await sql`SELECT 1 as test`;
+    const result = await sql('SELECT 1 as test');
     console.log('Neon Database connected:', result);
     return true;
   } catch (error) {
@@ -34,7 +30,7 @@ export async function initializeTables() {
   
   try {
     // Products table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS products (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
@@ -52,10 +48,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Users table  
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -67,10 +63,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Customers table (for legacy compatibility)
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS customers (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -80,10 +76,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Customer profiles table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS customer_profiles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
@@ -102,10 +98,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Wishlist sessions table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS wishlist_sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_token VARCHAR(255) UNIQUE NOT NULL,
@@ -113,10 +109,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Wishlist items table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS wishlist_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_id UUID REFERENCES wishlist_sessions(id) ON DELETE CASCADE,
@@ -132,10 +128,10 @@ export async function initializeTables() {
         price_alert TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Orders table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS orders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         order_number VARCHAR(50) UNIQUE NOT NULL,
@@ -155,10 +151,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Order items table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS order_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
@@ -169,10 +165,10 @@ export async function initializeTables() {
         discount DECIMAL(10,2) DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Cart items table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -182,10 +178,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Loyalty transactions table
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
@@ -194,10 +190,10 @@ export async function initializeTables() {
         description TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Activity logs table (for admin dashboard)
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id),
@@ -207,9 +203,9 @@ export async function initializeTables() {
         user_agent TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS price_alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
@@ -222,19 +218,19 @@ export async function initializeTables() {
         triggered_at TIMESTAMP,
         notification_sent BOOLEAN DEFAULT false
       )
-    `;
+    `);
 
     // Create indexes for better performance
-    await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
+    await sql('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)');
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS blog_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         title VARCHAR(255) NOT NULL,
@@ -253,9 +249,9 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS blog_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         title VARCHAR(255) NOT NULL,
@@ -274,13 +270,13 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Create indexes for blog posts
-    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)`;
+    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)');
+    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)');
 
     console.log('All tables initialized successfully');
     return true;

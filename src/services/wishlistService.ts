@@ -78,18 +78,11 @@ export const wishlistService = {
   async getOrCreateSession() {
     const token = getSessionToken()
     
-    const existingSessions = await sql`
-      SELECT * FROM wishlist_sessions 
-      WHERE session_token = ${token}
-    `;
+    const existingSessions = await sql('SELECT * FROM wishlist_sessions WHERE session_token = ?', token);
 
     if (existingSessions.length > 0) return existingSessions[0];
 
-    const newSessions = await sql`
-      INSERT INTO wishlist_sessions (session_token, created_at)
-      VALUES (${token}, NOW())
-      RETURNING *
-    `;
+    const newSessions = await sql('INSERT INTO wishlist_sessions (session_token, created_at) VALUES (?, NOW()) RETURNING *', token);
 
     return newSessions[0];
   },
@@ -98,10 +91,7 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return []
 
-    const items = await sql`
-      SELECT * FROM wishlist_items 
-      WHERE session_id = ${session.id}
-    `;
+    const items = await sql('SELECT * FROM wishlist_items WHERE session_id = ?', session.id);
 
     return items || []
   },
@@ -111,10 +101,7 @@ export const wishlistService = {
     if (!session) return { data: [], error: null }
 
     try {
-      const items = await sql`
-        SELECT product_id FROM wishlist_items 
-        WHERE session_id = ${session.id}
-      `;
+      const items = await sql('SELECT product_id FROM wishlist_items WHERE session_id = ?', session.id);
 
       return { data: items.map((item: any) => item.product_id) || [], error: null }
     } catch (error) {
@@ -127,10 +114,7 @@ export const wishlistService = {
     if (!session) return { error: { message: 'Failed to create session' } }
 
     try {
-      await sql`
-        INSERT INTO wishlist_items (session_id, product_id, created_at)
-        VALUES (${session.id}, ${productId}, NOW())
-      `;
+      await sql('INSERT INTO wishlist_items (session_id, product_id, created_at) VALUES (?, ?, NOW())', session.id, productId);
 
       return { error: null }
     } catch (error) {
@@ -143,10 +127,7 @@ export const wishlistService = {
     if (!session) return { error: { message: 'Failed to get session' } }
 
     try {
-      await sql`
-        DELETE FROM wishlist_items 
-        WHERE session_id = ${session.id} AND product_id = ${productId}
-      `;
+      await sql('DELETE FROM wishlist_items WHERE session_id = ? AND product_id = ?', session.id, productId);
 
       return { error: null }
     } catch (error) {
@@ -158,10 +139,7 @@ export const wishlistService = {
     const session = await this.getOrCreateSession()
     if (!session) return false
 
-    const items = await sql`
-      SELECT id FROM wishlist_items 
-      WHERE session_id = ${session.id} AND product_id = ${productId}
-    `;
+    const items = await sql('SELECT id FROM wishlist_items WHERE session_id = ? AND product_id = ?', session.id, productId);
 
     return items.length > 0
   },
@@ -170,25 +148,16 @@ export const wishlistService = {
     const session = await this.getOrCreateSession();
     if (!session) return;
 
-    const sessionItems = await sql`
-      SELECT product_id FROM wishlist_items 
-      WHERE session_id = ${session.id}
-    `;
+    const sessionItems = await sql('SELECT product_id FROM wishlist_items WHERE session_id = ?', session.id);
 
     if (!sessionItems?.length) return;
 
     try {
       for (const item of sessionItems) {
-        await sql`
-          INSERT INTO wishlist_items (user_id, product_id, created_at)
-          VALUES (${userId}, ${item.product_id}, NOW())
-        `;
+        await sql('INSERT INTO wishlist_items (user_id, product_id, created_at) VALUES (?, ?, NOW())', userId, item.product_id);
       }
 
-      await sql`
-        DELETE FROM wishlist_items 
-        WHERE session_id = ${session.id}
-      `;
+      await sql('DELETE FROM wishlist_items WHERE session_id = ?', session.id);
     } catch (error) {
       console.error('Migration failed:', error);
     }

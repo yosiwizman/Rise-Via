@@ -70,7 +70,7 @@ export interface LoyaltyTransaction {
 export const customerService = {
   async getAll() {
     try {
-      const customers = await sql`
+      const customers = await sql(`
         SELECT 
           c.*,
           cp.segment,
@@ -81,7 +81,7 @@ export const customerService = {
         FROM customers c
         LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
         ORDER BY c.created_at DESC
-      `;
+      `);
       
       return customers;
     } catch (error) {
@@ -91,18 +91,18 @@ export const customerService = {
 
   async create(customer: Customer) {
     try {
-      const customers = await sql`
+      const customers = await sql(`
         INSERT INTO customers (email, first_name, last_name, phone, created_at)
         VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null}, NOW())
         RETURNING *
-      ` as any[];
+      `) as any[];
       
       const newCustomer = customers[0];
       
-      await sql`
+      await sql(`
         INSERT INTO customer_profiles (customer_id, created_at)
         VALUES (${newCustomer.id}, NOW())
-      `;
+      `);
       
       return newCustomer;
     } catch (error) {
@@ -116,12 +116,12 @@ export const customerService = {
         .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
         .join(', ');
       
-      const customers = await sql`
+      const customers = await sql(`
         UPDATE customers 
         SET ${sql.unsafe(setClause)}, updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
-      ` as any[];
+      `) as any[];
       
       return customers[0];
     } catch (error) {
@@ -157,7 +157,7 @@ export const customerService = {
         ? `WHERE ${whereConditions.join(' AND ')}`
         : '';
       
-      const customers = await sql`
+      const customers = await sql(`
         SELECT 
           c.*,
           cp.segment,
@@ -169,7 +169,7 @@ export const customerService = {
         LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
         ${sql.unsafe(whereClause)}
         ORDER BY c.created_at DESC
-      `;
+      `);
       
       return customers;
     } catch (error) {
