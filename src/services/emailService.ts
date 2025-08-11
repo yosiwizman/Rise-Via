@@ -1,7 +1,8 @@
 import { Resend } from 'resend';
-import { sql } from '../lib/neon'
+import { sql } from '../lib/database';
+import { env } from '../config/env';
 
-const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
+const resend = new Resend(env.RESEND_API_KEY || 'placeholder-key');
 
 export interface EmailTemplate {
   id: string
@@ -171,7 +172,7 @@ const emailService = {
           <h1>Verify Your Email</h1>
           <p>Hi ${name},</p>
           <p>Please click the link below to verify your email address:</p>
-          <a href="${import.meta.env.VITE_APP_URL || 'https://rise-via.vercel.app'}/verify-email?token=${token}" 
+          <a href="https://rise-via.vercel.app/verify-email?token=${token}" 
              style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
              Verify Email Address
           </a>

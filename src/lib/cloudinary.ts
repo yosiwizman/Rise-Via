@@ -1,8 +1,11 @@
+import { env } from '../config/env';
+
 export const cloudinaryConfig = {
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-  apiKey: import.meta.env.VITE_CLOUDINARY_API_KEY,
-  uploadPreset: 'risevia_products'
+  cloudName: env.CLOUDINARY_CLOUD_NAME,
+  apiKey: env.CLOUDINARY_API_KEY,
+  uploadPreset: env.CLOUDINARY_UPLOAD_PRESET
 };
+
 
 export const uploadToCloudinary = async (file: File, folder: string = 'products') => {
   const formData = new FormData();

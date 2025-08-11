@@ -1,7 +1,4 @@
-import { neon } from '@neondatabase/serverless';
-
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const sql = DATABASE_URL ? neon(DATABASE_URL) : null;
+import { sql } from '../lib/database';
 
 export interface BlogPost {
   id: string;

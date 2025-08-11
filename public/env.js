@@ -1,0 +1,7 @@
+window.__ENV = {
+  VITE_DATABASE_URL: '',
+  VITE_CLOUDINARY_CLOUD_NAME: 'dxvffqjvs',
+  VITE_CLOUDINARY_UPLOAD_PRESET: 'risevia_products',
+  VITE_RESEND_API_KEY: '',
+  VITE_STRIPE_PUBLISHABLE_KEY: ''
+};

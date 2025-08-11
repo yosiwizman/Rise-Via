@@ -1,13 +1,27 @@
 import { neon } from '@neondatabase/serverless';
+import { env } from '../config/env';
 
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+const DATABASE_URL = env.DATABASE_URL;
 
-if (!isValidDatabaseUrl) {
-  console.warn('⚠️ No valid database URL provided in database.ts. Running in development mode with mock data.');
+if (!DATABASE_URL) {
+  console.error('❌ DATABASE_URL is not configured');
 }
 
-const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
+export const sql = neon(DATABASE_URL);
+
+export { DATABASE_URL };
+
+export async function safeQuery<T = any>(
+  queryFn: () => Promise<T>
+): Promise<{ data?: T; error?: Error }> {
+  try {
+    const data = await queryFn();
+    return { data };
+  } catch (error) {
+    console.error('Database query error:', error);
+    return { error: error as Error };
+  }
+}
 
 export async function testConnection() {
   if (!sql) {
@@ -302,6 +316,3 @@ export async function hashPassword(password: string): Promise<string> {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
-
-// Export the sql instance for direct queries
-export { sql };
