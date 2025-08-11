@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useWishlist } from '../../hooks/useWishlist';
 
 export const WishlistInitializer = () => {
-  const initializeSession = useWishlist(state => state.initializeSession);
+  const { initializeSession } = useWishlist();
 
   useEffect(() => {
     initializeSession();

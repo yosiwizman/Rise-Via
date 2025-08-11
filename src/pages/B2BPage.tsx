@@ -56,7 +56,7 @@ export const B2BPage = () => {
       });
 
       if (customerData) {
-        await sql(`
+        await sql`
           UPDATE customer_profiles 
           SET 
             is_b2b = true,
@@ -65,7 +65,7 @@ export const B2BPage = () => {
             membership_tier = 'SILVER',
             segment = 'B2B'
           WHERE customer_id = ${customerData.id}
-        `);
+        `;
       }
 
       if (customerData) {

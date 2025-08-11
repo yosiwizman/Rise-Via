@@ -337,7 +337,7 @@ This content is for educational purposes only and has not been evaluated by the 
       values.push(id);
 
       const query = `UPDATE blog_posts SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
-      const result = await sql(query, values);
+      const result = await sql`${sql.unsafe(query)}`;
       
       return result && result.length > 0 ? (result[0] as BlogPost) : null;
     } catch (error) {

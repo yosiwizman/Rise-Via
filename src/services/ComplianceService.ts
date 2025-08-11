@@ -57,34 +57,6 @@ export interface ComplianceAlert {
   resolvedAt?: string;
 }
 
-interface StateComplianceRow {
-  state: string;
-  is_legal: boolean;
-  age_requirement: number;
-  max_possession: string;
-  home_grow_allowed: boolean;
-  public_consumption: boolean;
-  driving_limit: string;
-  retail_sales_allowed: boolean;
-  delivery_allowed: boolean;
-  online_ordering_allowed: boolean;
-  tax_rate: string;
-  license_required: boolean;
-  last_updated: Date;
-}
-
-interface ComplianceAlertRow {
-  id: string;
-  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  action_required: boolean;
-  deadline: Date | null;
-  affected_states: string;
-  created_at: Date;
-  resolved_at: Date | null;
-}
 
 export interface AuditLog {
   id: string;
@@ -98,34 +70,6 @@ export interface AuditLog {
   complianceFlags: string[];
 }
 
-interface StateComplianceRow {
-  state: string;
-  is_legal: boolean;
-  age_requirement: number;
-  max_possession: string;
-  home_grow_allowed: boolean;
-  public_consumption: boolean;
-  driving_limit: string;
-  retail_sales_allowed: boolean;
-  delivery_allowed: boolean;
-  online_ordering_allowed: boolean;
-  tax_rate: string;
-  license_required: boolean;
-  last_updated: Date;
-}
-
-interface ComplianceAlertRow {
-  id: string;
-  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  action_required: boolean;
-  deadline: Date | null;
-  affected_states: string;
-  created_at: Date;
-  resolved_at: Date | null;
-}
 
 interface ComplianceEvent {
   id?: string;
@@ -215,7 +159,7 @@ class ComplianceService {
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row: StateComplianceRow) => ({
+      const complianceData: StateCompliance[] = (result as any[]).map((row: any) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -228,7 +172,7 @@ class ComplianceService {
         onlineOrderingAllowed: row.online_ordering_allowed,
         taxRate: parseFloat(row.tax_rate),
         licenseRequired: row.license_required,
-        lastUpdated: row.last_updated.toISOString()
+        lastUpdated: typeof row.last_updated === 'string' ? row.last_updated : row.last_updated.toISOString()
       }));
 
       this.complianceCache.clear();
@@ -370,7 +314,7 @@ class ComplianceService {
 
       const result = await query;
 
-      return (result as ComplianceAlertRow[]).map((row: ComplianceAlertRow) => ({
+      return (result as any[]).map((row: any) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
@@ -409,7 +353,7 @@ class ComplianceService {
         ) RETURNING id
       `;
 
-      return result[0].id;
+      return (result as any[])[0]?.id;
     } catch (error) {
       console.error('Error creating compliance alert:', error);
       throw new Error('Failed to create compliance alert');
@@ -479,7 +423,7 @@ class ComplianceService {
       WHERE user_id = ${userId} OR session_id = ${sessionId}
       LIMIT 1
     `;
-    const existingLimit = existingLimitResult[0];
+    const existingLimit = (existingLimitResult as any[])[0];
 
     const today = new Date().toDateString();
     const dailyLimit = 1000;
@@ -488,11 +432,11 @@ class ComplianceService {
     let currentDaily = purchaseAmount;
     let currentMonthly = purchaseAmount;
 
-    if (existingLimit[0]) {
-      if (existingLimit[0].last_purchase_date === today) {
-        currentDaily += existingLimit[0].daily_amount;
+    if (existingLimit) {
+      if (existingLimit.last_purchase_date === today) {
+        currentDaily += existingLimit.daily_amount;
       }
-      currentMonthly += existingLimit[0].monthly_amount;
+      currentMonthly += existingLimit.monthly_amount;
     }
 
     const withinLimits = currentDaily <= dailyLimit && currentMonthly <= monthlyLimit;
@@ -535,7 +479,7 @@ class ComplianceService {
       ORDER BY created_at DESC
     `;
 
-    const typedEvents = (events as ComplianceEvent[]) || [];
+    const typedEvents = (events as any[]) || [];
     
     const report = {
       totalEvents: typedEvents.length,

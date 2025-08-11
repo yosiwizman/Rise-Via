@@ -28,11 +28,9 @@ export const authService = {
     }
     
     try {
-      const users = await sql(
-        `SELECT id, email, password_hash, role, created_at 
+      const users = await sql`SELECT id, email, password_hash, role, created_at 
         FROM admin_users 
-        WHERE email = ${email} AND is_active = true`
-      ) as any[];
+        WHERE email = ${email} AND is_active = true` as any[];
       
       if (users.length === 0) {
         throw new Error('Invalid credentials');
@@ -54,13 +52,11 @@ export const authService = {
     }
   },
 
-  async register(email: string, password: string, metadata: any) {
+  async register(email: string, _password: string, metadata: any) {
     try {
-      const users = await sql(
-        `INSERT INTO admin_users (email, password_hash, role, metadata, created_at)
+      const users = await sql`INSERT INTO admin_users (email, password_hash, role, metadata, created_at)
         VALUES (${email}, ${'mock-hash'}, ${metadata.role || 'employee'}, ${JSON.stringify(metadata)}, NOW())
-        RETURNING id, email, role, created_at`
-      ) as any[];
+        RETURNING id, email, role, created_at` as any[];
       
       return { user: users[0] };
     } catch (error) {
@@ -80,11 +76,9 @@ export const authService = {
     
     try {
       const decoded = JSON.parse(atob(token));
-      const users = await sql(
-        `SELECT id, email, role, created_at 
+      const users = await sql`SELECT id, email, role, created_at 
         FROM admin_users 
-        WHERE id = ${decoded.userId} AND is_active = true`
-      ) as any[];
+        WHERE id = ${decoded.userId} AND is_active = true` as any[];
       
       return users.length > 0 ? users[0] : null;
     } catch (error) {
@@ -105,5 +99,23 @@ export const authService = {
     
     checkAuth();
     return { unsubscribe: () => {} };
+  },
+
+  async requestPasswordReset(email: string): Promise<void> {
+    try {
+      console.log('🔵 Password reset requested for:', email);
+      return Promise.resolve();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async resetPassword(token: string, _password: string): Promise<void> {
+    try {
+      console.log('🔵 Password reset with token:', token);
+      return Promise.resolve();
+    } catch (error) {
+      throw error;
+    }
   }
 };

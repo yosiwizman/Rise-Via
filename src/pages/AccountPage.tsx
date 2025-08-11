@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, startTransition } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { User, Star, Gift, ShoppingBag, Crown, Copy, Bell, Trash2 } from 'lucide-react';
+import { User, Star, Gift, ShoppingBag, Crown, Copy } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
 const sql = Object.assign(
@@ -77,18 +77,17 @@ export const AccountPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
   const [membershipTier, setMembershipTier] = useState<MembershipTier | null>(null);
-  const [redeemPoints, setRedeemPoints] = useState('');
 
   const fetchCustomerData = useCallback(async () => {
     try {
       if (!customer?.id) return;
 
-      const ordersData = await sql('SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC', customer.id);
+      const ordersData = await sql`SELECT * FROM orders WHERE customer_id = ${customer.id} ORDER BY created_at DESC`;
 
-      const transactionsData = await sql('SELECT * FROM loyalty_transactions WHERE customer_id = ? ORDER BY created_at DESC', customer.id);
+      const transactionsData = await sql`SELECT * FROM loyalty_transactions WHERE customer_id = ${customer.id} ORDER BY created_at DESC`;
 
-      setOrders(ordersData || []);
-      setLoyaltyTransactions(transactionsData || []);
+      setOrders((ordersData as any[]) || []);
+      setLoyaltyTransactions((transactionsData as any[]) || []);
 
       const tierName = customer.customer_profiles?.[0]?.membership_tier || 'GREEN';
       const tierInfo = { name: tierName, benefits: [] };

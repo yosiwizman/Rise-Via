@@ -117,7 +117,7 @@ export const analyticsAPI = {
       WHERE created_at >= ${startDate} AND created_at <= ${endDate}
     `;
 
-    const uniqueSessions = sessions?.[0]?.unique_sessions || 1;
+    const uniqueSessions = (sessions as any[])?.[0]?.unique_sessions || 1;
     const conversionRate = (totalOrders / uniqueSessions) * 100;
 
     return {
