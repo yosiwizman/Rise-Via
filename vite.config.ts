@@ -15,7 +15,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    minify: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: false
+      },
+      mangle: {
+        keep_fnames: true,
+        properties: false
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
