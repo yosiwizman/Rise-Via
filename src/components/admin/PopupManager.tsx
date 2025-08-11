@@ -305,7 +305,7 @@ export const PopupManager = () => {
                   <Label htmlFor="trigger_type">Trigger Type</Label>
                   <Select 
                     value={formData.trigger_type} 
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, trigger_type: value }))}
+                    onValueChange={(value: 'timer' | 'exit_intent' | 'scroll' | 'page_load') => setFormData(prev => ({ ...prev, trigger_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -334,7 +334,7 @@ export const PopupManager = () => {
                   <Label htmlFor="display_frequency">Display Frequency</Label>
                   <Select 
                     value={formData.display_frequency} 
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, display_frequency: value }))}
+                    onValueChange={(value: 'once_per_session' | 'once_per_day' | 'always') => setFormData(prev => ({ ...prev, display_frequency: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
