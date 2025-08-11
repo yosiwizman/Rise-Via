@@ -234,6 +234,54 @@ export async function initializeTables() {
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        author_name VARCHAR(255) DEFAULT 'Rise-Via Team',
+        keywords TEXT[] DEFAULT '{}',
+        tone VARCHAR(50) DEFAULT 'educational',
+        target_length INTEGER DEFAULT 500,
+        status VARCHAR(20) DEFAULT 'draft',
+        published_at TIMESTAMP,
+        scheduled_at TIMESTAMP,
+        view_count INTEGER DEFAULT 0,
+        meta_description TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        author_name VARCHAR(255) DEFAULT 'Rise-Via Team',
+        keywords JSONB DEFAULT '[]',
+        tone VARCHAR(50) DEFAULT 'educational',
+        target_length INTEGER DEFAULT 500,
+        status VARCHAR(20) DEFAULT 'draft',
+        published_at TIMESTAMP,
+        scheduled_at TIMESTAMP,
+        view_count INTEGER DEFAULT 0,
+        meta_description TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for blog posts
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)`;
+
     console.log('All tables initialized successfully');
     return true;
   } catch (error) {
