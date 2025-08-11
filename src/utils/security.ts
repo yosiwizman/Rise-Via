@@ -18,22 +18,62 @@ export class SecurityUtils {
   /**
    * Sanitizes user input by removing potentially dangerous characters
    */
-  static sanitizeInput(input: string): string {
-    if (typeof input !== 'string' || input === null || input === undefined) {
-      console.warn('⚠️ SecurityUtils.sanitizeInput called with invalid input:', typeof input, input);
+  static sanitizeInput(input: unknown): string {
+    console.log('🔐 SecurityUtils.sanitizeInput called with:', { 
+      inputType: typeof input,
+      inputValue: input,
+      inputLength: typeof input === 'string' ? input.length : 'N/A'
+    });
+    
+    if (input === null || input === undefined) {
+      console.log('🔐 Input is null/undefined, returning empty string');
+      return '';
+    }
+    
+    if (typeof input !== 'string') {
+      console.log('🔐 Input is not a string, converting', { originalType: typeof input });
+      try {
+        input = String(input);
+      } catch (error) {
+        console.log('🔐 String conversion failed', error);
+        return '';
+      }
+    }
+    
+    if (typeof input !== 'string') {
+      console.log('🔐 Input still not a string after conversion');
       return '';
     }
     
     try {
-      return input
-        .trim()
-        .replace(/[<>]/g, '') // Remove angle brackets
-        .replace(/javascript:/gi, '') // Remove javascript: protocol
-        .replace(/on\w+=/gi, '') // Remove event handlers
-        .replace(/data:/gi, '') // Remove data: protocol
-        .substring(0, 1000); // Limit length
+      let result = input;
+      
+      if (typeof result.trim === 'function') {
+        result = result.trim();
+      }
+      
+      if (typeof result.replace === 'function') {
+        result = result.replace(/[<>]/g, '');
+        result = result.replace(/javascript:/gi, '');
+        result = result.replace(/on\w+=/gi, '');
+        result = result.replace(/data:/gi, '');
+      }
+      
+      if (typeof result.substring === 'function') {
+        result = result.substring(0, 1000);
+      }
+      
+      console.log('🔐 sanitizeInput successful', { 
+        originalLength: input.length,
+        resultLength: result.length 
+      });
+      
+      return result;
     } catch (error) {
-      console.error('❌ Error in SecurityUtils.sanitizeInput:', error, 'Input:', input);
+      console.log('🔐 Error in sanitizeInput', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
       return '';
     }
   }

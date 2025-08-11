@@ -46,12 +46,27 @@ import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 
 function App() {
+  console.log('🔵 App component rendering...');
+  
   const [currentPage, setCurrentPage] = useState('home');
   const [blogSlug, setBlogSlug] = useState<string>('');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [, setSearchOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
+  
+  useEffect(() => {
+    console.log('🔵 App component mounted');
+    
+    if ((window as any).__moduleErrors?.length > 0) {
+      setError('Module initialization errors detected. Check console.');
+    }
+    
+    return () => {
+      console.log('🔵 App component unmounting');
+    };
+  }, []);
 
   useEffect(() => {
     startTransition(() => {
@@ -374,6 +389,20 @@ function App() {
         return <NotFoundPage onNavigate={setCurrentPage} />;
     }
   };
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h2>App Error</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Reload</button>
+        <details>
+          <summary>Module Errors</summary>
+          <pre>{JSON.stringify((window as any).__moduleErrors || [], null, 2)}</pre>
+        </details>
+      </div>
+    );
+  }
 
   return (
     <CustomerProvider>

@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:debug": "GENERATE_SOURCEMAP=true vite build --sourcemap --minify terser",
     "preview": "vite preview",
     "validate": "node scripts/build-validation.js",
     "test": "vitest",

@@ -13,7 +13,31 @@ export default defineConfig({
     allowedHosts: true
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    sourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: false
+      },
+      mangle: {
+        keep_fnames: true,
+        properties: false
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 })
 
