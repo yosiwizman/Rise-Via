@@ -19,14 +19,6 @@ function getEnvVar(key: string, fallback: string = ''): string {
     }
   }
   
-  try {
-    if (import.meta && import.meta.env && typeof import.meta.env === 'object') {
-      const value = (import.meta.env as any)[key];
-      if (value !== undefined) return value;
-    }
-  } catch (e) {
-  }
-  
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
   }
