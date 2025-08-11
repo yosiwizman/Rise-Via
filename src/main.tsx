@@ -12,7 +12,42 @@ console.log('🔵 Starting app initialization...');
 console.log('🔵 Environment:', import.meta.env.MODE);
 console.log('🔵 DATABASE_URL available:', !!import.meta.env.VITE_DATABASE_URL);
 
-PerformanceMonitor.init();
+window.addEventListener('error', (event) => {
+  console.error('❌ Global error caught during initialization:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error,
+    stack: event.error?.stack
+  });
+  
+  if (event.message && typeof event.message === 'string' && event.message.includes('Cannot read properties of undefined')) {
+    console.error('🚨 FOUND THE S PROPERTY ERROR:', {
+      fullMessage: event.message,
+      stack: event.error?.stack,
+      filename: event.filename,
+      line: event.lineno,
+      column: event.colno
+    });
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ Unhandled promise rejection during initialization:', {
+    reason: event.reason,
+    promise: event.promise
+  });
+});
+
+try {
+  console.log('🔵 Initializing PerformanceMonitor...');
+  PerformanceMonitor.init();
+  console.log('✅ PerformanceMonitor initialized successfully');
+} catch (error) {
+  console.error('❌ Error initializing PerformanceMonitor:', error);
+  console.error('❌ PerformanceMonitor error stack:', error instanceof Error ? error.stack : 'No stack trace');
+}
 
 try {
   console.log('🔵 Creating React root...');
