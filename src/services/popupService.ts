@@ -1,4 +1,4 @@
-import { sql } from '../lib/database';
+import { sql } from '../lib/neon';
 import type { Popup } from '../types/database';
 
 export const popupService = {
