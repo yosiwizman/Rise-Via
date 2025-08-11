@@ -14,7 +14,9 @@ import { useCart } from '../hooks/useCart';
 import { orderService } from '../services/orderService';
 import { safeToFixed } from '../utils/formatters';
 
-const stripePromise = loadStripe((import.meta as { env?: { VITE_STRIPE_PUBLISHABLE_KEY?: string } }).env?.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51placeholder');
+import { env } from '../config/env';
+
+const stripePromise = loadStripe(env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51placeholder');
 
 interface CheckoutFormProps {
   onSuccess: (orderId: string) => void;
