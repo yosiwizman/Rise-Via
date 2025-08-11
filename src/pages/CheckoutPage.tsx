@@ -309,25 +309,36 @@ export const CheckoutPage = ({ onNavigate, isStateBlocked }: CheckoutPageProps) 
                 </CardContent>
               </Card>
             ) : (
-              <PaymentMethodSelector 
-                onPaymentComplete={(result) => {
-                  if (result.success) {
-                    localStorage.setItem('lastOrder', JSON.stringify({
-                      orderNumber: result.orderNumber,
-                      total: getCartTotal(),
-                      paymentMethod: result.paymentMethod,
-                      transactionId: result.transactionId,
-                      timestamp: new Date().toISOString()
-                    }));
-                    onNavigate('order-confirmation');
-                  } else {
-                    alert('Payment failed: ' + result.error);
-                    setShowPaymentOptions(false);
-                  }
-                }}
-                customerData={formData}
-                totalAmount={getCartTotal()}
-              />
+              <div className="space-y-4">
+                <PaymentMethodSelector 
+                  onPaymentComplete={(result) => {
+                    try {
+                      console.log('💳 Payment completion result:', result);
+                      if (result.success) {
+                        localStorage.setItem('lastOrder', JSON.stringify({
+                          orderNumber: result.orderNumber,
+                          total: getCartTotal(),
+                          paymentMethod: result.paymentMethod,
+                          transactionId: result.transactionId,
+                          timestamp: new Date().toISOString()
+                        }));
+                        console.log('✅ Order saved to localStorage, navigating to confirmation');
+                        onNavigate('order-confirmation');
+                      } else {
+                        console.error('❌ Payment failed:', result.error);
+                        alert('Payment failed: ' + result.error);
+                        setShowPaymentOptions(false);
+                      }
+                    } catch (error) {
+                      console.error('❌ Payment processing error:', error);
+                      alert('An error occurred during payment processing. Please try again.');
+                      setShowPaymentOptions(false);
+                    }
+                  }}
+                  customerData={formData}
+                  totalAmount={getCartTotal()}
+                />
+              </div>
             )}
           </motion.div>
         </div>
