@@ -14,29 +14,43 @@ export class RecommendationEngine {
   static getRecommendations(currentProduct: Product) {
     const products = productsData.products;
     
-    const similarEffects = products.filter(p => 
-      p.id !== currentProduct.id &&
-      p.effects.some(e => currentProduct.effects.includes(e))
-    ).slice(0, 4);
+    try {
+      const similarEffects = products.filter(p => 
+        p.id !== currentProduct.id &&
+        p.effects.some(e => currentProduct.effects.includes(e))
+      );
+      const similarEffectsSliced = Array.isArray(similarEffects) ? similarEffects.slice(0, 4) : [];
+      
+      const similarType = products.filter(p => 
+        p.id !== currentProduct.id &&
+        p.strainType === currentProduct.strainType
+      );
+      const similarTypeSliced = Array.isArray(similarType) ? similarType.slice(0, 4) : [];
+      
+      const similarPotency = products.filter(p => 
+        p.id !== currentProduct.id &&
+        Math.abs(p.thcaPercentage - currentProduct.thcaPercentage) <= 3
+      );
+      const similarPotencySliced = Array.isArray(similarPotency) ? similarPotency.slice(0, 4) : [];
+      
+      const boughtTogetherArray = this.getFrequentPairs(currentProduct.id);
+      const boughtTogether = Array.isArray(boughtTogetherArray) ? boughtTogetherArray.slice(0, 4) : [];
     
-    const similarType = products.filter(p => 
-      p.id !== currentProduct.id &&
-      p.strainType === currentProduct.strainType
-    ).slice(0, 4);
-    
-    const similarPotency = products.filter(p => 
-      p.id !== currentProduct.id &&
-      Math.abs(p.thcaPercentage - currentProduct.thcaPercentage) <= 3
-    ).slice(0, 4);
-    
-    const boughtTogether = this.getFrequentPairs(currentProduct.id).slice(0, 4);
-    
-    return {
-      similar: similarEffects,
-      alternative: similarType,
-      potency_match: similarPotency,
-      pairs_well: boughtTogether
-    };
+      return {
+        similar: similarEffectsSliced,
+        alternative: similarTypeSliced,
+        potency_match: similarPotencySliced,
+        pairs_well: boughtTogether
+      };
+    } catch (error) {
+      console.error('❌ Error in RecommendationEngine.getRecommendations:', error);
+      return {
+        similar: [],
+        alternative: [],
+        potency_match: [],
+        pairs_well: []
+      };
+    }
   }
 
   static getFrequentPairs(productId: string): Product[] {
@@ -89,7 +103,12 @@ export class RecommendationEngine {
       score: this.calculatePreferenceScore(product, userPreferences)
     })).sort((a, b) => b.score - a.score);
 
-    return scored.slice(0, 8);
+    try {
+      return Array.isArray(scored) ? scored.slice(0, 8) : [];
+    } catch (error) {
+      console.error('❌ Error in RecommendationEngine.getPersonalizedRecommendations slice:', error);
+      return [];
+    }
   }
 
   private static calculatePreferenceScore(product: Product, preferences: {

@@ -72,9 +72,17 @@ export class SecurityUtils {
     this.csrfTokens.add(token);
     
     if (this.csrfTokens.size > 100) {
-      const tokensArray = Array.from(this.csrfTokens);
-      this.csrfTokens.clear();
-      tokensArray.slice(-50).forEach(t => this.csrfTokens.add(t));
+      try {
+        const tokensArray = Array.from(this.csrfTokens);
+        if (!Array.isArray(tokensArray)) {
+          console.warn('⚠️ SecurityUtils.generateCSRFToken: tokensArray is not an array:', typeof tokensArray, tokensArray);
+          return token;
+        }
+        this.csrfTokens.clear();
+        tokensArray.slice(-50).forEach(t => this.csrfTokens.add(t));
+      } catch (error) {
+        console.error('❌ Error in SecurityUtils.generateCSRFToken slice operation:', error);
+      }
     }
     
     return token;

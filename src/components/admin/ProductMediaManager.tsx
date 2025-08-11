@@ -52,8 +52,19 @@ export const ProductMediaManager: React.FC<ProductMediaManagerProps> = ({
       const videoUrls = videoResults.map(result => result.secure_url);
       
       if (imageUrls.length > 0) {
-        const newImages = [...uploadedImages, ...imageUrls].slice(0, 3);
-        setUploadedImages(newImages);
+        try {
+          const combinedImages = [...uploadedImages, ...imageUrls];
+          if (Array.isArray(combinedImages)) {
+            const newImages = combinedImages.slice(0, 3);
+            setUploadedImages(newImages);
+          } else {
+            console.warn('⚠️ Combined images is not an array:', typeof combinedImages, combinedImages);
+            setUploadedImages(imageUrls.slice(0, 3));
+          }
+        } catch (error) {
+          console.error('❌ Error processing uploaded images:', error);
+          setUploadedImages(imageUrls.slice(0, 3));
+        }
       }
       
       if (videoUrls.length > 0 && !videoUrl) {

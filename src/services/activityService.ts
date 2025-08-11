@@ -100,7 +100,16 @@ export const activityService = {
       }
 
       if (filters?.limit) {
-        filteredLogs = filteredLogs.slice(0, filters.limit);
+        if (!Array.isArray(filteredLogs)) {
+          console.warn('⚠️ activityService.getActivityLogs: filteredLogs is not an array:', typeof filteredLogs, filteredLogs);
+          filteredLogs = [];
+        }
+        try {
+          filteredLogs = filteredLogs.slice(0, filters.limit);
+        } catch (error) {
+          console.error('❌ Error in activityService slice operation:', error, 'filteredLogs:', filteredLogs);
+          filteredLogs = [];
+        }
       }
 
       return { success: true, data: filteredLogs };

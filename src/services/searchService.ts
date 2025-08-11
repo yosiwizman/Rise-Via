@@ -262,7 +262,17 @@ export class SearchService {
       });
     });
 
-    return Array.from(suggestions).slice(0, limit);
+    try {
+      const suggestionsArray = Array.from(suggestions);
+      if (!Array.isArray(suggestionsArray)) {
+        console.warn('⚠️ searchService.getSuggestions: suggestions is not an array:', typeof suggestionsArray, suggestionsArray);
+        return [];
+      }
+      return suggestionsArray.slice(0, limit);
+    } catch (error) {
+      console.error('❌ Error in searchService.getSuggestions slice:', error, 'Suggestions:', suggestions);
+      return [];
+    }
   }
 
   /**
@@ -340,7 +350,16 @@ export class SearchService {
       })
       .sort((a, b) => b.score - a.score);
 
-    return scored.slice(0, limit).map(s => s.product);
+    try {
+      if (!Array.isArray(scored)) {
+        console.warn('⚠️ searchService.getRelatedProducts: scored is not an array:', typeof scored, scored);
+        return [];
+      }
+      return scored.slice(0, limit).map(s => s.product);
+    } catch (error) {
+      console.error('❌ Error in searchService.getRelatedProducts slice:', error, 'Scored:', scored);
+      return [];
+    }
   }
 
   /**

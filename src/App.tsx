@@ -88,9 +88,14 @@ function App() {
       } else if (path === '/blog') {
         setCurrentPage('blog');
       } else if (path && typeof path === 'string' && path.startsWith('/blog/')) {
-        const slug = path.replace('/blog/', '');
-        setBlogSlug(slug);
-        setCurrentPage('blog-post');
+        try {
+          const slug = path && typeof path === 'string' ? path.replace('/blog/', '') : '';
+          setBlogSlug(slug);
+          setCurrentPage('blog-post');
+        } catch (error) {
+          console.error('❌ Error processing blog path:', error, 'Path:', path);
+          setCurrentPage('blog');
+        }
       } else if (path === '/wishlist') {
         setCurrentPage('wishlist');
       } else if (path === '/account') {

@@ -236,11 +236,22 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                     const imageUrls = urls.filter(url => !url.includes('/video/'));
                     const videoUrls = urls.filter(url => url.includes('/video/'));
                     
-                    setFormData(prev => ({
-                      ...prev,
-                      images: [...(prev.images || []), ...imageUrls].slice(0, 3),
-                      ...(videoUrls.length > 0 && !prev.videoUrl && { videoUrl: videoUrls[0] })
-                    }));
+                    setFormData(prev => {
+                      try {
+                        const existingImages = Array.isArray(prev.images) ? prev.images : [];
+                        const newImages = Array.isArray(imageUrls) ? imageUrls : [];
+                        const combinedImages = [...existingImages, ...newImages];
+                        
+                        return {
+                          ...prev,
+                          images: Array.isArray(combinedImages) ? combinedImages.slice(0, 3) : [],
+                          ...(videoUrls.length > 0 && !prev.videoUrl && { videoUrl: videoUrls[0] })
+                        };
+                      } catch (error) {
+                        console.error('❌ Error updating product images:', error);
+                        return prev;
+                      }
+                    });
                   }}
                 />
               </div>

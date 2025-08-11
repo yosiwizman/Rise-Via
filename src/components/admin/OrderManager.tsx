@@ -196,7 +196,16 @@ export const OrderManager: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {status && typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : status} ({count})
+            {status && typeof status === 'string' ? (
+              (() => {
+                try {
+                  return status.charAt(0).toUpperCase() + (status.length > 1 ? status.slice(1) : '');
+                } catch (error) {
+                  console.warn('⚠️ Error processing status string in OrderManager:', error, 'Status:', status);
+                  return status;
+                }
+              })()
+            ) : status} ({count})
           </button>
         ))}
       </div>

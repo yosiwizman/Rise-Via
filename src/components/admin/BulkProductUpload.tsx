@@ -24,7 +24,18 @@ export const BulkProductUpload: React.FC = () => {
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
       
-      const products = (lines && Array.isArray(lines) ? lines.slice(1) : []).map((line, lineIndex) => {
+      const products = (() => {
+        if (!lines || !Array.isArray(lines)) {
+          console.warn('⚠️ BulkProductUpload: lines is not an array:', typeof lines, lines);
+          return [];
+        }
+        try {
+          return lines.slice(1);
+        } catch (error) {
+          console.error('❌ Error in BulkProductUpload lines.slice():', error, 'Lines:', lines);
+          return [];
+        }
+      })().map((line, lineIndex) => {
         const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
         const product: Record<string, unknown> = {};
         
@@ -112,7 +123,18 @@ export const BulkProductUpload: React.FC = () => {
 
       setResults({ 
         success: successCount, 
-        errors: (errors && Array.isArray(errors) ? errors.slice(0, 10) : []),
+        errors: (() => {
+          if (!errors || !Array.isArray(errors)) {
+            console.warn('⚠️ BulkProductUpload: errors is not an array:', typeof errors, errors);
+            return [];
+          }
+          try {
+            return errors.slice(0, 10);
+          } catch (error) {
+            console.error('❌ Error in BulkProductUpload errors.slice():', error, 'Errors:', errors);
+            return [];
+          }
+        })(),
         total: products.length 
       });
     } catch (error: unknown) {

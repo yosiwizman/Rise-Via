@@ -217,7 +217,9 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
             }
           >
             <Calendar className="w-4 h-4 mr-2" />
-            {period && typeof period === 'string' ? period.charAt(0).toUpperCase() + period.slice(1) : period}
+            {period && typeof period === 'string' ? (
+              period.charAt(0).toUpperCase() + (period.length > 1 ? period.slice(1) : '')
+            ) : period}
           </Button>
         ))}
       </motion.div>
@@ -230,7 +232,9 @@ export const RevenueAnalyticsDashboard: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         <MetricCard
-          title={`${selectedPeriod && typeof selectedPeriod === 'string' ? selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1) : selectedPeriod} Revenue`}
+          title={`${selectedPeriod && typeof selectedPeriod === 'string' ? (
+            selectedPeriod.charAt(0).toUpperCase() + (selectedPeriod.length > 1 ? selectedPeriod.slice(1) : '')
+          ) : selectedPeriod} Revenue`}
           value={formatCurrency(getCurrentPeriodRevenue())}
           change={formatPercentage(metrics.trends.revenueGrowth)}
           trend={metrics.trends.revenueGrowth >= 0 ? 'up' : 'down'}

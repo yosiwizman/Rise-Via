@@ -166,7 +166,15 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <SelectContent>
                       {STRAIN_TYPES.map(type => (
                         <SelectItem key={type} value={type}>
-                          {type && typeof type === 'string' ? type.charAt(0).toUpperCase() + type.slice(1) : type}
+                          {type && typeof type === 'string' ? 
+                            (() => {
+                              try {
+                                return type.charAt(0).toUpperCase() + type.slice(1);
+                              } catch (error) {
+                                console.warn('⚠️ Error capitalizing strain type:', error, 'Type:', type);
+                                return type;
+                              }
+                            })() : type}
                         </SelectItem>
                       ))}
                     </SelectContent>

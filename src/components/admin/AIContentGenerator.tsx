@@ -60,7 +60,7 @@ export const AIContentGenerator = () => {
       if (result && result.trim()) {
         setGeneratedContent(result);
       } else {
-        const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType && typeof productForm.strainType === 'string' ? productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1) : 'Hybrid'}**
+        const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType && typeof productForm.strainType === 'string' && productForm.strainType.length > 0 ? productForm.strainType.charAt(0).toUpperCase() + (productForm.strainType.length > 1 ? productForm.strainType.slice(1) : '') : 'Hybrid'}**
 
 Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
 
@@ -82,7 +82,7 @@ Experience the exceptional quality of ${productForm.name}, a premium ${productFo
     } catch (error) {
       console.error('Product generation error:', error);
       
-      const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType && typeof productForm.strainType === 'string' ? productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1) : 'Hybrid'}**
+      const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType && typeof productForm.strainType === 'string' && productForm.strainType.length > 0 ? productForm.strainType.charAt(0).toUpperCase() + (productForm.strainType.length > 1 ? productForm.strainType.slice(1) : '') : 'Hybrid'}**
 
 Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
 
@@ -606,7 +606,15 @@ Understanding ${blogForm.topic} is crucial for cannabis education and responsibl
                       type="datetime-local"
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
-                      min={new Date().toISOString()?.slice(0, 16) || ''}
+                      min={(() => {
+                        try {
+                          const isoString = new Date().toISOString();
+                          return isoString && typeof isoString === 'string' && isoString.length >= 16 ? isoString.slice(0, 16) : '';
+                        } catch (error) {
+                          console.warn('⚠️ Error creating datetime-local min value:', error);
+                          return '';
+                        }
+                      })()}
                       className="text-gray-900"
                     />
                   </div>

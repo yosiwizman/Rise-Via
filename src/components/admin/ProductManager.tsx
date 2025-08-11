@@ -96,14 +96,10 @@ export const ProductManager: React.FC = () => {
     if (!adjustment || typeof adjustment !== 'string') return;
 
     const operator = adjustment[0];
-    const value = parseFloat(adjustment.slice(1));
-
-    if (isNaN(value)) {
-      alert('Invalid adjustment value');
-      return;
-    }
-
-    setProducts(prev => prev.map(p => {
+    try {
+      const value = parseFloat(adjustment && typeof adjustment === 'string' ? adjustment.slice(1) : '0');
+      
+      setProducts(prev => prev.map(p => {
       if (!selectedProducts.includes(p.id!)) return p;
 
       let newPrice = p.price || 0;
@@ -124,6 +120,10 @@ export const ProductManager: React.FC = () => {
       return { ...p, price: Math.max(0, Math.round(newPrice * 100) / 100) };
     }));
     setSelectedProducts([]);
+    } catch (error) {
+      console.error('❌ Error in handleBulkPriceAdjustment:', error, 'Adjustment:', adjustment);
+      alert('Error processing price adjustment');
+    }
   };
 
   const handleQuickEdit = (product: Product, field: string, value: string | number | boolean) => {

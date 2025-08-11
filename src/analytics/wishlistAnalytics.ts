@@ -88,7 +88,17 @@ export class WishlistAnalyticsService {
               metrics.topCategories.push({ category: item.category, count: 1 });
             }
             metrics.topCategories.sort((a, b) => b.count - a.count);
-            metrics.topCategories = metrics.topCategories.slice(0, 10);
+            try {
+              if (Array.isArray(metrics.topCategories)) {
+                metrics.topCategories = metrics.topCategories.slice(0, 10);
+              } else {
+                console.warn('⚠️ metrics.topCategories is not an array for slice operation:', typeof metrics.topCategories, metrics.topCategories);
+                metrics.topCategories = [];
+              }
+            } catch (error) {
+              console.error('❌ Error in topCategories slice operation:', error);
+              metrics.topCategories = [];
+            }
           }
           break;
         case 'remove':
@@ -203,7 +213,17 @@ export class WishlistAnalyticsService {
         console.warn('⚠️ Analytics events is not an array:', typeof events, events);
         return [];
       }
-      return events.slice(-limit);
+      try {
+        if (Array.isArray(events)) {
+          return events.slice(-limit);
+        } else {
+          console.warn('⚠️ Events is not an array for slice operation:', typeof events, events);
+          return [];
+        }
+      } catch (sliceError) {
+        console.error('❌ Error in events slice operation:', sliceError);
+        return [];
+      }
     } catch (error) {
       console.error('❌ Error in getAnalyticsEvents:', error);
       return [];
@@ -257,10 +277,22 @@ export class WishlistAnalyticsService {
       }
     });
 
-    const topCategories = Object.entries(categoryCount)
-      .map(([category, count]) => ({ category, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    let topCategories: Array<{ category: string; count: number }> = [];
+    try {
+      const categoriesArray = Object.entries(categoryCount)
+        .map(([category, count]) => ({ category, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      if (Array.isArray(categoriesArray)) {
+        topCategories = categoriesArray.slice(0, 5);
+      } else {
+        console.warn('⚠️ Categories array is not an array for slice operation:', typeof categoriesArray, categoriesArray);
+        topCategories = [];
+      }
+    } catch (error) {
+      console.error('❌ Error in topCategories slice operation:', error);
+      topCategories = [];
+    }
 
     return {
       date: today.toDateString(),

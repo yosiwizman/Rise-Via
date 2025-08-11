@@ -412,7 +412,7 @@ export const InventoryManagementDashboard: React.FC = () => {
                       : "border-gray-300 text-gray-600 hover:bg-gray-50"
                     }
                   >
-                    {category === 'all' ? 'All' : (category && typeof category === 'string' ? category.charAt(0).toUpperCase() + category.slice(1) : '')}
+                    {category === 'all' ? 'All' : (category && typeof category === 'string' ? category.charAt(0).toUpperCase() + (category.length > 1 ? category.slice(1) : '') : '')}
                   </Button>
                 ))}
               </div>

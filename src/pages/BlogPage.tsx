@@ -137,7 +137,15 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
               >
                 All Topics
               </Button>
-              {getAllKeywords().slice(0, 8).map(keyword => (
+              {(() => {
+                try {
+                  const keywords = getAllKeywords();
+                  return Array.isArray(keywords) ? keywords.slice(0, 8) : [];
+                } catch (error) {
+                  console.warn('⚠️ Error getting keywords in BlogPage:', error);
+                  return [];
+                }
+              })().map(keyword => (
                 <Button
                   key={keyword}
                   onClick={() => setSelectedKeyword(keyword)}
@@ -200,7 +208,14 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
                   {/* Keywords */}
                   {post.keywords.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {post.keywords.slice(0, 3).map(keyword => (
+                      {(() => {
+                        try {
+                          return Array.isArray(post.keywords) ? post.keywords.slice(0, 3) : [];
+                        } catch (error) {
+                          console.warn('⚠️ Error slicing keywords in BlogPage:', error, 'Keywords:', post.keywords);
+                          return [];
+                        }
+                      })().map(keyword => (
                         <Badge 
                           key={keyword} 
                           variant="secondary" 

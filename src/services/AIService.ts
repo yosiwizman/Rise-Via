@@ -123,8 +123,13 @@ Create a 150-word description that highlights the unique characteristics, effect
       });
 
       // Keep conversation history limited to last 10 messages
-      if (this.conversationHistory.length > 10) {
-        this.conversationHistory = this.conversationHistory.slice(-10);
+      if (Array.isArray(this.conversationHistory) && this.conversationHistory.length > 10) {
+        try {
+          this.conversationHistory = this.conversationHistory.slice(-10);
+        } catch (error) {
+          console.warn('⚠️ Error slicing conversation history:', error);
+          this.conversationHistory = [];
+        }
       }
 
       const response = await fetch('/api/ai-chat', {

@@ -333,7 +333,7 @@ export const AccountPage = () => {
                   No orders yet. Start shopping to see your orders here!
                 </div>
               ) : (
-                orders.slice(0, 5).map((order) => (
+                (Array.isArray(orders) ? orders : []).slice(0, 5).map((order) => (
                   <div key={order.id} className="border-b pb-3 last:border-b-0">
                     <div className="flex justify-between items-start">
                       <div>
@@ -371,7 +371,7 @@ export const AccountPage = () => {
                   No points activity yet. Make a purchase to start earning points!
                 </div>
               ) : (
-                loyaltyTransactions.slice(0, 10).map((transaction) => (
+                (Array.isArray(loyaltyTransactions) ? loyaltyTransactions : []).slice(0, 10).map((transaction) => (
                   <div key={transaction.id} className="flex justify-between items-center">
                     <div>
                       <div className="text-sm font-medium">{transaction.description}</div>
@@ -408,7 +408,7 @@ export const AccountPage = () => {
                   No price alerts set. Visit product pages to set alerts when prices drop!
                 </div>
               ) : (
-                priceAlerts.slice(0, 5).map((alert) => (
+                (Array.isArray(priceAlerts) ? priceAlerts : []).slice(0, 5).map((alert) => (
                   <div key={alert.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <div className="font-medium text-sm">{alert.product_name}</div>

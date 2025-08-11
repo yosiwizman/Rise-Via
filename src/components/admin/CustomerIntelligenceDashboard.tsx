@@ -420,7 +420,14 @@ export const CustomerIntelligenceDashboard: React.FC = () => {
                       : "border-gray-300 text-gray-600 hover:bg-gray-50"
                     }
                   >
-                    {segment === 'all' ? 'All' : (segment && typeof segment === 'string' ? segment.charAt(0).toUpperCase() + segment.slice(1).replace('_', ' ') : '')}
+                    {segment === 'all' ? 'All' : (segment && typeof segment === 'string' ? (() => {
+                      try {
+                        return segment.charAt(0).toUpperCase() + segment.slice(1).replace('_', ' ');
+                      } catch (error) {
+                        console.warn('⚠️ Error processing segment string:', error, 'Segment:', segment);
+                        return segment;
+                      }
+                    })() : '')}
                   </Button>
                 ))}
               </div>

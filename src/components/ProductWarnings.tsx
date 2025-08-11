@@ -39,7 +39,7 @@ export const ProductWarnings = ({ placement, compact = false }: ProductWarningsP
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="text-white text-sm">
           <div className="space-y-1">
-            {warnings.slice(0, 2).map((warning, index) => (
+            {(Array.isArray(warnings) ? warnings.slice(0, 2) : []).map((warning, index) => (
               <div key={index}>⚠️ {warning}</div>
             ))}
             {warnings.length > 2 && (

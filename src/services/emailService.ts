@@ -122,11 +122,11 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: 'Rise Via <orders@risevia.com>',
         to,
-        subject: `Order Update #${orderData.orderNumber} - ${newStatus && typeof newStatus === 'string' ? newStatus.charAt(0).toUpperCase() + newStatus.slice(1) : 'Unknown'}`,
+        subject: `Order Update #${orderData.orderNumber} - ${newStatus && typeof newStatus === 'string' && newStatus.length > 0 ? newStatus.charAt(0).toUpperCase() + newStatus.slice(1) : 'Unknown'}`,
         html: `
           <h1>Order Status Update</h1>
           <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
-          <p><strong>Status:</strong> ${newStatus && typeof newStatus === 'string' ? newStatus.charAt(0).toUpperCase() + newStatus.slice(1) : 'Unknown'}</p>
+          <p><strong>Status:</strong> ${newStatus && typeof newStatus === 'string' && newStatus.length > 0 ? newStatus.charAt(0).toUpperCase() + newStatus.slice(1) : 'Unknown'}</p>
           <p>${statusMessages[newStatus as keyof typeof statusMessages] || 'Your order status has been updated.'}</p>
           <p><strong>Total:</strong> $${orderData.total}</p>
           <p>Thank you for choosing Rise Via!</p>

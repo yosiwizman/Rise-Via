@@ -84,11 +84,18 @@ export const DashboardMetrics: React.FC = () => {
         todayOrders: Math.round(revenueMetrics.dailyRevenue / Math.max(revenueMetrics.averageOrderValue, 1)),
         totalCustomers: customerAnalytics.totalCustomers,
         lowStockProducts: (inventoryAnalytics.lowStockAlerts && Array.isArray(inventoryAnalytics.lowStockAlerts)) 
-          ? inventoryAnalytics.lowStockAlerts.slice(0, 5).map(item => ({
-              id: item.productId,
-              name: item.productName,
-              inventory: item.currentStock
-            }))
+          ? (() => {
+              try {
+                return inventoryAnalytics.lowStockAlerts.slice(0, 5).map(item => ({
+                  id: item.productId,
+                  name: item.productName,
+                  inventory: item.currentStock
+                }));
+              } catch (error) {
+                console.warn('⚠️ Error slicing lowStockAlerts in DashboardMetrics:', error);
+                return [];
+              }
+            })()
           : [],
         pendingOrders: Math.floor(Math.random() * 20) + 5,
         activeProducts: inventoryAnalytics.totalProducts,

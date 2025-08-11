@@ -169,15 +169,26 @@ export class RevenueAnalyticsService {
       });
     });
 
-    return Array.from(productMap.entries())
-      .map(([productId, data]) => ({
-        productId,
-        productName: data.productName,
-        revenue: data.revenue,
-        orders: data.orders.size
-      }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 20);
+    try {
+      const productArray = Array.from(productMap.entries());
+      if (!Array.isArray(productArray)) {
+        console.warn('⚠️ revenueAnalytics.calculateRevenueByProduct: productArray is not an array:', typeof productArray, productArray);
+        return [];
+      }
+      
+      return productArray
+        .map(([productId, data]) => ({
+          productId,
+          productName: data.productName,
+          revenue: data.revenue,
+          orders: data.orders.size
+        }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 20);
+    } catch (error) {
+      console.error('❌ Error in revenueAnalytics.calculateRevenueByProduct:', error);
+      return [];
+    }
   }
 
   private calculateRevenueByCategory(transactions: SalesTransaction[]): Array<{ category: string; revenue: number; percentage: number }> {
@@ -268,9 +279,20 @@ export class RevenueAnalyticsService {
       monthlyData.set(monthKey, existing);
     });
 
-    const sortedMonths = Array.from(monthlyData.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12);
+    try {
+      const monthlyArray = Array.from(monthlyData.entries());
+      if (!Array.isArray(monthlyArray)) {
+        console.warn('⚠️ revenueAnalytics.calculateSeasonalData: monthlyArray is not an array:', typeof monthlyArray, monthlyArray);
+        return [];
+      }
+      
+      const sortedMonths = monthlyArray
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-12);
+    } catch (error) {
+      console.error('❌ Error in revenueAnalytics.calculateSeasonalData:', error);
+      return [];
+    }
 
     return sortedMonths.map(([period, data], index) => {
       const previousData = index > 0 ? sortedMonths[index - 1][1] : null;
@@ -392,7 +414,7 @@ export class RevenueAnalyticsService {
         grossMargin: metrics.profitMargins.grossMargin
       },
       trends: metrics.trends,
-      topProducts: metrics.revenueByProduct.slice(0, 10),
+      topProducts: Array.isArray(metrics.revenueByProduct) ? metrics.revenueByProduct.slice(0, 10) : [],
       categoryBreakdown: metrics.revenueByCategory,
       seasonalData: metrics.seasonalData,
       transactionCount: transactions.length

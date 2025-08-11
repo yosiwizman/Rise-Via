@@ -12,7 +12,7 @@ interface HomePageProps {
 }
 
 export const HomePage = ({ onNavigate }: HomePageProps) => {
-  const featuredStrains = strainsData.slice(0, 3);
+  const featuredStrains = Array.isArray(strainsData) ? strainsData.slice(0, 3) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-teal-50">

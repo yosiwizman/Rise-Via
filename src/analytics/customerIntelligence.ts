@@ -140,13 +140,24 @@ export class CustomerIntelligenceService {
       });
     });
 
-    return Array.from(categoryCount.entries())
-      .map(([category, count]) => ({
-        category,
-        percentage: (count / totalItems) * 100
-      }))
-      .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, 5);
+    try {
+      const categoryArray = Array.from(categoryCount.entries());
+      if (!Array.isArray(categoryArray)) {
+        console.warn('⚠️ categoryCount.entries() is not an array in analyzePreferredCategories');
+        return [];
+      }
+      
+      return categoryArray
+        .map(([category, count]) => ({
+          category,
+          percentage: (count / totalItems) * 100
+        }))
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 5);
+    } catch (error) {
+      console.error('❌ Error in analyzePreferredCategories slice operation:', error);
+      return [];
+    }
   }
 
   private determineCustomerSegment(
@@ -201,17 +212,19 @@ export class CustomerIntelligenceService {
     const churnRate = (churnedCustomers / totalCustomers) * 100;
     
     const segmentCounts = this.calculateSegmentDistribution(customerMetrics);
-    const topCustomers = customerMetrics
-      .sort((a, b) => b.lifetimeValue - a.lifetimeValue)
-      .slice(0, 20);
+    const topCustomers = Array.isArray(customerMetrics) ? 
+      customerMetrics
+        .sort((a, b) => b.lifetimeValue - a.lifetimeValue)
+        .slice(0, 20) : [];
     
     const churnRiskDistribution = this.calculateChurnRiskDistribution(customerMetrics);
     const retentionRate = this.calculateRetentionRate(customerMetrics);
     const newCustomerRate = this.calculateNewCustomerRate(customerMetrics);
-    const reactivationOpportunities = customerMetrics
-      .filter(c => c.segment === 'at_risk' && c.lifetimeValue > 100)
-      .sort((a, b) => b.lifetimeValue - a.lifetimeValue)
-      .slice(0, 10);
+    const reactivationOpportunities = Array.isArray(customerMetrics) ? 
+      customerMetrics
+        .filter(c => c.segment === 'at_risk' && c.lifetimeValue > 100)
+        .sort((a, b) => b.lifetimeValue - a.lifetimeValue)
+        .slice(0, 10) : [];
 
     return {
       totalCustomers,

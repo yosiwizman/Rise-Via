@@ -149,7 +149,18 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
               <div>
                 <p className="text-sm font-medium">Benefits:</p>
                 <ul className="text-xs text-gray-600 list-disc list-inside">
-                  {(tierInfo.benefits && Array.isArray(tierInfo.benefits) ? tierInfo.benefits.slice(0, 2) : []).map((benefit, index) => (
+                  {(() => {
+                    try {
+                      if (!tierInfo?.benefits || !Array.isArray(tierInfo.benefits)) {
+                        console.warn('⚠️ PurchaseOrderForm: tierInfo.benefits is not an array:', typeof tierInfo?.benefits, tierInfo?.benefits);
+                        return [];
+                      }
+                      return tierInfo.benefits.slice(0, 2);
+                    } catch (error) {
+                      console.error('❌ Error in PurchaseOrderForm benefits slice:', error);
+                      return [];
+                    }
+                  })().map((benefit, index) => (
                     <li key={index}>{benefit}</li>
                   ))}
                 </ul>
