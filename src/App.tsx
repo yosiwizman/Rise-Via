@@ -150,6 +150,10 @@ function App() {
         }
         if (adaWidget) {
           const element = adaWidget as HTMLElement;
+          if (!element || !element.style) {
+            console.warn('⚠️ UserWay widget element not properly initialized');
+            return;
+          }
           element.style.removeProperty('left');
           element.removeAttribute('offscreen');
 
@@ -195,6 +199,7 @@ function App() {
           const styleObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                if (!element || !element.style) return;
                 const currentStyle = element.getAttribute('style') || '';
                 if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
                   element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
@@ -210,6 +215,7 @@ function App() {
 
           // Interval to maintain right-side positioning
           const maintainPosition = () => {
+            if (!element || !element.style) return;
             const currentStyle = element.getAttribute('style') || '';
             if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
               element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
