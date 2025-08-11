@@ -14,8 +14,24 @@ export const ComplianceReports: React.FC = () => {
     averageRiskScore: number;
     complianceRate: number;
   } | null>(null);
-  const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(() => {
+    try {
+      const dateStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      return dateStr && typeof dateStr === 'string' ? dateStr.split('T')[0] : '';
+    } catch (error) {
+      console.error('❌ Error creating start date in ComplianceReports:', error);
+      return '';
+    }
+  });
+  const [endDate, setEndDate] = useState(() => {
+    try {
+      const dateStr = new Date().toISOString();
+      return dateStr && typeof dateStr === 'string' ? dateStr.split('T')[0] : '';
+    } catch (error) {
+      console.error('❌ Error creating end date in ComplianceReports:', error);
+      return '';
+    }
+  });
   const [loading, setLoading] = useState(false);
 
   const generateReport = useCallback(async () => {

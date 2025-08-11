@@ -115,7 +115,15 @@ export const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
                   id="birthDate"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
+                  max={(() => {
+                    try {
+                      const dateStr = new Date().toISOString();
+                      return dateStr && typeof dateStr === 'string' ? dateStr.split('T')[0] : '';
+                    } catch (error) {
+                      console.error('❌ Error creating max date in AgeVerificationModal:', error);
+                      return '';
+                    }
+                  })()}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   required
                 />
