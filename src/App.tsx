@@ -8,7 +8,6 @@ import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
-import { FloatingChatButton } from './components/FloatingChatButton';
 import MobileCartButton from './components/MobileCartButton';
 import { ToastEventHandler } from './components/ToastEventHandler';
 import { ChatBot } from './components/ChatBot';
@@ -313,13 +312,12 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
-                <FloatingChatButton />
+                <ChatBot />
               </>
             )}
           </div>
           <ToastEventHandler />
           <Toaster />
-          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
       <Toaster />
