@@ -37,8 +37,8 @@ export const ProductMediaManager: React.FC<ProductMediaManagerProps> = ({
     setUploading(true);
     
     try {
-      const imageFiles = files.filter(file => file.type.startsWith('image/'));
-      const videoFiles = files.filter(file => file.type.startsWith('video/'));
+      const imageFiles = files.filter(file => file && file.type && file.type.startsWith('image/'));
+      const videoFiles = files.filter(file => file && file.type && file.type.startsWith('video/'));
       
       const imagePromises = imageFiles.map(file => uploadToCloudinary(file, 'products'));
       const videoPromises = videoFiles.map(file => uploadVideoToCloudinary(file, 'products/videos'));
