@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -216,9 +216,19 @@ export const CartSidebar = ({ isOpen, onClose, onNavigate }: CartSidebarProps) =
               className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal text-white py-3 text-lg touch-optimized"
               onClick={() => {
                 console.log('🚀 Proceeding to checkout...');
-                if (onNavigate) {
-                  onNavigate('checkout');
-                  onClose();
+                try {
+                  if (onNavigate) {
+                    console.log('🔄 Navigating to checkout page...');
+                    startTransition(() => {
+                      onNavigate('checkout');
+                      onClose();
+                    });
+                  } else {
+                    console.error('❌ onNavigate function not available');
+                  }
+                } catch (error) {
+                  console.error('❌ Checkout navigation error:', error);
+                  alert('Unable to proceed to checkout. Please try again.');
                 }
               }}
             >
