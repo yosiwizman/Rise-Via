@@ -6,6 +6,7 @@ import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
 import { emailAutomationService } from '../services/EmailAutomation';
 import { membershipService } from '../services/membershipService';
+import { SecurityUtils } from '../utils/security';
 
 export interface Customer {
   id?: string;
@@ -50,6 +51,7 @@ export interface RegisterResult {
   success: boolean;
   customer?: Customer;
   message?: string;
+  email?: string;
 }
 
 export interface RegistrationData {
@@ -225,6 +227,17 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           });
         }
 
+        const verificationToken = SecurityUtils.generateVerificationToken();
+        try {
+          await emailService.sendVerificationEmail(
+            registrationData.email,
+            registrationData.firstName,
+            verificationToken
+          );
+        } catch (emailError) {
+          console.error('Verification email failed:', emailError);
+        }
+
         try {
           await emailService.sendWelcomeEmail(
             registrationData.email,
@@ -261,7 +274,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
         setCustomer(customerData as Customer);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData as Customer };
+        return { success: true, customer: customerData as Customer, email: registrationData.email };
       }
 
       return { success: false, message: 'Registration failed' };

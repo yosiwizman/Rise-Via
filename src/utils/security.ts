@@ -100,6 +100,35 @@ export class SecurityUtils {
   }
 
   /**
+   * Validates password strength with complexity requirements
+   */
+  static validatePassword(password: string): { isValid: boolean; message?: string } {
+    if (password.length < 8) {
+      return { isValid: false, message: 'Password must be at least 8 characters' };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+    }
+    if (!/[a-z]/.test(password)) {
+      return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+    }
+    if (!/\d/.test(password)) {
+      return { isValid: false, message: 'Password must contain at least one number' };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return { isValid: false, message: 'Password must contain at least one special character' };
+    }
+    return { isValid: true };
+  }
+
+  /**
+   * Generates a secure verification token
+   */
+  static generateVerificationToken(): string {
+    return this.generateCSRFToken();
+  }
+
+  /**
    * Sanitizes and validates review content
    */
   static sanitizeReviewContent(content: string): { sanitized: string; isValid: boolean } {
