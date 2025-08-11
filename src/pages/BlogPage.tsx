@@ -55,7 +55,7 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
 
   useEffect(() => {
     filterPosts();
-  }, [filterPosts]);
+  }, [posts, searchTerm, selectedKeyword, filterPosts]);
 
   const getAllKeywords = () => {
     const keywordSet = new Set<string>();
