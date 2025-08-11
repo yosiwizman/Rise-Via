@@ -198,12 +198,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
     try {
       const authResult = await authService.register(
         registrationData.email,
-        registrationData.password,
-        {
-          first_name: registrationData.firstName,
-          last_name: registrationData.lastName,
-          phone: registrationData.phone
-        }
+        registrationData.password
       );
 
       if (authResult.user) {
