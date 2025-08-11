@@ -55,7 +55,7 @@ function App() {
 
   useEffect(() => {
     startTransition(() => {
-      const path = window.location.pathname.toLowerCase();
+      const path = (window.location.pathname || '/').toLowerCase();
       const urlParams = new URLSearchParams(window.location.search);
       const page = urlParams.get('page');
 
@@ -387,6 +387,8 @@ function App() {
                   currentPage={currentPage}
                   onNavigate={setCurrentPage}
                   setSearchOpen={setSearchOpen}
+                  userMenuOpen={false}
+                  setUserMenuOpen={() => {}}
                 />
                 <main>
                   {renderCurrentPage()}

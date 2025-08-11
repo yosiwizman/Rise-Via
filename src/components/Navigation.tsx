@@ -11,9 +11,11 @@ interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   setSearchOpen: (open: boolean) => void;
+  userMenuOpen?: boolean;
+  setUserMenuOpen?: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, setSearchOpen, userMenuOpen, setUserMenuOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { getWishlistCount } = useWishlist();
