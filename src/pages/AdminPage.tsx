@@ -22,6 +22,7 @@ import { AIContentGenerator } from '../components/admin/AIContentGenerator';
 import { EmailManager } from '../components/admin/EmailManager';
 import { LabResultsManager } from '../components/admin/LabResultsManager';
 import { ComplianceReports } from './admin/ComplianceReports';
+import { PopupManager } from '../components/admin/PopupManager';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -122,6 +123,7 @@ export const AdminPage = () => {
     { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'lab-results', label: 'Lab Results', icon: FileText },
     { id: 'compliance', label: 'Compliance', icon: Shield },
+    { id: 'popups', label: 'Popup Management', icon: FileText },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
     { id: 'payments', label: 'Payment Settings', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -178,6 +180,9 @@ export const AdminPage = () => {
 
       case 'compliance':
         return <ComplianceReports />;
+      
+      case 'popups':
+        return <PopupManager />;
       
       default:
         return (

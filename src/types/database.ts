@@ -56,3 +56,20 @@ export interface BlogPost {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface Popup {
+  id: string;
+  title: string;
+  content: string;
+  image_url?: string;
+  trigger_type: 'timer' | 'exit_intent' | 'scroll' | 'page_load';
+  trigger_delay: number;
+  is_active: boolean;
+  priority: number;
+  target_pages: string[];
+  display_frequency: 'once_per_session' | 'once_per_day' | 'always';
+  start_date?: Date;
+  end_date?: Date;
+  created_at: Date;
+  updated_at: Date;
+}

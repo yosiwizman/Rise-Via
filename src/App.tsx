@@ -2,6 +2,7 @@ import { useState, useEffect, startTransition } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
+import { PopupManager } from './components/PopupManager';
 import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
@@ -374,6 +375,9 @@ function App() {
             {showStateBlocker && (
               <StateBlocker onStateVerified={handleStateVerified} />
             )}
+
+            {/* Popup Management System */}
+            <PopupManager currentPage={currentPage} />
             {isAgeVerified && (
               <>
                 <WishlistInitializer />

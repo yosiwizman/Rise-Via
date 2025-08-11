@@ -282,6 +282,30 @@ export async function initializeTables() {
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)`;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS popups (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        image_url VARCHAR(500),
+        trigger_type VARCHAR(50) NOT NULL DEFAULT 'timer',
+        trigger_delay INTEGER DEFAULT 5000,
+        is_active BOOLEAN DEFAULT true,
+        priority INTEGER DEFAULT 1,
+        target_pages TEXT[] DEFAULT '{}',
+        display_frequency VARCHAR(50) DEFAULT 'once_per_session',
+        start_date TIMESTAMP,
+        end_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for popups
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_active ON popups(is_active)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_priority ON popups(priority)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_trigger_type ON popups(trigger_type)`;
+
     console.log('All tables initialized successfully');
     return true;
   } catch (error) {
