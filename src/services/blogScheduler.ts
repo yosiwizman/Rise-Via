@@ -31,8 +31,8 @@ export class BlogScheduler {
       if (publishedCount > 0) {
         console.log(`📝 Published ${publishedCount} scheduled blog posts`);
       }
-    } catch (error) {
-      console.error('❌ Failed to publish scheduled posts:', error);
+    } catch (err) {
+      console.error('❌ Failed to publish scheduled posts:', err);
     }
   }
 
@@ -57,7 +57,7 @@ export class BlogScheduler {
           targetLength: 500,
           tone: 'educational'
         });
-      } catch (error) {
+      } catch {
         console.warn('AI service unavailable, using fallback content');
         content = this.generateFallbackContent(randomTopic);
       }

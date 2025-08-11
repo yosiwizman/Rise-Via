@@ -282,7 +282,7 @@ This content is for educational purposes only and has not been evaluated by the 
       }
       
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: unknown[] = [];
       let paramIndex = 1;
 
       if (data.title !== undefined) {

@@ -27,8 +27,8 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
       setPost(null);
       const blogPost = await blogService.getPostBySlug(slug);
       setPost(blogPost);
-    } catch (error) {
-      console.error('Failed to load blog post:', error);
+    } catch (err) {
+      console.error('Failed to load blog post:', err);
       setPost(null);
     } finally {
       setLoading(false);
@@ -60,7 +60,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
           text: post?.excerpt,
           url: url
         });
-      } catch (error) {
+      } catch {
         console.log('Share cancelled');
       }
     } else {
@@ -68,8 +68,8 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy URL:', error);
+      } catch (err) {
+        console.error('Failed to copy URL:', err);
       }
     }
   };
