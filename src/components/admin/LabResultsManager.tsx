@@ -4,43 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-
-const sql = Object.assign(
-  (strings: TemplateStringsArray, ...values: unknown[]) => {
-    if (!strings || !strings.length) {
-      console.log('Mock SQL Query (LabResultsManager): strings is undefined or empty');
-      return Promise.resolve([]);
-    }
-    const query = strings.join('?');
-    console.log('Mock SQL Query (LabResultsManager):', query, values);
-    
-    if (query.includes('lab_results')) {
-      return Promise.resolve([{
-        id: 'mock-lab-result-1',
-        product_id: 'PROD-001',
-        batch_id: 'BATCH-2024-001',
-        test_date: '2024-01-15',
-        expiration_date: '2025-01-15',
-        thca_percentage: 22.5,
-        delta9_thc_percentage: 0.8,
-        cbd_percentage: 1.2,
-        pesticides_passed: true,
-        heavy_metals_passed: true,
-        microbials_passed: true,
-        terpene_profile: { myrcene: 0.5, limonene: 0.3 },
-        coa_url: 'https://storage.risevia.com/coa/mock-coa.pdf',
-        qr_code: '{"batch_id":"BATCH-2024-001","certificate_number":"COA-001"}',
-        lab_name: 'Cannabis Testing Lab',
-        certificate_number: 'COA-001'
-      }]);
-    }
-    
-    return Promise.resolve([]);
-  },
-  {
-    unsafe: (str: string) => str
-  }
-);
+import { sql } from '../../lib/neon';
 
 interface LabResult {
   id?: string;
