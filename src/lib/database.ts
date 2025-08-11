@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
+const isValidDatabaseUrl = DATABASE_URL && typeof DATABASE_URL === 'string' && DATABASE_URL.startsWith('postgresql://');
 
 if (!isValidDatabaseUrl) {
   console.warn('⚠️ No valid database URL provided in database.ts. Running in development mode with mock data.');

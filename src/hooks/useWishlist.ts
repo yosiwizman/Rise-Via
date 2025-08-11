@@ -45,7 +45,7 @@ const mapDbItemToWishlistItem = (dbItem: DbItem): WishlistItem => {
   try {
     if (dbItem.effects) {
       if (typeof dbItem.effects === 'string') {
-        if (dbItem.effects.startsWith('[') && dbItem.effects.endsWith(']')) {
+        if (dbItem.effects && dbItem.effects.startsWith('[') && dbItem.effects.endsWith(']')) {
           effects = JSON.parse(dbItem.effects);
         } else {
           effects = dbItem.effects.split(',').map((effect: string) => effect.trim());

@@ -387,8 +387,6 @@ function App() {
                   currentPage={currentPage}
                   onNavigate={setCurrentPage}
                   setSearchOpen={setSearchOpen}
-                  userMenuOpen={false}
-                  setUserMenuOpen={() => {}}
                 />
                 <main>
                   {renderCurrentPage()}
