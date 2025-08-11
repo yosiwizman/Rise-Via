@@ -109,7 +109,7 @@ export async function initializeTables() {
       CREATE TABLE IF NOT EXISTS wishlist_sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_token VARCHAR(255) UNIQUE NOT NULL,
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -119,7 +119,7 @@ export async function initializeTables() {
     await sql`
       CREATE TABLE IF NOT EXISTS wishlist_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        session_id UUID REFERENCES wishlist_sessions(id) ON DELETE CASCADE,
+        session_id UUID,
         product_id VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
@@ -139,8 +139,8 @@ export async function initializeTables() {
       CREATE TABLE IF NOT EXISTS orders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         order_number VARCHAR(50) UNIQUE NOT NULL,
-        user_id UUID REFERENCES users(id),
-        customer_id UUID REFERENCES customers(id),
+        user_id UUID,
+        customer_id UUID,
         total DECIMAL(10,2) NOT NULL,
         subtotal DECIMAL(10,2) NOT NULL,
         tax DECIMAL(10,2) DEFAULT 0,
@@ -161,7 +161,7 @@ export async function initializeTables() {
     await sql`
       CREATE TABLE IF NOT EXISTS order_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+        order_id UUID,
         product_id VARCHAR(255) NOT NULL,
         product_name VARCHAR(255) NOT NULL,
         quantity INTEGER NOT NULL,
