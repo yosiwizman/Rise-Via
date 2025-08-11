@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { sql } from '../lib/neon';
 
 interface Customer {
   id?: string;
@@ -15,70 +15,111 @@ interface SearchFilters {
 
 export const customerService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('customers')
-      .select(`
-        *,
-        customer_profiles (*)
-      `)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const customers = await sql`
+        SELECT 
+          c.*,
+          cp.segment,
+          cp.is_b2b,
+          cp.loyalty_points,
+          cp.total_spent,
+          cp.last_order_date
+        FROM customers c
+        LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
+        ORDER BY c.created_at DESC
+      `;
+      
+      return customers;
+    } catch (error) {
+      throw error;
+    }
   },
 
   async create(customer: Customer) {
-    const { data, error } = await supabase
-      .from('customers')
-      .insert([customer])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    const { error: profileError } = await supabase
-      .from('customer_profiles')
-      .insert([{ customer_id: data.id }]);
-    
-    if (profileError) throw profileError;
-    
-    return data;
+    try {
+      const customers = await sql`
+        INSERT INTO customers (email, first_name, last_name, phone, created_at)
+        VALUES (${customer.email}, ${customer.first_name}, ${customer.last_name}, ${customer.phone || null}, NOW())
+        RETURNING *
+      `;
+      
+      const newCustomer = customers[0];
+      
+      await sql`
+        INSERT INTO customer_profiles (customer_id, created_at)
+        VALUES (${newCustomer.id}, NOW())
+      `;
+      
+      return newCustomer;
+    } catch (error) {
+      throw error;
+    }
   },
 
   async update(id: string, updates: Partial<Customer>) {
-    const { data, error } = await supabase
-      .from('customers')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const setClause = Object.keys(updates)
+        .map(key => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
+        .join(', ');
+      
+      const customers = await sql`
+        UPDATE customers 
+        SET ${sql.unsafe(setClause)}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `;
+      
+      return customers[0];
+    } catch (error) {
+      throw error;
+    }
   },
 
   async search(searchTerm: string, filters: SearchFilters = {}) {
-    let query = supabase
-      .from('customers')
-      .select(`
-        *,
-        customer_profiles (*)
-      `);
-
-    if (searchTerm) {
-      query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+    try {
+      let whereConditions = [];
+      let params = [];
+      
+      if (searchTerm) {
+        whereConditions.push(`(
+          c.first_name ILIKE $${params.length + 1} OR 
+          c.last_name ILIKE $${params.length + 1} OR 
+          c.email ILIKE $${params.length + 1}
+        )`);
+        params.push(`%${searchTerm}%`);
+      }
+      
+      if (filters.segment && filters.segment !== 'all') {
+        whereConditions.push(`cp.segment = $${params.length + 1}`);
+        params.push(filters.segment);
+      }
+      
+      if (filters.isB2B && filters.isB2B !== 'all') {
+        whereConditions.push(`cp.is_b2b = $${params.length + 1}`);
+        params.push(filters.isB2B === 'true');
+      }
+      
+      const whereClause = whereConditions.length > 0 
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
+      
+      const customers = await sql`
+        SELECT 
+          c.*,
+          cp.segment,
+          cp.is_b2b,
+          cp.loyalty_points,
+          cp.total_spent,
+          cp.last_order_date
+        FROM customers c
+        LEFT JOIN customer_profiles cp ON c.id = cp.customer_id
+        ${sql.unsafe(whereClause)}
+        ORDER BY c.created_at DESC
+      `;
+      
+      return customers;
+    } catch (error) {
+      throw error;
     }
-
-    if (filters.segment && filters.segment !== 'all') {
-      query = query.eq('customer_profiles.segment', filters.segment);
-    }
-
-    if (filters.isB2B && filters.isB2B !== 'all') {
-      query = query.eq('customer_profiles.is_b2b', filters.isB2B === 'true');
-    }
-
-    const { data, error } = await query.order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
   }
 };

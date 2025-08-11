@@ -1,9 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const databaseUrl = import.meta.env.DATABASE_URL || 'postgresql://placeholder:placeholder@placeholder.neon.tech/placeholder?sslmode=require';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const sql = neon(databaseUrl);
 
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
-export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+export const supabase = {
+  from: (table: string) => ({
+    select: (columns = '*') => ({
+      eq: (column: string, value: any) => sql`SELECT ${columns} FROM ${table} WHERE ${column} = ${value}`,
+      order: (column: string, options: any) => sql`SELECT ${columns} FROM ${table} ORDER BY ${column} ${options.ascending ? 'ASC' : 'DESC'}`
+    }),
+    insert: (data: any) => ({
+      select: () => sql`INSERT INTO ${table} (${Object.keys(data).join(', ')}) VALUES (${Object.values(data).map(() => '?').join(', ')}) RETURNING *`
+    }),
+    update: (data: any) => ({
+      eq: (column: string, value: any) => sql`UPDATE ${table} SET ${Object.keys(data).map(key => `${key} = ?`).join(', ')} WHERE ${column} = ${value} RETURNING *`
+    })
+  })
+};
+
+export const supabaseAdmin = null; // Not needed with Neon
