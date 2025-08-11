@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -15,13 +15,7 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (slug) {
-      loadPost();
-    }
-  }, [slug]);
-
-  const loadPost = async () => {
+  const loadPost = useCallback(async () => {
     try {
       setLoading(true);
       setPost(null);
@@ -33,7 +27,13 @@ const BlogPostPage = ({ slug, onNavigate }: BlogPostPageProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    if (slug) {
+      loadPost();
+    }
+  }, [slug, loadPost]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

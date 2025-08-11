@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -17,15 +17,7 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedKeyword, setSelectedKeyword] = useState<string>('');
 
-  useEffect(() => {
-    loadPosts();
-  }, []);
-
-  useEffect(() => {
-    filterPosts();
-  }, [posts, searchTerm, selectedKeyword]);
-
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     try {
       setLoading(true);
       const publishedPosts = await blogService.getPublishedPosts();
@@ -35,9 +27,9 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterPosts = () => {
+  const filterPosts = useCallback(() => {
     let filtered = posts;
 
     if (searchTerm) {
@@ -55,7 +47,15 @@ const BlogPage = ({ onNavigate }: BlogPageProps) => {
     }
 
     setFilteredPosts(filtered);
-  };
+  }, [posts, searchTerm, selectedKeyword]);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
+  useEffect(() => {
+    filterPosts();
+  }, [filterPosts]);
 
   const getAllKeywords = () => {
     const keywordSet = new Set<string>();
