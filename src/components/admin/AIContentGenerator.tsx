@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, FileText, Wand2, Copy, Download, Sparkles, AlertCircle } from 'lucide-react';
+import { Bot, FileText, Wand2, Copy, Download, Sparkles, AlertCircle, Calendar, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -10,12 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { aiService } from '../../services/AIService';
+import { blogService } from '../../services/blogService';
 import { ComplianceChecker } from './ComplianceChecker';
 
 export const AIContentGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
   const [activeTab, setActiveTab] = useState('product');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -48,14 +52,56 @@ export const AIContentGenerator = () => {
         name: productForm.name,
         strainType: productForm.strainType as 'sativa' | 'indica' | 'hybrid',
         thcPercentage: parseFloat(productForm.thcaPercentage),
-        cbdPercentage: 0, // Default CBD percentage
-        terpenes: [], // Default empty terpenes
+        cbdPercentage: 0,
+        terpenes: [],
         effects: productForm.effects.split(',').map(e => e.trim())
       });
-      setGeneratedContent(result);
+      
+      if (result && result.trim()) {
+        setGeneratedContent(result);
+      } else {
+        const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1)}**
+
+Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
+
+**Effects:** ${productForm.effects}
+
+**Key Features:**
+• Lab-tested for purity and potency
+• Federally compliant hemp-derived THCA
+• Third-party COA available
+• Discreet packaging and fast shipping
+
+**Important:** This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women. Keep out of reach of children and pets. Do not drive or operate machinery after use.
+
+*Must be 21+ to purchase. Please consume responsibly.*`;
+        
+        setGeneratedContent(fallbackContent);
+        console.warn('AI service returned empty result, using fallback content');
+      }
     } catch (error) {
       console.error('Product generation error:', error);
-      alert('Failed to generate product description. Please try again.');
+      
+      const fallbackContent = `**${productForm.name} - Premium THCA ${productForm.strainType.charAt(0).toUpperCase() + productForm.strainType.slice(1)}**
+
+Experience the exceptional quality of ${productForm.name}, a premium ${productForm.strainType} strain with ${productForm.thcaPercentage}% THCA content.
+
+**Effects:** ${productForm.effects}
+
+**Key Features:**
+• Lab-tested for purity and potency
+• Federally compliant hemp-derived THCA
+• Third-party COA available
+• Discreet packaging and fast shipping
+
+**Important:** This product has not been evaluated by the FDA. Not for use by minors, pregnant or nursing women. Keep out of reach of children and pets. Do not drive or operate machinery after use.
+
+*Must be 21+ to purchase. Please consume responsibly.*
+
+*Note: AI generation temporarily unavailable. This is a template description.*`;
+      
+      setGeneratedContent(fallbackContent);
+      alert('AI service temporarily unavailable. Generated template description instead.');
     } finally {
       setIsGenerating(false);
     }
@@ -75,10 +121,68 @@ export const AIContentGenerator = () => {
         targetLength: parseInt(blogForm.targetLength),
         tone: blogForm.tone as 'educational' | 'promotional' | 'informative'
       });
-      setGeneratedContent(result);
+      
+      if (result && result.trim()) {
+        setGeneratedContent(result);
+      } else {
+        const fallbackContent = `# ${blogForm.topic}
+
+## Introduction
+
+Welcome to our comprehensive guide on ${blogForm.topic}. In this ${blogForm.tone} article, we'll explore the key aspects of ${blogForm.keywords.split(',')[0]?.trim() || 'cannabis'} and provide valuable insights for our community.
+
+## Key Points
+
+Understanding ${blogForm.topic} is essential for anyone interested in cannabis education and responsible consumption. Here are the main topics we'll cover:
+
+• **Safety and Compliance**: Always prioritize safety and legal compliance
+• **Quality Standards**: Learn about lab testing and quality assurance
+• **Best Practices**: Discover recommended usage guidelines
+• **Community Insights**: Connect with fellow enthusiasts
+
+## Conclusion
+
+${blogForm.topic} represents an important aspect of cannabis education. We encourage all readers to stay informed, consume responsibly, and follow local regulations.
+
+**Keywords**: ${blogForm.keywords}
+
+---
+
+*Disclaimer: This content is for educational purposes only. Cannabis products have not been evaluated by the FDA. Keep out of reach of children and pets. Must be 21+ to purchase.*`;
+        
+        setGeneratedContent(fallbackContent);
+        console.warn('AI service returned empty result, using fallback content');
+      }
     } catch (error) {
       console.error('Blog generation error:', error);
-      alert('Failed to generate blog post. Please try again.');
+      
+      const fallbackContent = `# ${blogForm.topic}
+
+## Introduction
+
+Welcome to our guide on ${blogForm.topic}. This ${blogForm.tone} article covers important information about ${blogForm.keywords.split(',')[0]?.trim() || 'cannabis'}.
+
+## Key Information
+
+Understanding ${blogForm.topic} is crucial for cannabis education and responsible use.
+
+## Important Notes
+
+• Always follow local laws and regulations
+• Consume responsibly and safely
+• Keep products away from children and pets
+• Consult with healthcare providers when needed
+
+**Keywords**: ${blogForm.keywords}
+
+*Note: AI generation temporarily unavailable. This is a template blog post.*
+
+---
+
+*Disclaimer: This content is for educational purposes only. Must be 21+ to purchase cannabis products.*`;
+      
+      setGeneratedContent(fallbackContent);
+      alert('AI service temporarily unavailable. Generated template blog post instead.');
     } finally {
       setIsGenerating(false);
     }
@@ -115,6 +219,91 @@ export const AIContentGenerator = () => {
     a.download = `ai-generated-${activeTab}-${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handlePublishNow = async () => {
+    if (!generatedContent || !blogForm.topic) {
+      alert('Please generate blog content first');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const blogPost = await blogService.createPost({
+        title: blogForm.topic,
+        content: generatedContent,
+        keywords: blogForm.keywords.split(',').map(k => k.trim()).filter(k => k),
+        tone: blogForm.tone as 'educational' | 'promotional' | 'informative',
+        target_length: parseInt(blogForm.targetLength),
+        status: 'published'
+      });
+
+      if (blogPost) {
+        alert('Blog post published successfully!');
+        setGeneratedContent('');
+        setBlogForm({
+          topic: '',
+          keywords: '',
+          targetLength: '500',
+          tone: 'educational'
+        });
+      } else {
+        alert('Failed to publish blog post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to publish blog post:', error);
+      alert('Failed to publish blog post. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleSchedulePost = () => {
+    if (!generatedContent || !blogForm.topic) {
+      alert('Please generate blog content first');
+      return;
+    }
+    setShowScheduleModal(true);
+  };
+
+  const handleConfirmSchedule = async () => {
+    if (!scheduledDate) {
+      alert('Please select a date and time');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const blogPost = await blogService.createPost({
+        title: blogForm.topic,
+        content: generatedContent,
+        keywords: blogForm.keywords.split(',').map(k => k.trim()).filter(k => k),
+        tone: blogForm.tone as 'educational' | 'promotional' | 'informative',
+        target_length: parseInt(blogForm.targetLength),
+        status: 'scheduled',
+        scheduled_at: scheduledDate
+      });
+
+      if (blogPost) {
+        alert(`Blog post scheduled for ${new Date(scheduledDate).toLocaleString()}!`);
+        setGeneratedContent('');
+        setBlogForm({
+          topic: '',
+          keywords: '',
+          targetLength: '500',
+          tone: 'educational'
+        });
+        setShowScheduleModal(false);
+        setScheduledDate('');
+      } else {
+        alert('Failed to schedule blog post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to schedule blog post:', error);
+      alert('Failed to schedule blog post. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -276,23 +465,55 @@ export const AIContentGenerator = () => {
                 />
               </div>
 
-              <Button 
-                onClick={handleGenerateBlog}
-                disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-risevia-purple to-risevia-teal"
-              >
-                {isGenerating ? (
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGenerateBlog}
+                  disabled={isGenerating}
+                  className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Blog Post
+                    </>
+                  )}
+                </Button>
+                
+                {generatedContent && (
                   <>
-                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Generate Blog Post
+                    <Button 
+                      onClick={handlePublishNow}
+                      disabled={isPublishing}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Publish Now
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={handleSchedulePost}
+                      disabled={isPublishing}
+                      variant="outline"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Schedule
+                    </Button>
                   </>
                 )}
-              </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="meta" className="space-y-4">
@@ -371,6 +592,46 @@ export const AIContentGenerator = () => {
                 </CardContent>
               </Card>
             </motion.div>
+          )}
+
+          {showScheduleModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">Schedule Blog Post</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="scheduledDate" className="text-gray-700">Date & Time</Label>
+                    <Input
+                      id="scheduledDate"
+                      type="datetime-local"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="text-gray-900"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleConfirmSchedule}
+                      disabled={isPublishing || !scheduledDate}
+                      className="flex-1 bg-gradient-to-r from-risevia-purple to-risevia-teal"
+                    >
+                      {isPublishing ? 'Scheduling...' : 'Schedule Post'}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowScheduleModal(false);
+                        setScheduledDate('');
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

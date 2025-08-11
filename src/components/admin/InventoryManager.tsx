@@ -42,7 +42,7 @@ export const InventoryManager: React.FC = () => {
   const [adjustmentType, setAdjustmentType] = useState<'increase' | 'decrease'>('increase');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     loadInventoryData();
@@ -135,27 +135,38 @@ export const InventoryManager: React.FC = () => {
   };
 
   const handleAdjustment = async () => {
-    if (!selectedItem || !adjustmentQuantity || !adjustmentReason) return;
+    if (!selectedItem || !adjustmentQuantity || !adjustmentReason) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
     try {
       const quantity = parseInt(adjustmentQuantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        alert('Please enter a valid positive quantity');
+        return;
+      }
+
       const newStock = adjustmentType === 'increase' 
         ? selectedItem.currentStock + quantity
         : Math.max(0, selectedItem.currentStock - quantity);
 
-      const product = products.find(p => p.id === selectedItem.id);
-      if (product) {
+      try {
         await productService.updateInventory(
           selectedItem.id,
           newStock,
           adjustmentReason,
           'admin-user'
         );
+        
         await loadInventoryData();
-      } else {
+        alert(`Inventory successfully ${adjustmentType === 'increase' ? 'increased' : 'decreased'} by ${quantity} units`);
+      } catch (dbError) {
+        console.warn('Database update failed, updating local state:', dbError);
+        
         setInventory(prev => prev.map(item => 
           item.id === selectedItem.id 
-            ? { ...item, currentStock: newStock }
+            ? { ...item, currentStock: newStock, lastRestocked: new Date().toISOString() }
             : item
         ));
 
@@ -171,6 +182,7 @@ export const InventoryManager: React.FC = () => {
         };
 
         setAdjustments(prev => [newAdjustment, ...prev]);
+        alert(`Inventory updated locally (database unavailable). ${adjustmentType === 'increase' ? 'Increased' : 'Decreased'} by ${quantity} units`);
       }
 
       setShowAdjustmentModal(false);
@@ -179,6 +191,7 @@ export const InventoryManager: React.FC = () => {
       setAdjustmentReason('');
     } catch (error) {
       console.error('Error updating inventory:', error);
+      alert('Failed to update inventory. Please try again.');
     }
   };
 

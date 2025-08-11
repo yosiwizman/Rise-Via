@@ -31,7 +31,7 @@ export class ImageOptimizer {
   }
 
   static generateSrcSet(baseUrl: string, sizes: number[] = [320, 480, 768, 1024, 1200, 1920]): string {
-    if (!baseUrl) return sizes.map(size => ` ${size}w`).join(', ');
+    if (!baseUrl || typeof baseUrl !== 'string') return sizes.map(size => ` ${size}w`).join(', ');
     
     return sizes.map(size => {
       const optimizedUrl = this.generateOptimizedUrl(baseUrl, size, 'jpg');
@@ -59,6 +59,10 @@ export class ImageOptimizer {
   }
 
   private static generateOptimizedUrl(src: string, width: number, format: string): string {
+    if (!src || typeof src !== 'string') {
+      return '';
+    }
+    
     if (src.startsWith('data:') || src.startsWith('blob:')) {
       return src;
     }

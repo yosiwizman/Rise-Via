@@ -6,6 +6,7 @@ import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
 import { emailAutomationService } from '../services/EmailAutomation';
 import { membershipService } from '../services/membershipService';
+import { SecurityUtils } from '../utils/security';
 
 export interface Customer {
   id?: string;
@@ -50,6 +51,7 @@ export interface RegisterResult {
   success: boolean;
   customer?: Customer;
   message?: string;
+  email?: string;
 }
 
 export interface RegistrationData {
@@ -90,9 +92,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔵 CustomerContext: Starting useEffect');
     checkAuthStatus();
 
-    const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
+    console.log('🔵 CustomerContext: Setting up auth state change listener');
+    const authHandler = authService.onAuthStateChange((event: string, session: unknown) => {
+      console.log('🔵 CustomerContext: Auth state change event:', event);
       if (event === 'SIGNED_OUT') {
         setCustomer(null);
         setIsAuthenticated(false);
@@ -101,9 +106,13 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
     });
 
+    console.log('🔵 CustomerContext: Auth handler created:', authHandler);
+
     return () => {
-      if (authStateChange && typeof authStateChange.then === 'function') {
-        authStateChange.then(res => res.data.subscription.unsubscribe());
+      console.log('🔵 CustomerContext: Cleanup function called');
+      if (authHandler?.data?.subscription?.unsubscribe) {
+        console.log('🔵 CustomerContext: Calling unsubscribe');
+        authHandler.data.subscription.unsubscribe();
       }
     };
     // No console.log
@@ -225,6 +234,17 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
           });
         }
 
+        const verificationToken = SecurityUtils.generateVerificationToken();
+        try {
+          await emailService.sendVerificationEmail(
+            registrationData.email,
+            registrationData.firstName,
+            verificationToken
+          );
+        } catch (emailError) {
+          console.error('Verification email failed:', emailError);
+        }
+
         try {
           await emailService.sendWelcomeEmail(
             registrationData.email,
@@ -261,7 +281,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
         setCustomer(customerData as Customer);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData as Customer };
+        return { success: true, customer: customerData as Customer, email: registrationData.email };
       }
 
       return { success: false, message: 'Registration failed' };

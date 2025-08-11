@@ -10,12 +10,10 @@ import { CartSidebar } from './cart/CartSidebar';
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
-  userMenuOpen: boolean;
-  setUserMenuOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
 }
 
-export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuOpen, setSearchOpen }: NavigationProps) => {
+export const Navigation = ({ currentPage, onNavigate, setSearchOpen }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { getWishlistCount } = useWishlist();
@@ -30,6 +28,7 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'shop', label: 'Shop' },
+    { id: 'blog', label: 'Blog' },
     { id: 'learn', label: 'Learn' },
     { id: 'legal', label: 'Legal' },
     { id: 'contact', label: 'Contact' }
@@ -105,7 +104,7 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
             </Button>
             <Button variant="ghost" size="sm" className="text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple" onClick={() => {
               console.log('👤 User clicked!');
-              setUserMenuOpen(!userMenuOpen);
+              handleNavigation('account');
             }}>
               <User className="w-4 h-4" />
             </Button>
@@ -200,7 +199,7 @@ export const Navigation = ({ currentPage, onNavigate, userMenuOpen, setUserMenuO
                       variant="ghost" 
                       className="w-full justify-start text-risevia-charcoal dark:text-gray-300 hover:text-risevia-purple py-4 touch-manipulation" 
                       onClick={() => {
-                        setUserMenuOpen(!userMenuOpen);
+                        handleNavigation('account');
                         setIsMobileMenuOpen(false);
                       }}
                     >

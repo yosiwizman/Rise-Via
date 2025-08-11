@@ -161,6 +161,53 @@ const emailService = {
     }
   },
 
+  sendVerificationEmail: async (to: string, name: string, token: string) => {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'Rise Via <verify@risevia.com>',
+        to,
+        subject: 'Verify Your Email Address',
+        html: `
+          <h1>Verify Your Email</h1>
+          <p>Hi ${name},</p>
+          <p>Please click the link below to verify your email address:</p>
+          <a href="${import.meta.env.VITE_APP_URL || 'https://rise-via.vercel.app'}/verify-email?token=${token}" 
+             style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+             Verify Email Address
+          </a>
+          <p>If you didn't create an account, you can safely ignore this email.</p>
+          <p>The Rise Via Team</p>
+        `
+      });
+      
+      if (error) throw error;
+
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status, sent_at)
+          VALUES (${to}, 'Verify Your Email Address', 'Email verification sent', 'sent', NOW())
+        `
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      
+      if (!sql) {
+        console.warn('⚠️ Database not available, skipping email log');
+      } else {
+        await sql`
+          INSERT INTO email_logs (to_email, subject, body, status)
+          VALUES (${to}, 'Verify Your Email Address', 'Email verification failed', 'failed')
+        `
+      }
+      
+      return { success: false, error };
+    }
+  },
+
   async sendEmail(to: string, subject: string, body: string): Promise<boolean> {
     try {
       if (!sql) {

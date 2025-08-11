@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, startTransition } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -8,7 +8,6 @@ import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
-import { FloatingChatButton } from './components/FloatingChatButton';
 import MobileCartButton from './components/MobileCartButton';
 import { ToastEventHandler } from './components/ToastEventHandler';
 import { ChatBot } from './components/ChatBot';
@@ -17,44 +16,46 @@ import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
+import { blogScheduler } from './services/blogScheduler';
 import RegisterPage from './pages/RegisterPage';
-
-const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
-const ShopPage = lazy(() => import('./pages/ShopPage').then(module => ({ default: module.ShopPage })));
-const LearnPage = lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
-const LegalPage = lazy(() => import('./pages/LegalPage').then(module => ({ default: module.LegalPage })));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
-const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
-const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage').then(module => ({ default: module.OrderTrackingPage })));
-const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
-const TermsOfService = lazy(() => import('./pages/legal/TermsOfService').then(module => ({ default: module.TermsOfService })));
-const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));
-const ShippingPage = lazy(() => import('./pages/ShippingPage').then(module => ({ default: module.ShippingPage })));
-const LabResultsPage = lazy(() => import('./pages/LabResultsPage').then(module => ({ default: module.LabResultsPage })));
-const CareersPage = lazy(() => import('./pages/CareersPage').then(module => ({ default: module.CareersPage })));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
-const WishlistPage = lazy(() => import('./components/wishlist/WishlistPage').then(module => ({ default: module.WishlistPage })));
-const SharedWishlistPage = lazy(() => import('./components/wishlist/WishlistShare').then(module => ({ default: module.SharedWishlistPage })));
-const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
-const AccountPage = lazy(() => import('./pages/AccountPage').then(module => ({ default: module.AccountPage })));
-const LoginPage = lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
-const B2BPage = lazy(() => import('./pages/B2BPage').then(module => ({ default: module.B2BPage })));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
-const HealthCheck = lazy(() => import('./components/HealthCheck').then(module => ({ default: module.HealthCheck })));
-const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })));
+import { CheckoutPage } from './pages/CheckoutPage';
+import { HomePage } from './pages/HomePage';
+import { ShopPage } from './pages/ShopPage';
+import { LearnPage } from './pages/LearnPage';
+import { LegalPage } from './pages/LegalPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { OrderTrackingPage } from './pages/OrderTrackingPage';
+import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
+import { TermsOfService } from './pages/legal/TermsOfService';
+import { ContactPage } from './pages/ContactPage';
+import { ShippingPage } from './pages/ShippingPage';
+import { LabResultsPage } from './pages/LabResultsPage';
+import { CareersPage } from './pages/CareersPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { WishlistPage } from './components/wishlist/WishlistPage';
+import { SharedWishlistPage } from './components/wishlist/WishlistShare';
+import { AdminPage } from './pages/AdminPage';
+import { AccountPage } from './pages/AccountPage';
+import { LoginPage } from './pages/LoginPage';
+import { B2BPage } from './pages/B2BPage';
+import { HealthCheck } from './components/HealthCheck';
+import { PasswordResetPage } from './pages/PasswordResetPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [blogSlug, setBlogSlug] = useState<string>('');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
 
   useEffect(() => {
     startTransition(() => {
-      const path = window.location.pathname.toLowerCase();
+      const path = (window.location.pathname || '/').toLowerCase();
       const urlParams = new URLSearchParams(window.location.search);
       const page = urlParams.get('page');
 
@@ -84,6 +85,12 @@ function App() {
         setCurrentPage('orders');
       } else if (path === '/contact') {
         setCurrentPage('contact');
+      } else if (path === '/blog') {
+        setCurrentPage('blog');
+      } else if (path.startsWith('/blog/')) {
+        const slug = path.replace('/blog/', '');
+        setBlogSlug(slug);
+        setCurrentPage('blog-post');
       } else if (path === '/wishlist') {
         setCurrentPage('wishlist');
       } else if (path === '/account') {
@@ -111,6 +118,7 @@ function App() {
     }
 
     priceTrackingService.startPriceTracking();
+    blogScheduler.start();
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
@@ -142,6 +150,10 @@ function App() {
         }
         if (adaWidget) {
           const element = adaWidget as HTMLElement;
+          if (!element || !element.style) {
+            console.warn('⚠️ UserWay widget element not properly initialized');
+            return;
+          }
           element.style.removeProperty('left');
           element.removeAttribute('offscreen');
 
@@ -187,6 +199,7 @@ function App() {
           const styleObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                if (!element || !element.style) return;
                 const currentStyle = element.getAttribute('style') || '';
                 if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
                   element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
@@ -202,6 +215,7 @@ function App() {
 
           // Interval to maintain right-side positioning
           const maintainPosition = () => {
+            if (!element || !element.style) return;
             const currentStyle = element.getAttribute('style') || '';
             if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
               element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
@@ -275,6 +289,7 @@ function App() {
 
     return () => {
       priceTrackingService.stopPriceTracking();
+      blogScheduler.stop();
     };
   }, []);
 
@@ -309,6 +324,23 @@ function App() {
         return <OrderTrackingPage />;
       case 'contact':
         return <ContactPage />;
+      case 'blog':
+        return <BlogPage onNavigate={(page: string, _productId?: string, slug?: string) => {
+          if (page === 'blog-post' && slug) {
+            setBlogSlug(slug);
+            setCurrentPage('blog-post');
+            window.history.pushState({}, '', `/blog/${slug}`);
+          } else {
+            setCurrentPage(page);
+          }
+        }} />;
+      case 'blog-post':
+        return <BlogPostPage slug={blogSlug} onNavigate={(page: string) => {
+          setCurrentPage(page);
+          if (page === 'blog') {
+            window.history.pushState({}, '', '/blog');
+          }
+        }} />;
       case 'shipping':
         return <ShippingPage />;
       case 'lab-results':
@@ -354,8 +386,6 @@ function App() {
                 <Navigation
                   currentPage={currentPage}
                   onNavigate={setCurrentPage}
-                  userMenuOpen={userMenuOpen}
-                  setUserMenuOpen={setUserMenuOpen}
                   setSearchOpen={setSearchOpen}
                 />
                 <main>
@@ -364,13 +394,12 @@ function App() {
                 <Footer onNavigate={setCurrentPage} />
                 <MobileCartButton />
                 <CookieConsentBanner />
-                <FloatingChatButton />
+                <ChatBot />
               </>
             )}
           </div>
           <ToastEventHandler />
           <Toaster />
-          <ChatBot />
         </AnalyticsProvider>
       </ErrorBoundary>
       <Toaster />
