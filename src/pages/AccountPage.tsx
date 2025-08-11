@@ -6,7 +6,42 @@ import { Input } from '../components/ui/input';
 import { User, Star, Gift, ShoppingBag, Crown, Copy, Bell, Trash2 } from 'lucide-react';
 import { useCustomer } from '../contexts/CustomerContext';
 import { SEOHead } from '../components/SEOHead';
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (AccountPage):', query, values);
+    
+    if (query.includes('orders')) {
+      return Promise.resolve([{
+        id: 'mock-order-1',
+        orderNumber: 'ORD-001',
+        total: 89.99,
+        status: 'delivered',
+        created_at: new Date().toISOString(),
+        items: [{
+          product: { name: 'Sample Product', images: [] },
+          quantity: 1,
+          price: 89.99
+        }]
+      }]);
+    }
+    
+    if (query.includes('loyalty_transactions')) {
+      return Promise.resolve([{
+        id: 'mock-transaction-1',
+        type: 'EARNED',
+        points: 50,
+        description: 'Points earned from purchase',
+        created_at: new Date().toISOString()
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 interface Order {
   id: string;

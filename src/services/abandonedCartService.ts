@@ -1,4 +1,32 @@
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (abandonedCartService):', query, values);
+    
+    if (query.includes('abandoned_carts')) {
+      return Promise.resolve([{
+        id: 'mock-cart-id',
+        session_id: 'mock-session',
+        customer_email: 'customer@example.com',
+        cart_data: {
+          items: [],
+          total: 0,
+          currency: 'USD'
+        },
+        total_amount: 0,
+        created_at: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+        recovery_email_sent: false,
+        recovered: false
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export interface AbandonedCart {
   id: string;

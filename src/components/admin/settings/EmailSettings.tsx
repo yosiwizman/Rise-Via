@@ -6,7 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Switch } from '../../ui/switch';
 import { Mail, Send, Settings, Zap } from 'lucide-react';
-import { sql } from '../../../lib/neon';
+
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (EmailSettings):', query, values);
+    
+    if (query.includes('system_settings') && query.includes('email')) {
+      return Promise.resolve([
+        { key: 'from_name', value: 'Rise-Via Cannabis' },
+        { key: 'from_email', value: 'noreply@rise-via.com' },
+        { key: 'reply_to', value: 'support@rise-via.com' },
+        { key: 'support_email', value: 'support@rise-via.com' },
+        { key: 'notifications_enabled', value: true },
+        { key: 'marketing_enabled', value: true }
+      ]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 const EmailSettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, any>>({});

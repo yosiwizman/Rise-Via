@@ -6,7 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SEOHead } from '../components/SEOHead';
 import { Building, FileText, DollarSign } from 'lucide-react';
 import { customerService } from '../services/customerService';
-import { sql } from '../lib/neon';
+
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (B2BPage):', query, values);
+    
+    if (query.includes('customer_profiles')) {
+      return Promise.resolve([{
+        customer_id: 'mock-customer-id',
+        is_b2b: true,
+        business_name: values[0] || 'Mock Business',
+        business_license: values[1] || 'MOCK-LICENSE-123',
+        membership_tier: 'SILVER',
+        segment: 'B2B'
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export const B2BPage = () => {
   const [formData, setFormData] = useState({

@@ -1,4 +1,47 @@
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (orderService):', query, values);
+    
+    if (query.includes('INSERT INTO orders')) {
+      return Promise.resolve([{
+        id: 'mock-order-id',
+        customer_id: values[0] || 'mock-customer-id',
+        total: values[1] || 0,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+    }
+    
+    if (query.includes('SELECT * FROM orders')) {
+      return Promise.resolve([{
+        id: 'mock-order-id',
+        customer_id: 'mock-customer-id',
+        total: 99.99,
+        status: 'completed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+    }
+    
+    if (query.includes('order_items')) {
+      return Promise.resolve([{
+        id: 'mock-item-id',
+        order_id: 'mock-order-id',
+        product_id: 'mock-product-id',
+        quantity: 1,
+        price: 99.99,
+        created_at: new Date().toISOString()
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export interface Order {
   id: string

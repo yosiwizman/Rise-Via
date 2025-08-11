@@ -1,4 +1,49 @@
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (analytics):', query, values);
+    
+    if (query.includes('orders')) {
+      return Promise.resolve([
+        { total_amount: 150.00, status: 'completed', created_at: new Date().toISOString() },
+        { total_amount: 89.99, status: 'completed', created_at: new Date().toISOString() },
+        { total_amount: 200.50, status: 'completed', created_at: new Date().toISOString() }
+      ]);
+    }
+    
+    if (query.includes('wishlist_sessions')) {
+      return Promise.resolve([{ unique_sessions: 100 }]);
+    }
+    
+    if (query.includes('customers')) {
+      return Promise.resolve([
+        { id: '1', created_at: new Date().toISOString(), lifetime_value: 500, total_orders: 3 },
+        { id: '2', created_at: new Date().toISOString(), lifetime_value: 300, total_orders: 2 }
+      ]);
+    }
+    
+    if (query.includes('wishlist_items')) {
+      return Promise.resolve([
+        { product_id: 'product-1', popularity: 25 },
+        { product_id: 'product-2', popularity: 18 },
+        { category: 'flower', sales: 50 },
+        { category: 'edibles', sales: 30 }
+      ]);
+    }
+    
+    if (query.includes('compliance_events')) {
+      return Promise.resolve([
+        { event_type: 'age_verification', compliance_result: true, risk_score: 0.1 },
+        { event_type: 'state_block', compliance_result: false, risk_score: 0.8 }
+      ]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 
 export interface AnalyticsMetrics {

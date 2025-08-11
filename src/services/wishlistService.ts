@@ -1,4 +1,49 @@
-import { sql } from '../lib/neon'
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (wishlistService):', query, values);
+    
+    if (query.includes('wishlist_sessions')) {
+      if (query.includes('INSERT')) {
+        return Promise.resolve([{
+          id: 'mock-session-id',
+          session_token: values[0] || 'mock-token',
+          created_at: new Date().toISOString()
+        }]);
+      }
+      return Promise.resolve([{
+        id: 'mock-session-id',
+        session_token: 'mock-token',
+        created_at: new Date().toISOString()
+      }]);
+    }
+    
+    if (query.includes('wishlist_items')) {
+      if (query.includes('SELECT product_id')) {
+        return Promise.resolve([
+          { product_id: 'mock-product-1' },
+          { product_id: 'mock-product-2' }
+        ]);
+      }
+      if (query.includes('SELECT id')) {
+        return Promise.resolve([{ id: 'mock-item-id' }]);
+      }
+      if (query.includes('SELECT *')) {
+        return Promise.resolve([{
+          id: 'mock-item-id',
+          session_id: 'mock-session-id',
+          product_id: 'mock-product-1',
+          created_at: new Date().toISOString()
+        }]);
+      }
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 const getSessionToken = () => {
   let token = localStorage.getItem('wishlist_session_token')

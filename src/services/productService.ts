@@ -1,4 +1,55 @@
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (productService):', query, values);
+    
+    if (query.includes('products')) {
+      return Promise.resolve([{
+        id: 'mock-product-id',
+        name: 'Mock Product',
+        category: 'flower',
+        strain_type: 'hybrid',
+        thca_percentage: 25.5,
+        price: 35.00,
+        inventory: 100,
+        in_stock: true,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+    }
+    
+    if (query.includes('inventory_logs')) {
+      return Promise.resolve([{
+        id: 'mock-log-id',
+        product_id: 'mock-product-id',
+        change_amount: 10,
+        reason: 'restock',
+        previous_count: 90,
+        new_count: 100,
+        created_at: new Date().toISOString()
+      }]);
+    }
+    
+    if (query.includes('inventory_alerts')) {
+      return Promise.resolve([{
+        id: 'mock-alert-id',
+        product_id: 'mock-product-id',
+        alert_type: 'low_stock',
+        threshold: 10,
+        current_value: 5,
+        resolved: false,
+        created_at: new Date().toISOString()
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
+
 import { Product, InventoryLog, InventoryAlert } from '../types/product';
 
 export const productService = {

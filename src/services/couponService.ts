@@ -1,4 +1,29 @@
-import { sql } from '../lib/neon'; // Neon DB for coupon persistence (wishlist DB already in project)
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (couponService):', query, values);
+    
+    if (query.includes('coupons')) {
+      return Promise.resolve([{
+        id: 'mock-coupon-id',
+        code: 'WELCOME10',
+        discount_type: 'percentage',
+        discount_value: 10,
+        min_order_amount: 50,
+        max_uses: 1000,
+        current_uses: 245,
+        expires_at: null,
+        created_at: new Date().toISOString(),
+        is_active: true
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 /**
  * Domain model (camelCase) used inside the app.

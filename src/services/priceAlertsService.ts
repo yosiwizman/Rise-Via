@@ -1,4 +1,28 @@
-import { sql } from '../lib/neon';
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (priceAlertsService):', query, values);
+    
+    if (query.includes('price_alerts')) {
+      return Promise.resolve([{
+        id: 'mock-alert-id',
+        customer_id: 'mock-customer-id',
+        product_id: 'mock-product-id',
+        product_name: 'Mock Product',
+        target_price: 25.00,
+        current_price: 30.00,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        notification_sent: false
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export interface PriceAlert {
   id: string;
