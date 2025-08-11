@@ -6,7 +6,6 @@ import { wishlistService } from '../services/wishlistService';
 import { listmonkService } from '../services/ListmonkService';
 import { emailAutomationService } from '../services/EmailAutomation';
 import { membershipService } from '../services/membershipService';
-import { SecurityUtils } from '../utils/security';
 
 export interface Customer {
   id?: string;

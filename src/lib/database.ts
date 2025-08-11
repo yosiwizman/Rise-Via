@@ -1,13 +1,13 @@
-import { neon } from '@neondatabase/serverless';
-
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
-
-if (!isValidDatabaseUrl) {
-  console.warn('⚠️ No valid database URL provided in database.ts. Running in development mode with mock data.');
-}
-
-const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (database.ts):', query, values);
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export async function testConnection() {
   if (!sql) {

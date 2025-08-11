@@ -1,7 +1,27 @@
-import { neon } from '@neondatabase/serverless';
-
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || import.meta.env.VITE_NEON_DATABASE_URL;
-const sql = DATABASE_URL ? neon(DATABASE_URL) : null;
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (blogService):', query, values);
+    
+    if (query.includes('blog_posts')) {
+      return Promise.resolve([{
+        id: 'mock-blog-id',
+        title: 'Mock Blog Post',
+        content: 'Mock content',
+        excerpt: 'Mock excerpt',
+        slug: 'mock-blog-post',
+        status: 'published',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export interface BlogPost {
   id: string;

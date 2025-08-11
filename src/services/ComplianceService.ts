@@ -1,13 +1,32 @@
-import { neon } from '@neondatabase/serverless';
-
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
-
-if (!isValidDatabaseUrl) {
-  console.warn('⚠️ No valid database URL provided in ComplianceService.ts. Running in development mode with mock data.');
-}
-
-const sql = isValidDatabaseUrl ? neon(DATABASE_URL) : null;
+const sql = Object.assign(
+  (strings: TemplateStringsArray, ...values: any[]) => {
+    const query = strings.join('?');
+    console.log('Mock SQL Query (ComplianceService):', query, values);
+    
+    if (query.includes('state_compliance')) {
+      return Promise.resolve([{
+        state: 'CA',
+        is_legal: true,
+        age_requirement: 21,
+        max_possession: '1 oz',
+        home_grow_allowed: true,
+        public_consumption: false,
+        driving_limit: '5ng/ml',
+        retail_sales_allowed: true,
+        delivery_allowed: true,
+        online_ordering_allowed: true,
+        tax_rate: '0.15',
+        license_required: true,
+        last_updated: new Date().toISOString()
+      }]);
+    }
+    
+    return Promise.resolve([]);
+  },
+  {
+    unsafe: (str: string) => str
+  }
+);
 
 export interface StateCompliance {
   state: string;
