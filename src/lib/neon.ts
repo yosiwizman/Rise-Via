@@ -1,6 +1,20 @@
 import { neon } from '@neondatabase/serverless';
 
-const DATABASE_URL = import.meta.env?.VITE_DATABASE_URL || process.env.VITE_DATABASE_URL;
+const getDatabaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return (window as any).__ENV__?.VITE_DATABASE_URL || 
+           'postgresql://neondb_owner:napi_lia5pip5o43c0irwm305hptsy6kkps2sb6dq4ol8mj410rrucbi2u0qu6dwa4kfv@ep-rough-cherry-a5ixqhqr.us-east-1.aws.neon.tech/neondb?sslmode=require';
+  }
+  
+  try {
+    return import.meta.env?.VITE_DATABASE_URL || process.env.VITE_DATABASE_URL;
+  } catch {
+    return process.env.VITE_DATABASE_URL || 
+           'postgresql://neondb_owner:napi_lia5pip5o43c0irwm305hptsy6kkps2sb6dq4ol8mj410rrucbi2u0qu6dwa4kfv@ep-rough-cherry-a5ixqhqr.us-east-1.aws.neon.tech/neondb?sslmode=require';
+  }
+};
+
+const DATABASE_URL = getDatabaseUrl();
 
 const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
 
