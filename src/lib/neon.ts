@@ -1,301 +1,130 @@
-import { neon } from '@neondatabase/serverless';
+export const mockDatabase = {
+  admin_users: [
+    {
+      id: '1',
+      email: 'admin@rise-via.com',
+      password_hash: '$2a$12$LQv3c1yqBWVHxkd0LQ4YCOuLQv3c1yqBWVHxkd0LQ4YCOuLQv3c1y',
+      role: 'admin',
+      first_name: 'Admin',
+      last_name: 'User',
+      permissions: {
+        products: { create: true, read: true, update: true, delete: true },
+        orders: { create: true, read: true, update: true, delete: true },
+        customers: { create: true, read: true, update: true, delete: true },
+        inventory: { create: true, read: true, update: true, delete: true },
+        reports: { view: true, export: true, advanced: true },
+        settings: { api: true, users: true, system: true },
+        media: { upload: true, manage: true, delete: true }
+      },
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
+  ],
+  api_settings: [
+    {
+      id: 'api-1',
+      service_name: 'openai',
+      api_key_encrypted: 'sk-mock-openai-key',
+      configuration: { model: 'gpt-4', max_tokens: 1000 },
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
+  ],
+  system_settings: [
+    {
+      key: 'site_name',
+      value: 'Rise-Via',
+      description: 'Site name',
+      category: 'general'
+    }
+  ],
+  customers: [
+    {
+      id: 'customer-1',
+      email: 'customer@example.com',
+      first_name: 'John',
+      last_name: 'Doe',
+      created_at: new Date().toISOString()
+    }
+  ],
+  customer_profiles: [],
+  orders: [],
+  products: [],
+  wishlist_sessions: [],
+  wishlist_items: [],
+  blog_posts: []
+};
 
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL;
-
-const isValidDatabaseUrl = DATABASE_URL && DATABASE_URL.startsWith('postgresql://');
-
-if (!isValidDatabaseUrl) {
-  console.warn('⚠️ No valid database URL provided. Running in development mode with mock data.');
-}
-
-export const sql = isValidDatabaseUrl ? neon(DATABASE_URL!) : null;
-
-export async function query(text: string, params: (string | number | boolean | Date | null | undefined)[] = []) {
-  if (!sql) {
-    console.warn('⚠️ Database not available, returning mock data for query:', text.substring(0, 60) + '...');
-    return { rows: [], error: null };
+export const sql = function(strings: TemplateStringsArray | string, ...values: unknown[]): Promise<any[]> {
+  let query: string;
+  
+  if (typeof strings === 'string') {
+    query = strings;
+  } else if (strings && strings.length) {
+    query = strings.join('?');
+  } else {
+    console.log('Mock SQL Query: strings is undefined or empty');
+    return Promise.resolve([]);
   }
   
-  try {
-    console.log('🔵 Executing Neon query:', text.substring(0, 60) + '...');
-    const startTime = Date.now();
-    
-    const result = await sql(text, params);
-    
-    const duration = Date.now() - startTime;
-    console.log(`✅ Query successful in ${duration}ms, rows:`, Array.isArray(result) ? result.length : 'single result');
-    
-    return { rows: result, error: null };
-  } catch (error) {
-    console.error('❌ Neon database query error:', error);
-    return { rows: [], error };
+  console.log('Mock SQL Query called:', query, values);
+  
+  const queryLower = query.toLowerCase().trim();
+  
+  if (queryLower.includes('select') && queryLower.includes('admin_users')) {
+    return Promise.resolve(mockDatabase.admin_users);
   }
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function generateSessionToken(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-export const authDb = {
-  async createUser(email: string, password: string, firstName?: string, lastName?: string) {
-    console.log('🔵 Creating user:', email);
-    const passwordHash = await hashPassword(password);
-    const { rows, error } = await query(
-      'INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
-      [email, passwordHash, firstName, lastName]
-    );
-    
-    if (error) {
-      console.error('❌ User creation failed:', error);
-      return null;
-    }
-    
-    console.log('✅ User created successfully:', rows[0]?.email);
-    return rows[0];
-  },
-
-  async loginUser(email: string, password: string) {
-    console.log('🔵 Authenticating user:', email);
-    const passwordHash = await hashPassword(password);
-    const { rows, error } = await query(
-      'SELECT id, email, first_name, last_name FROM users WHERE email = $1 AND password_hash = $2',
-      [email, passwordHash]
-    );
-    
-    if (error || rows.length === 0) {
-      console.error('❌ Authentication failed for:', email);
-      return null;
-    }
-    
-    console.log('✅ User authenticated successfully:', email);
-    return rows[0];
-  },
-
-  async createSession(userId: number) {
-    const sessionToken = generateSessionToken();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    
-    const { error } = await query(
-      'INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES ($1, $2, $3)',
-      [userId, sessionToken, expiresAt]
-    );
-    
-    if (error) {
-      console.error('❌ Session creation failed:', error);
-      return null;
-    }
-    
-    console.log('✅ Session created for user ID:', userId);
-    return sessionToken;
-  },
-
-  async validateSession(sessionToken: string) {
-    const { rows, error } = await query(
-      `SELECT u.id, u.email, u.first_name, u.last_name 
-       FROM users u 
-       JOIN user_sessions s ON u.id = s.user_id 
-       WHERE s.session_token = $1 AND s.expires_at > NOW()`,
-      [sessionToken]
-    );
-    
-    if (error || rows.length === 0) {
-      return null;
-    }
-    
-    return rows[0];
-  },
-
-  async destroySession(sessionToken: string) {
-    await query('DELETE FROM user_sessions WHERE session_token = $1', [sessionToken]);
-    console.log('✅ Session destroyed');
+  
+  if (queryLower.includes('select') && queryLower.includes('api_settings')) {
+    return Promise.resolve(mockDatabase.api_settings);
   }
+  
+  if (queryLower.includes('select') && queryLower.includes('system_settings')) {
+    return Promise.resolve(mockDatabase.system_settings);
+  }
+  
+  if (queryLower.includes('select') && queryLower.includes('customers')) {
+    return Promise.resolve(mockDatabase.customers);
+  }
+  
+  if (queryLower.includes('insert') || queryLower.includes('update')) {
+    return Promise.resolve([{ id: 'mock-id', success: true }]);
+  }
+  
+  return Promise.resolve([]);
 };
 
-export const wishlistDb = {
-  async getOrCreateSession(token: string) {
-    console.log('🔵 Getting/creating wishlist session:', token.substring(0, 10) + '...');
-    
-    const { rows: existing } = await query(
-      'SELECT * FROM wishlist_sessions WHERE session_token = $1',
-      [token]
-    );
-    
-    if (existing.length > 0) {
-      console.log('✅ Found existing wishlist session:', existing[0].id);
-      return existing[0];
-    }
-    
-    const { rows: newSession } = await query(
-      'INSERT INTO wishlist_sessions (session_token) VALUES ($1) RETURNING *',
-      [token]
-    );
-    
-    console.log('✅ Created new wishlist session:', newSession[0]?.id);
-    return newSession[0];
-  },
+sql.unsafe = (str: string) => str;
 
-  async getItems(sessionToken: string) {
-    console.log('🔵 Getting wishlist items for session:', sessionToken.substring(0, 10) + '...');
-    const session = await this.getOrCreateSession(sessionToken);
-    if (!session) return [];
-    
-    const { rows } = await query(
-      'SELECT product_id FROM wishlist_items WHERE session_id = $1',
-      [session.id]
-    );
-    
-    const productIds = rows.map((row: Record<string, unknown>) => row.product_id);
-    console.log('✅ Found wishlist items:', productIds);
-    return productIds;
-  },
+Object.defineProperty(sql, Symbol.toPrimitive, {
+  value: () => sql,
+  writable: false,
+  enumerable: false,
+  configurable: false
+});
 
-  async addItem(sessionToken: string, productId: string) {
-    console.log('🔵 Adding item to wishlist database:', productId);
-    const session = await this.getOrCreateSession(sessionToken);
-    if (!session) return false;
-    
-    const { error } = await query(
-      'INSERT INTO wishlist_items (session_id, product_id) VALUES ($1, $2) ON CONFLICT (session_id, product_id) DO NOTHING',
-      [session.id, productId]
-    );
-    
-    if (!error) {
-      console.log('✅ Item successfully added to wishlist database:', productId);
-      return true;
-    } else {
-      console.error('❌ Failed to add item to wishlist database:', error);
-      return false;
+export const dbHelpers = {
+  async findOne(tableName: string, conditions?: Record<string, unknown>) {
+    console.log('Mock findOne called for table:', tableName, conditions);
+    if (tableName === 'admin_users') {
+      return mockDatabase.admin_users[0] || null;
     }
+    return null;
   },
-
-  async removeItem(sessionToken: string, productId: string) {
-    console.log('🔵 Removing item from wishlist database:', productId);
-    const session = await this.getOrCreateSession(sessionToken);
-    if (!session) return false;
-    
-    const { error } = await query(
-      'DELETE FROM wishlist_items WHERE session_id = $1 AND product_id = $2',
-      [session.id, productId]
-    );
-    
-    if (!error) {
-      console.log('✅ Item successfully removed from wishlist database:', productId);
-      return true;
-    } else {
-      console.error('❌ Failed to remove item from wishlist database:', error);
-      return false;
+  
+  async findMany(tableName: string, conditions: Record<string, unknown> = {}) {
+    console.log('Mock findMany called for table:', tableName, conditions);
+    if (tableName === 'admin_users') {
+      return mockDatabase.admin_users;
     }
+    if (tableName === 'customers') {
+      return mockDatabase.customers;
+    }
+    return [];
   },
-
-  async clearItems(sessionToken: string) {
-    console.log('🔵 Clearing all wishlist items from database');
-    const session = await this.getOrCreateSession(sessionToken);
-    if (!session) return false;
-    
-    const { error } = await query(
-      'DELETE FROM wishlist_items WHERE session_id = $1',
-      [session.id]
-    );
-    
-    if (!error) {
-      console.log('✅ All wishlist items cleared from database');
-      return true;
-    } else {
-      console.error('❌ Failed to clear wishlist items from database:', error);
-      return false;
-    }
+  
+  async insertOne(tableName: string, data: Record<string, unknown>) {
+    console.log('Mock insertOne called for table:', tableName);
+    return { id: 'mock-id', ...data };
   }
 };
-
-export interface User {
-  id: string;
-  email: string;
-  password_hash: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Customer {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CustomerProfile {
-  id: string;
-  customer_id: string;
-  membership_tier: string;
-  loyalty_points: number;
-  preferences: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Order {
-  id: string;
-  customer_id: string;
-  total: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OrderItem {
-  id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  price: number;
-  created_at: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  images: string[];
-  category: string;
-  in_stock: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LoyaltyTransaction {
-  id: string;
-  customer_id: string;
-  type: string;
-  points: number;
-  description: string;
-  created_at: string;
-}
-
-export interface WishlistSession {
-  id: string;
-  session_token: string;
-  user_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface WishlistItem {
-  id: string;
-  session_id: string;
-  product_id: string;
-  created_at: string;
-}

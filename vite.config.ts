@@ -1,19 +1,33 @@
-import path from "path"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
-    allowedHosts: true
+    port: 5174,
+    host: true,
   },
   build: {
-    outDir: 'dist'
+    minify: 'esbuild',
+    target: 'es2015',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          neon: ['@neondatabase/serverless'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 2000,
+  },
+  optimizeDeps: {
+    exclude: ['@neondatabase/serverless']
   }
-})
+});
 

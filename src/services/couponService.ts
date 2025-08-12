@@ -1,4 +1,4 @@
-import { sql } from '../lib/neon'; // Neon DB for coupon persistence (wishlist DB already in project)
+import { sql } from '../lib/neon';
 
 /**
  * Domain model (camelCase) used inside the app.

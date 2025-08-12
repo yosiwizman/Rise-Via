@@ -252,7 +252,7 @@ describe('WishlistMetricsDashboard Comprehensive Tests', () => {
       render(<MockWishlistMetricsDashboard />)
 
       const buttons = screen.getAllByRole('button')
-      buttons.forEach(button => {
+      buttons.forEach((button: HTMLElement) => {
         expect(button).toHaveAttribute('data-testid')
       })
     })

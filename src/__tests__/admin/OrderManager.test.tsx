@@ -65,7 +65,7 @@ describe('OrderManager', () => {
     })
 
     const statusSelects = screen.getAllByRole('combobox')
-    const statusSelect = statusSelects.find(select => 
+    const statusSelect = statusSelects.find((select: HTMLElement) => 
       select.closest('tr')?.textContent?.includes('RV-2024-001')
     )
     
@@ -85,7 +85,7 @@ describe('OrderManager', () => {
     })
 
     const viewButtons = screen.getAllByRole('button')
-    const viewButton = viewButtons.find(btn => 
+    const viewButton = viewButtons.find((btn: HTMLElement) => 
       btn.querySelector('svg') && btn.closest('tr')?.textContent?.includes('RV-2024-001')
     )
     

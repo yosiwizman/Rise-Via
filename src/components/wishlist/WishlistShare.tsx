@@ -88,11 +88,7 @@ export const SharedWishlistPage = ({ shareCode, onNavigate }: SharedWishlistPage
   const handleAddSingleItem = (item: WishlistItem) => {
     if (!isInWishlist(item.id)) {
       addToWishlist({
-        name: item.name,
-        price: item.price,
-        image: item.image,
-        category: item.category,
-        effects: item.effects
+        id: item.id
       });
     }
   };

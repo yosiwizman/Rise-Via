@@ -59,7 +59,7 @@ describe('Dialog Component - Simple', () => {
       </MockDialog>
     )
     
-    const overlay = document.querySelector('.dialog-overlay')
+    const overlay = document.querySelector('.dialog-overlay') as HTMLElement
     if (overlay) {
       fireEvent.click(overlay)
       expect(handleOpenChange).toHaveBeenCalledWith(false)

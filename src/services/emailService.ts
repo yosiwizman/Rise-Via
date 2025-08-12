@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { sql } from '../lib/neon'
+import { sql } from '../lib/neon';
 
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || 'placeholder-key');
 
@@ -237,7 +237,7 @@ const emailService = {
         ORDER BY created_at DESC 
         LIMIT ${limit}
       `
-      return (logs || []) as EmailLog[]
+      return (logs || []) as Array<EmailLog>
     } catch {
       return []
     }

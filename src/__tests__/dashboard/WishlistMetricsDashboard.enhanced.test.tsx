@@ -171,7 +171,7 @@ describe('WishlistMetricsDashboard - Enhanced', () => {
       const buttons = screen.getAllByRole('button')
       expect(buttons).toHaveLength(2)
       
-      buttons.forEach(button => {
+      buttons.forEach((button: HTMLElement) => {
         expect(button).toHaveTextContent(/Export CSV|Refresh/)
       })
     })

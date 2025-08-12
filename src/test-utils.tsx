@@ -1,22 +1,44 @@
-import React, { ReactElement } from 'react'
-import { render, RenderOptions } from '@testing-library/react'
+import React from 'react';
+import { render as rtlRender, RenderOptions, RenderResult } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const MockCustomerProvider = ({ children }: { children: React.ReactNode }) => {
-  return <div data-testid="mock-customer-provider">{children}</div>
+import * as testingLibrary from '@testing-library/react';
+
+// eslint-disable-next-line react-refresh/only-export-components
+export * from '@testing-library/react';
+
+export const { screen, fireEvent, waitFor, within, cleanup, act } = testingLibrary;
+
+export { default as userEvent } from '@testing-library/user-event';
+
+interface AllTheProvidersProps {
+  children: React.ReactNode;
 }
 
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+// eslint-disable-next-line react-refresh/only-export-components
+function AllTheProviders({ children }: AllTheProvidersProps) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
   return (
-    <MockCustomerProvider>
-      {children}
-    </MockCustomerProvider>
-  )
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        {children}
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
 }
 
-const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => render(ui, { wrapper: AllTheProviders, ...options })
+function customRender(
+  ui: React.ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>
+): RenderResult {
+  return rtlRender(ui, { wrapper: AllTheProviders, ...options });
+}
 
-export * from '@testing-library/react'
-export { customRender as render }
+export { customRender as render };
+export default customRender;
