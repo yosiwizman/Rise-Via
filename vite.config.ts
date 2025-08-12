@@ -1,57 +1,35 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'RiseViA Cannabis',
-        short_name: 'RiseViA',
-        description: 'Premium THCA Cannabis Products',
-        theme_color: '#000000',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'react': 'react/index.js',
+      'react-dom': 'react-dom/index.js',
     },
   },
-  server: {
-    port: 5174,
-    host: true,
+  define: {
+    'process.env.NODE_ENV': '"development"',
   },
   build: {
     minify: false,
-    sourcemap: true,
+    sourcemap: 'inline',
+    cssCodeSplit: false,
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
+        format: 'es',
         manualChunks: undefined,
         inlineDynamicImports: true,
       }
-    },
-    chunkSizeWarningLimit: 2000,
-    target: 'esnext',
+    }
   },
-  optimizeDeps: {
-    exclude: ['@neondatabase/serverless']
+  esbuild: {
+    keepNames: true,
+    drop: [],
   }
 });
 
