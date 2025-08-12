@@ -11,7 +11,7 @@ export const sql = neon(DATABASE_URL);
 
 export { DATABASE_URL };
 
-export async function safeQuery<T = any>(
+export async function safeQuery<T = unknown>(
   queryFn: () => Promise<T>
 ): Promise<{ data?: T; error?: Error }> {
   try {
