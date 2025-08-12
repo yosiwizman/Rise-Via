@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { sql } from '../lib/neon';
 import type { Popup } from '../types/database';
 
@@ -34,7 +35,14 @@ export const popupService = {
         ORDER BY priority DESC
         LIMIT 20
       `;
-      return result as Popup[];
+      
+      return (result as Popup[]).map(popup => ({
+        ...popup,
+        content: DOMPurify.sanitize(popup.content, {
+          ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'],
+          ALLOWED_ATTR: ['href', 'target', 'rel']
+        })
+      }));
     } catch (error) {
       console.error('Failed to fetch active popups:', error);
       return [];
