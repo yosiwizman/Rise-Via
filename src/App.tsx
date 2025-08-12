@@ -2,6 +2,7 @@ import { useState, useEffect, startTransition } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
+import { PopupManager } from './components/PopupManager';
 import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
@@ -17,6 +18,7 @@ import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
 import { blogScheduler } from './services/blogScheduler';
+import { initializeTables } from './lib/database';
 import RegisterPage from './pages/RegisterPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
@@ -117,8 +119,24 @@ function App() {
       setShowStateBlocker(true);
     }
 
-    priceTrackingService.startPriceTracking();
-    blogScheduler.start();
+    const initializeApp = async () => {
+      try {
+        console.log('🔧 Initializing database tables...');
+        const success = await initializeTables();
+        if (success) {
+          console.log('✅ Database tables initialized successfully');
+        } else {
+          console.error('❌ Database initialization failed');
+        }
+      } catch (error) {
+        console.error('❌ Database initialization error:', error);
+      }
+      
+      priceTrackingService.startPriceTracking();
+      blogScheduler.start();
+    };
+    
+    initializeApp();
 
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
@@ -374,6 +392,9 @@ function App() {
             {showStateBlocker && (
               <StateBlocker onStateVerified={handleStateVerified} />
             )}
+
+            {/* Popup Management System */}
+            <PopupManager currentPage={currentPage} />
             {isAgeVerified && (
               <>
                 <WishlistInitializer />

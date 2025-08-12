@@ -1,9 +1,27 @@
-const sql = function(query: string, ...values: unknown[]) {
-  console.log('Mock SQL Query (database.ts):', query, values);
-  return Promise.resolve([{ success: true }]);
-};
+import { neon } from '@neondatabase/serverless';
+import { env } from '../config/env';
 
-sql.unsafe = (str: string) => str;
+const DATABASE_URL = env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  console.error('❌ DATABASE_URL is not configured');
+}
+
+export const sql = neon(DATABASE_URL);
+
+export { DATABASE_URL };
+
+export async function safeQuery<T = any>(
+  queryFn: () => Promise<T>
+): Promise<{ data?: T; error?: Error }> {
+  try {
+    const data = await queryFn();
+    return { data };
+  } catch (error) {
+    console.error('Database query error:', error);
+    return { error: error as Error };
+  }
+}
 
 export async function testConnection() {
   if (!sql) {
@@ -12,7 +30,7 @@ export async function testConnection() {
   }
   
   try {
-    const result = await sql('SELECT 1 as test');
+    const result = await sql`SELECT 1 as test`;
     console.log('Neon Database connected:', result);
     return true;
   } catch (error) {
@@ -30,7 +48,7 @@ export async function initializeTables() {
   
   try {
     // Products table
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS products (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
@@ -41,17 +59,17 @@ export async function initializeTables() {
         inventory INTEGER DEFAULT 0,
         description TEXT,
         effects TEXT[],
-        active BOOLEAN DEFAULT true,
+        status VARCHAR(50) DEFAULT 'active',
         images TEXT[],
         strain_type VARCHAR(50),
         terpenes TEXT[],
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Users table  
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -63,10 +81,10 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Customers table (for legacy compatibility)
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS customers (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -76,13 +94,13 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
-    // Customer profiles table
-    await sql(`
+    // Customer profiles table - create without foreign key constraints
+    await sql`
       CREATE TABLE IF NOT EXISTS customer_profiles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         membership_tier VARCHAR(50) DEFAULT 'GREEN',
         loyalty_points INTEGER DEFAULT 0,
         preferences JSONB DEFAULT '{}',
@@ -98,24 +116,24 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Wishlist sessions table
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS wishlist_sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_token VARCHAR(255) UNIQUE NOT NULL,
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Wishlist items table
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS wishlist_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        session_id UUID REFERENCES wishlist_sessions(id) ON DELETE CASCADE,
+        session_id UUID,
         product_id VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
@@ -128,15 +146,15 @@ export async function initializeTables() {
         price_alert TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Orders table
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS orders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         order_number VARCHAR(50) UNIQUE NOT NULL,
-        user_id UUID REFERENCES users(id),
-        customer_id UUID REFERENCES customers(id),
+        user_id UUID,
+        customer_id UUID,
         total DECIMAL(10,2) NOT NULL,
         subtotal DECIMAL(10,2) NOT NULL,
         tax DECIMAL(10,2) DEFAULT 0,
@@ -151,13 +169,13 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Order items table
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS order_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+        order_id UUID,
         product_id VARCHAR(255) NOT NULL,
         product_name VARCHAR(255) NOT NULL,
         quantity INTEGER NOT NULL,
@@ -165,50 +183,50 @@ export async function initializeTables() {
         discount DECIMAL(10,2) DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
-    // Cart items table
-    await sql(`
+    // Cart items table - create without foreign key constraints
+    await sql`
       CREATE TABLE IF NOT EXISTS cart_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID,
         session_token VARCHAR(255),
         product_id VARCHAR(255) NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
-    // Loyalty transactions table
-    await sql(`
+    // Loyalty transactions table - create without foreign key constraints
+    await sql`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         type VARCHAR(50) NOT NULL,
         points INTEGER NOT NULL,
         description TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
-    // Activity logs table (for admin dashboard)
-    await sql(`
+    // Activity logs table (for admin dashboard) - create without foreign key constraints
+    await sql`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id),
+        user_id UUID,
         action VARCHAR(100) NOT NULL,
         details JSONB,
         ip_address VARCHAR(45),
         user_agent TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS price_alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+        customer_id UUID,
         product_id VARCHAR(255) NOT NULL,
         product_name VARCHAR(255) NOT NULL,
         target_price DECIMAL(10,2) NOT NULL,
@@ -218,40 +236,19 @@ export async function initializeTables() {
         triggered_at TIMESTAMP,
         notification_sent BOOLEAN DEFAULT false
       )
-    `);
+    `;
 
     // Create indexes for better performance
-    await sql('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)');
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_status ON products(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_wishlist_items_session_id ON wishlist_items(session_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_customer_id ON price_alerts(customer_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_price_alerts_product_id ON price_alerts(product_id)`;
 
-    await sql(`
-      CREATE TABLE IF NOT EXISTS blog_posts (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        title VARCHAR(255) NOT NULL,
-        slug VARCHAR(255) UNIQUE NOT NULL,
-        content TEXT NOT NULL,
-        excerpt TEXT,
-        author_name VARCHAR(255) DEFAULT 'Rise-Via Team',
-        keywords TEXT[] DEFAULT '{}',
-        tone VARCHAR(50) DEFAULT 'educational',
-        target_length INTEGER DEFAULT 500,
-        status VARCHAR(20) DEFAULT 'draft',
-        published_at TIMESTAMP,
-        scheduled_at TIMESTAMP,
-        view_count INTEGER DEFAULT 0,
-        meta_description TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-
-    await sql(`
+    await sql`
       CREATE TABLE IF NOT EXISTS blog_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         title VARCHAR(255) NOT NULL,
@@ -270,13 +267,37 @@ export async function initializeTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
 
     // Create indexes for blog posts
-    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)');
-    await sql('CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)');
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_blog_posts_scheduled_at ON blog_posts(scheduled_at)`;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS popups (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        image_url VARCHAR(500),
+        trigger_type VARCHAR(50) NOT NULL DEFAULT 'timer',
+        trigger_delay INTEGER DEFAULT 5000,
+        is_active BOOLEAN DEFAULT true,
+        priority INTEGER DEFAULT 1,
+        target_pages TEXT[] DEFAULT '{}',
+        display_frequency VARCHAR(50) DEFAULT 'once_per_session',
+        start_date TIMESTAMP,
+        end_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for popups
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_active ON popups(is_active)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_priority ON popups(priority)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_popups_trigger_type ON popups(trigger_type)`;
 
     console.log('All tables initialized successfully');
     return true;
@@ -295,6 +316,3 @@ export async function hashPassword(password: string): Promise<string> {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
-
-// Export the sql instance for direct queries
-export { sql };
