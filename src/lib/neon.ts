@@ -55,7 +55,7 @@ export const mockDatabase = {
   blog_posts: []
 };
 
-export const sql = function(strings: TemplateStringsArray | string, ...values: unknown[]): Promise<any[]> {
+export const sql = function(strings: TemplateStringsArray | string, ...values: unknown[]): Promise<unknown[]> {
   let query: string;
   
   if (typeof strings === 'string') {

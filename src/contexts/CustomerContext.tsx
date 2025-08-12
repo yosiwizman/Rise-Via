@@ -118,7 +118,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       };
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: { email: string }) => c.email === mockUser.email);
+      const customerData = (customers as Array<{ email: string }>).find((c) => c.email === mockUser.email);
       
       if (customerData) {
         setCustomer(customerData as Customer);
@@ -149,12 +149,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = customers.find((c: { email: string }) => c.email === email);
+      const customerData = (customers as Array<{ email: string }>).find((c) => c.email === email);
       
       if (customerData) {
         setCustomer(customerData as Customer);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData };
+        return { success: true, customer: customerData as Customer };
       } else {
         setCustomer({
           id: mockUser.id,

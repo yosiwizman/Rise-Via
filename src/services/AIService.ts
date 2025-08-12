@@ -34,6 +34,7 @@ export class AIService {
   /**
    * Get personalized strain recommendations
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async getStrainRecommendation(_userPreferences: UserPreferences): Promise<string> {
     try {
       console.log('AI recommendation requested but API not available');
@@ -101,6 +102,7 @@ export class AIService {
   /**
    * Answer frequently asked questions
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async answerFAQ(_question: string): Promise<string> {
     try {
       console.log('FAQ requested but API not available');
@@ -150,6 +152,7 @@ export class AIService {
   /**
    * Generate compliance-aware marketing copy
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async generateMarketingCopy(productName: string, _targetAudience: string): Promise<string> {
     try {
       console.log('Marketing copy generation requested but API not available');

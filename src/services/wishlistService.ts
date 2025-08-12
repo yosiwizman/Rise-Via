@@ -30,11 +30,11 @@ export const wishlistService = {
     
     const existingSessions = await sql`SELECT * FROM wishlist_sessions WHERE session_token = ${token}`;
 
-    if (existingSessions.length > 0) return existingSessions[0];
+    if (existingSessions.length > 0) return existingSessions[0] as WishlistSession;
 
     const newSessions = await sql`INSERT INTO wishlist_sessions (session_token, created_at) VALUES (${token}, NOW()) RETURNING *`;
 
-    return newSessions[0];
+    return newSessions[0] as WishlistSession;
   },
 
   async getWishlistItems() {
