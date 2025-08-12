@@ -47,21 +47,8 @@ Medical Conditions: ${userPreferences.medicalConditions?.join(', ') || 'None spe
 
 Please recommend 3 specific strains and explain why each would be suitable. Focus on effects, terpene profiles, and user experience. Keep recommendations compliant and educational.`;
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'recommendation'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed with status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.response || 'Unable to generate recommendations at this time.';
+      console.log('AI recommendation requested but API not available');
+      return 'AI recommendations are currently unavailable. Please browse our product catalog or contact our support team for personalized assistance.';
     } catch (error) {
       console.error('AI recommendation error:', error);
       return 'Recommendation service temporarily unavailable. Please try again later or contact our support team.';
@@ -92,18 +79,8 @@ Effects: ${productData.effects.join(', ')}
 
 Create a 150-word description that highlights the unique characteristics, effects, and experience. Make it engaging and informative while maintaining compliance.`;
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'description'
-        })
-      });
-
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      return data.response || '';
+      console.log('Product description generation requested but API not available');
+      return `${productData.name} is a premium ${productData.strainType} strain with ${productData.thcPercentage}% THC. Experience the unique blend of ${productData.terpenes.join(', ')} terpenes for ${productData.effects.join(', ')} effects.`;
     } catch (error) {
       console.error('Product description generation error:', error);
       return '';
@@ -127,21 +104,8 @@ Create a 150-word description that highlights the unique characteristics, effect
         this.conversationHistory = this.conversationHistory.slice(-10);
       }
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: message,
-          type: 'chat'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed with status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const assistantResponse = data.response || 'I apologize, but I couldn\'t process your request. Please try again.';
+      console.log('Chat requested but API not available');
+      const assistantResponse = 'Thank you for your message! Our AI chat service is currently being updated. Please contact our support team for immediate assistance with your cannabis questions.';
 
       // Add assistant response to history
       this.conversationHistory.push({
@@ -168,18 +132,8 @@ Question: ${question}
 
 Provide a helpful, educational response that maintains compliance with cannabis regulations. If it's a medical question, remind them to consult a healthcare provider.`;
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'faq'
-        })
-      });
-
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      return data.response || 'Unable to answer at this time.';
+      console.log('FAQ requested but API not available');
+      return 'Thank you for your question! Our AI FAQ service is currently being updated. Please contact our support team for detailed answers to your cannabis-related questions.';
     } catch (error) {
       console.error('FAQ answer error:', error);
       return 'Unable to process your question. Please contact our support team.';
@@ -204,28 +158,27 @@ Return a JSON object with:
 - score: 0-1 (0 = very negative, 1 = very positive)
 - keywords: array of key phrases that indicate the sentiment`;
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'sentiment'
-        })
-      });
-
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
+      console.log('Sentiment analysis requested but API not available');
       
-      if (data.response) {
-        try {
-          return JSON.parse(data.response);
-        } catch {
-          // Fallback if JSON parsing fails
-          return { sentiment: 'neutral', score: 0.5, keywords: [] };
-        }
+      const positiveWords = ['great', 'excellent', 'amazing', 'love', 'perfect', 'awesome', 'fantastic'];
+      const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'horrible', 'worst', 'disappointing'];
+      
+      const lowerText = reviewText.toLowerCase();
+      const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length;
+      const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length;
+      
+      let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
+      let score = 0.5;
+      
+      if (positiveCount > negativeCount) {
+        sentiment = 'positive';
+        score = Math.min(0.7 + (positiveCount * 0.1), 1.0);
+      } else if (negativeCount > positiveCount) {
+        sentiment = 'negative';
+        score = Math.max(0.3 - (negativeCount * 0.1), 0.0);
       }
-
-      return { sentiment: 'neutral', score: 0.5, keywords: [] };
+      
+      return { sentiment, score, keywords: [...positiveWords, ...negativeWords].filter(word => lowerText.includes(word)) };
     } catch (error) {
       console.error('Sentiment analysis error:', error);
       return { sentiment: 'neutral', score: 0.5, keywords: [] };
@@ -248,18 +201,8 @@ Requirements:
 - Focus on experience and quality
 - Engaging and memorable`;
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          type: 'marketing'
-        })
-      });
-
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      return data.response || '';
+      console.log('Marketing copy generation requested but API not available');
+      return `Premium ${productName} - Experience Quality Cannabis`;
     } catch (error) {
       console.error('Marketing copy generation error:', error);
       return '';
