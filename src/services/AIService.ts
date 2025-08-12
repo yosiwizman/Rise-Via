@@ -36,17 +36,6 @@ export class AIService {
    */
   static async getStrainRecommendation(userPreferences: UserPreferences): Promise<string> {
     try {
-      const prompt = `Based on the following cannabis preferences, recommend suitable THCA strains:
-      
-Desired Effects: ${userPreferences.desiredEffects?.join(', ') || 'Not specified'}
-Experience Level: ${userPreferences.experienceLevel || 'Not specified'}
-Preferred Strain Type: ${userPreferences.preferredStrainType || 'Any'}
-THC Tolerance: ${userPreferences.thcTolerance || 'Unknown'}
-Price Range: ${userPreferences.priceRange ? `$${userPreferences.priceRange.min}-$${userPreferences.priceRange.max}` : 'Any'}
-Medical Conditions: ${userPreferences.medicalConditions?.join(', ') || 'None specified'}
-
-Please recommend 3 specific strains and explain why each would be suitable. Focus on effects, terpene profiles, and user experience. Keep recommendations compliant and educational.`;
-
       console.log('AI recommendation requested but API not available');
       return 'AI recommendations are currently unavailable. Please browse our product catalog or contact our support team for personalized assistance.';
     } catch (error) {
@@ -67,18 +56,6 @@ Please recommend 3 specific strains and explain why each would be suitable. Focu
     effects: string[];
   }): Promise<string> {
     try {
-
-      const prompt = `Create a compelling, SEO-friendly product description for:
-      
-Product: ${productData.name}
-Strain Type: ${productData.strainType}
-THC: ${productData.thcPercentage}%
-CBD: ${productData.cbdPercentage}%
-Terpenes: ${productData.terpenes.join(', ')}
-Effects: ${productData.effects.join(', ')}
-
-Create a 150-word description that highlights the unique characteristics, effects, and experience. Make it engaging and informative while maintaining compliance.`;
-
       console.log('Product description generation requested but API not available');
       return `${productData.name} is a premium ${productData.strainType} strain with ${productData.thcPercentage}% THC. Experience the unique blend of ${productData.terpenes.join(', ')} terpenes for ${productData.effects.join(', ')} effects.`;
     } catch (error) {
@@ -126,12 +103,6 @@ Create a 150-word description that highlights the unique characteristics, effect
    */
   static async answerFAQ(question: string): Promise<string> {
     try {
-      const prompt = `Answer this cannabis-related question concisely and accurately:
-      
-Question: ${question}
-
-Provide a helpful, educational response that maintains compliance with cannabis regulations. If it's a medical question, remind them to consult a healthcare provider.`;
-
       console.log('FAQ requested but API not available');
       return 'Thank you for your question! Our AI FAQ service is currently being updated. Please contact our support team for detailed answers to your cannabis-related questions.';
     } catch (error) {
@@ -149,15 +120,6 @@ Provide a helpful, educational response that maintains compliance with cannabis 
     keywords: string[];
   }> {
     try {
-      const prompt = `Analyze the sentiment of this cannabis product review:
-      
-"${reviewText}"
-
-Return a JSON object with:
-- sentiment: "positive", "neutral", or "negative"
-- score: 0-1 (0 = very negative, 1 = very positive)
-- keywords: array of key phrases that indicate the sentiment`;
-
       console.log('Sentiment analysis requested but API not available');
       
       const positiveWords = ['great', 'excellent', 'amazing', 'love', 'perfect', 'awesome', 'fantastic'];
@@ -190,17 +152,6 @@ Return a JSON object with:
    */
   static async generateMarketingCopy(productName: string, targetAudience: string): Promise<string> {
     try {
-      const prompt = `Create a short, engaging marketing tagline for:
-      
-Product: ${productName}
-Target Audience: ${targetAudience}
-
-Requirements:
-- Maximum 15 words
-- Compliance-friendly (no medical claims)
-- Focus on experience and quality
-- Engaging and memorable`;
-
       console.log('Marketing copy generation requested but API not available');
       return `Premium ${productName} - Experience Quality Cannabis`;
     } catch (error) {
