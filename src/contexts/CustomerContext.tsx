@@ -93,6 +93,21 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
 
   useEffect(() => {
     checkAuthStatus();
+
+    const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
+      if (event === 'SIGNED_OUT') {
+        setCustomer(null);
+        setIsAuthenticated(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        checkAuthStatus();
+      }
+    });
+
+    return () => {
+      if (authStateChange && typeof authStateChange.then === 'function') {
+        authStateChange.then(res => res?.unsubscribe());
+      }
+    };
   }, []);
 
   const checkAuthStatus = async () => {
