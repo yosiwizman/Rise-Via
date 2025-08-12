@@ -7,29 +7,27 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'react': 'react/index.js',
-      'react-dom': 'react-dom/index.js',
     },
   },
-  define: {
-    'process.env.NODE_ENV': '"development"',
+  server: {
+    port: 5174,
+    host: true,
   },
   build: {
-    minify: false,
-    sourcemap: 'inline',
-    cssCodeSplit: false,
-    assetsInlineLimit: 0,
+    minify: 'esbuild',
+    target: 'es2015',
     rollupOptions: {
       output: {
-        format: 'es',
-        manualChunks: undefined,
-        inlineDynamicImports: true,
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          neon: ['@neondatabase/serverless'],
+        }
       }
-    }
+    },
+    chunkSizeWarningLimit: 2000,
   },
-  esbuild: {
-    keepNames: true,
-    drop: [],
+  optimizeDeps: {
+    exclude: ['@neondatabase/serverless']
   }
 });
 
