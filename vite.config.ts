@@ -33,20 +33,7 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: false,
-          drop_debugger: true,
-        },
-        mangle: {
-          properties: false,
-          keep_fnames: true,
-        },
-        format: {
-          comments: false,
-        }
-      }
+      minify: 'esbuild'
     },
     optimizeDeps: {
       include: [
