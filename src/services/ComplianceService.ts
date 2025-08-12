@@ -91,20 +91,36 @@ class ComplianceService {
         return null;
       }
 
+      const firstResult = (result as Array<{
+        state: string;
+        is_legal: boolean;
+        age_requirement: number;
+        max_possession: string;
+        home_grow_allowed: boolean;
+        public_consumption: boolean;
+        driving_limit: string;
+        retail_sales_allowed: boolean;
+        delivery_allowed: boolean;
+        online_ordering_allowed: boolean;
+        tax_rate: string;
+        license_required: boolean;
+        last_updated: string;
+      }>)[0];
+
       const compliance: StateCompliance = {
-        state: result[0].state,
-        isLegal: result[0].is_legal,
-        ageRequirement: result[0].age_requirement,
-        maxPossession: result[0].max_possession,
-        homeGrowAllowed: result[0].home_grow_allowed,
-        publicConsumption: result[0].public_consumption,
-        drivingLimit: result[0].driving_limit,
-        retailSalesAllowed: result[0].retail_sales_allowed,
-        deliveryAllowed: result[0].delivery_allowed,
-        onlineOrderingAllowed: result[0].online_ordering_allowed,
-        taxRate: parseFloat(result[0].tax_rate),
-        licenseRequired: result[0].license_required,
-        lastUpdated: result[0].last_updated
+        state: firstResult.state,
+        isLegal: firstResult.is_legal,
+        ageRequirement: firstResult.age_requirement,
+        maxPossession: firstResult.max_possession,
+        homeGrowAllowed: firstResult.home_grow_allowed,
+        publicConsumption: firstResult.public_consumption,
+        drivingLimit: firstResult.driving_limit,
+        retailSalesAllowed: firstResult.retail_sales_allowed,
+        deliveryAllowed: firstResult.delivery_allowed,
+        onlineOrderingAllowed: firstResult.online_ordering_allowed,
+        taxRate: parseFloat(firstResult.tax_rate),
+        licenseRequired: firstResult.license_required,
+        lastUpdated: firstResult.last_updated
       };
 
       this.complianceCache.set(state, compliance);

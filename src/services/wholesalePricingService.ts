@@ -163,19 +163,19 @@ class WholesalePricingService {
         ORDER BY created_at DESC
       `;
 
-      return orders.map(order => ({
-        id: order.id,
-        customerId: order.customer_id,
-        orderNumber: order.order_number,
-        items: JSON.parse(order.items),
-        subtotal: parseFloat(order.subtotal),
-        discount: parseFloat(order.discount),
-        total: parseFloat(order.total),
-        creditTerms: order.credit_terms,
+      return (orders as Array<Record<string, unknown>>).map((order) => ({
+        id: order.id as string,
+        customerId: order.customer_id as string,
+        orderNumber: order.order_number as string,
+        items: JSON.parse(order.items as string),
+        subtotal: parseFloat(order.subtotal as string),
+        discount: parseFloat(order.discount as string),
+        total: parseFloat(order.total as string),
+        creditTerms: order.credit_terms as string,
         status: order.status as PurchaseOrder['status'],
-        createdAt: new Date(order.created_at),
-        dueDate: new Date(order.due_date)
-      }));
+        createdAt: new Date(order.created_at as string),
+        dueDate: new Date(order.due_date as string)
+      })) as PurchaseOrder[];
     } catch (error) {
       console.error('Error fetching purchase orders:', error);
       return [];

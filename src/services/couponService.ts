@@ -73,7 +73,7 @@ export const couponService = {
         LIMIT 1;
       `;
 
-      const row = result[0];
+      const row = result[0] as Record<string, unknown>;
       if (!row) {
         return { isValid: false, error: 'Invalid or expired coupon code' };
       }

@@ -39,7 +39,7 @@ const SystemSettings: React.FC = () => {
       `;
       
       const settingsMap: Record<string, unknown> = {};
-      data.forEach((setting: { key: string; value: unknown }) => {
+      (data as Array<{ key: string; value: unknown }>).forEach((setting) => {
         settingsMap[setting.key] = setting.value;
       });
       

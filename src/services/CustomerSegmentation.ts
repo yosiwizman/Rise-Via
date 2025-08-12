@@ -123,7 +123,7 @@ class CustomerSegmentationService {
       const segmentedCustomers = new Map<string, Customer[]>();
 
       for (const segment of this.segments) {
-        const matchingCustomers = customers.filter(segment.criteria) as Customer[];
+        const matchingCustomers = (customers as Customer[]).filter(segment.criteria);
         segmentedCustomers.set(segment.id, matchingCustomers);
       }
 
@@ -137,7 +137,7 @@ class CustomerSegmentationService {
   async getCustomerSegments(customerId: string): Promise<string[]> {
     try {
       const customers = await customerService.getAll();
-      const customer = customers.find(c => c.id === customerId);
+      const customer = (customers as Customer[]).find(c => c.id === customerId);
       
       if (!customer) return [];
 

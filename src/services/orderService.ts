@@ -44,7 +44,7 @@ export const orderService = {
 
       if (orders.length === 0) return null;
 
-      const order = orders[0];
+      const order = orders[0] as Record<string, unknown>;
 
       for (const item of orderData.items) {
         await sql`
@@ -53,7 +53,7 @@ export const orderService = {
         `;
       }
 
-      return order as Order;
+      return order as unknown as Order;
     } catch {
       return null;
     }

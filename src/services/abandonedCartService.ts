@@ -145,7 +145,7 @@ export const abandonedCartService = {
         LIMIT ${limit}
       `;
 
-      return result.map((row: Record<string, unknown>) => ({
+      return (result as Array<Record<string, unknown>>).map((row) => ({
         id: row.id as string,
         sessionId: row.session_id as string,
         customerEmail: row.customer_email as string,
