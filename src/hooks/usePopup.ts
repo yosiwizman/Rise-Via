@@ -55,12 +55,13 @@ export const usePopup = (currentPage: string = '/') => {
           setTimeout(() => showPopup(popup), popup.trigger_delay);
           break;
 
-        case 'timer':
+        case 'timer': {
           const timer = setTimeout(() => showPopup(popup), popup.trigger_delay);
           cleanupFunctions.push(() => clearTimeout(timer));
           break;
+        }
 
-        case 'scroll':
+        case 'scroll': {
           const handleScroll = () => {
             const scrollPercentage = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
             if (scrollPercentage >= 50) {
@@ -71,8 +72,9 @@ export const usePopup = (currentPage: string = '/') => {
           window.addEventListener('scroll', handleScroll, { passive: true });
           cleanupFunctions.push(() => window.removeEventListener('scroll', handleScroll));
           break;
+        }
 
-        case 'exit_intent':
+        case 'exit_intent': {
           const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY <= 0) {
               showPopup(popup);
@@ -82,12 +84,14 @@ export const usePopup = (currentPage: string = '/') => {
           document.addEventListener('mouseleave', handleMouseLeave);
           cleanupFunctions.push(() => document.removeEventListener('mouseleave', handleMouseLeave));
           break;
+        }
       }
     });
 
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [popups, canShowPopups]);
 
   const showPopup = useCallback((popup: Popup) => {
