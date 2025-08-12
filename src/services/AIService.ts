@@ -34,7 +34,7 @@ export class AIService {
   /**
    * Get personalized strain recommendations
    */
-  static async getStrainRecommendation(userPreferences: UserPreferences): Promise<string> {
+  static async getStrainRecommendation(_userPreferences: UserPreferences): Promise<string> {
     try {
       console.log('AI recommendation requested but API not available');
       return 'AI recommendations are currently unavailable. Please browse our product catalog or contact our support team for personalized assistance.';
@@ -101,7 +101,7 @@ export class AIService {
   /**
    * Answer frequently asked questions
    */
-  static async answerFAQ(question: string): Promise<string> {
+  static async answerFAQ(_question: string): Promise<string> {
     try {
       console.log('FAQ requested but API not available');
       return 'Thank you for your question! Our AI FAQ service is currently being updated. Please contact our support team for detailed answers to your cannabis-related questions.';
@@ -150,7 +150,7 @@ export class AIService {
   /**
    * Generate compliance-aware marketing copy
    */
-  static async generateMarketingCopy(productName: string, targetAudience: string): Promise<string> {
+  static async generateMarketingCopy(productName: string, _targetAudience: string): Promise<string> {
     try {
       console.log('Marketing copy generation requested but API not available');
       return `Premium ${productName} - Experience Quality Cannabis`;
