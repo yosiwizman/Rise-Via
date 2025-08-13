@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
@@ -17,8 +17,12 @@ export const StateBlocker = ({ onStateVerified }: StateBlockerProps) => {
   const [selectedState, setSelectedState] = useState<string>('');
   const [isBlocked, setIsBlocked] = useState<boolean>(false);
   const [showStateSelector, setShowStateSelector] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   useEffect(() => {
+    // Only run once on mount
+    if (isInitialized) return;
+    
     const savedState = getUserState();
     if (savedState) {
       setSelectedState(savedState);
@@ -26,12 +30,16 @@ export const StateBlocker = ({ onStateVerified }: StateBlockerProps) => {
       setIsBlocked(blocked);
       if (!blocked) {
         setShowStateSelector(false);
-        onStateVerified(savedState);
+        // Use setTimeout to avoid potential synchronous state update issues
+        setTimeout(() => {
+          onStateVerified(savedState);
+        }, 0);
       }
     }
-  }, [onStateVerified]);
+    setIsInitialized(true);
+  }, [isInitialized]); // Remove onStateVerified from dependencies
 
-  const handleStateSelection = (state: string) => {
+  const handleStateSelection = useCallback((state: string) => {
     setSelectedState(state);
     setUserState(state);
     const blocked = isStateBlocked(state);
@@ -39,9 +47,12 @@ export const StateBlocker = ({ onStateVerified }: StateBlockerProps) => {
     
     if (!blocked) {
       setShowStateSelector(false);
-      onStateVerified(state);
+      // Use setTimeout to avoid potential synchronous state update issues
+      setTimeout(() => {
+        onStateVerified(state);
+      }, 0);
     }
-  };
+  }, [onStateVerified]);
 
   if (!showStateSelector && !isBlocked) {
     return null;
