@@ -29,7 +29,6 @@ export interface ComplianceAlert {
   resolvedAt?: string;
 }
 
-
 export interface AuditLog {
   id: string;
   userId: string;
@@ -42,7 +41,6 @@ export interface AuditLog {
   complianceFlags: string[];
 }
 
-
 interface ComplianceEvent {
   id?: string;
   event_type: 'age_verification' | 'state_block' | 'purchase_limit' | 'id_verification' | 'metrc_sync';
@@ -54,7 +52,46 @@ interface ComplianceEvent {
   created_at?: string;
 }
 
+interface StateComplianceRow {
+  state: string;
+  is_legal: boolean;
+  age_requirement: number;
+  max_possession: string;
+  home_grow_allowed: boolean;
+  public_consumption: boolean;
+  driving_limit: string;
+  retail_sales_allowed: boolean;
+  delivery_allowed: boolean;
+  online_ordering_allowed: boolean;
+  tax_rate: string;
+  license_required: boolean;
+  last_updated: string | Date;
+}
 
+interface ComplianceAlertRow {
+  id: string;
+  type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  action_required: boolean;
+  deadline?: Date;
+  affected_states: string;
+  created_at: Date;
+  resolved_at?: Date;
+}
+
+interface ComplianceEventRow {
+  event_type: string;
+  compliance_result: boolean;
+  risk_score: number;
+}
+
+interface PurchaseLimitRow {
+  last_purchase_date: string;
+  daily_amount: number;
+  monthly_amount: number;
+}
 
 class ComplianceService {
   private static instance: ComplianceService;
@@ -91,21 +128,7 @@ class ComplianceService {
         return null;
       }
 
-      const firstResult = (result as Array<{
-        state: string;
-        is_legal: boolean;
-        age_requirement: number;
-        max_possession: string;
-        home_grow_allowed: boolean;
-        public_consumption: boolean;
-        driving_limit: string;
-        retail_sales_allowed: boolean;
-        delivery_allowed: boolean;
-        online_ordering_allowed: boolean;
-        tax_rate: string;
-        license_required: boolean;
-        last_updated: string;
-      }>)[0];
+      const firstResult = result[0] as StateComplianceRow;
 
       const compliance: StateCompliance = {
         state: firstResult.state,
@@ -120,7 +143,7 @@ class ComplianceService {
         onlineOrderingAllowed: firstResult.online_ordering_allowed,
         taxRate: parseFloat(firstResult.tax_rate),
         licenseRequired: firstResult.license_required,
-        lastUpdated: firstResult.last_updated
+        lastUpdated: typeof firstResult.last_updated === 'string' ? firstResult.last_updated : firstResult.last_updated.toISOString()
       };
 
       this.complianceCache.set(state, compliance);
@@ -147,21 +170,7 @@ class ComplianceService {
         ORDER BY state, last_updated DESC
       `;
 
-      const complianceData: StateCompliance[] = (result as Array<{
-        state: string;
-        is_legal: boolean;
-        age_requirement: number;
-        max_possession: string;
-        home_grow_allowed: boolean;
-        public_consumption: boolean;
-        driving_limit: string;
-        retail_sales_allowed: boolean;
-        delivery_allowed: boolean;
-        online_ordering_allowed: boolean;
-        tax_rate: string;
-        license_required: boolean;
-        last_updated: string | Date;
-      }>).map((row) => ({
+      const complianceData: StateCompliance[] = (result as StateComplianceRow[]).map((row) => ({
         state: row.state,
         isLegal: row.is_legal,
         ageRequirement: row.age_requirement,
@@ -316,18 +325,7 @@ class ComplianceService {
 
       const result = await query;
 
-      return (result as unknown as Array<{
-        id: string;
-        type: 'regulatory_change' | 'license_expiry' | 'tax_update' | 'shipping_restriction';
-        severity: 'low' | 'medium' | 'high' | 'critical';
-        title: string;
-        description: string;
-        action_required: boolean;
-        deadline?: Date;
-        affected_states: string;
-        created_at: Date;
-        resolved_at?: Date;
-      }>).map((row) => ({
+      return (result as ComplianceAlertRow[]).map((row) => ({
         id: row.id,
         type: row.type,
         severity: row.severity,
@@ -366,7 +364,7 @@ class ComplianceService {
         ) RETURNING id
       `;
 
-      return (result as unknown as Array<{ id: string }>)[0]?.id;
+      return (result as Array<{ id: string }>)[0]?.id;
     } catch (error) {
       console.error('Error creating compliance alert:', error);
       throw new Error('Failed to create compliance alert');
@@ -436,11 +434,7 @@ class ComplianceService {
       WHERE user_id = ${userId} OR session_id = ${sessionId}
       LIMIT 1
     `;
-    const existingLimit = (existingLimitResult as unknown as Array<{
-      last_purchase_date: string;
-      daily_amount: number;
-      monthly_amount: number;
-    }>)[0];
+    const existingLimit = (existingLimitResult as PurchaseLimitRow[])[0];
 
     const today = new Date().toDateString();
     const dailyLimit = 1000;
@@ -467,7 +461,7 @@ class ComplianceService {
       compliance_result: withinLimits
     });
 
-    return withinLimits;
+    return wit hinLimits;
   }
 
   async getComplianceReport(startDate: string, endDate: string): Promise<{
@@ -496,11 +490,7 @@ class ComplianceService {
       ORDER BY created_at DESC
     `;
 
-    const typedEvents = (events as unknown as Array<{
-      event_type: string;
-      compliance_result: boolean;
-      risk_score: number;
-    }>) || [];
+    const typedEvents = (events as ComplianceEventRow[]) || [];
     
     const report = {
       totalEvents: typedEvents.length,

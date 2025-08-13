@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
 import { authService } from '../services/authService';
 import { customerService } from '../services/customerService';
 import { emailService } from '../services/emailService';
@@ -91,6 +91,29 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const checkAuthStatus = useCallback(async () => {
+    try {
+      const mockUser = {
+        id: 'mock-user-id',
+        email: 'user@example.com'
+      };
+
+      const customers = await customerService.getAll();
+      const customerData = (customers as Customer[]).find((c) => c.email === mockUser.email);
+      
+      if (customerData) {
+        setCustomer(customerData);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch {
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     checkAuthStatus();
 
@@ -108,30 +131,7 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
         authStateChange.then(res => res?.unsubscribe());
       }
     };
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const mockUser = {
-        id: 'mock-user-id',
-        email: 'user@example.com'
-      };
-
-      const customers = await customerService.getAll();
-      const customerData = (customers as Array<{ email: string }>).find((c) => c.email === mockUser.email);
-      
-      if (customerData) {
-        setCustomer(customerData as Customer);
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch {
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [checkAuthStatus]);
 
   const login = async (email: string): Promise<LoginResult> => {
     try {
@@ -149,12 +149,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       }
 
       const customers = await customerService.getAll();
-      const customerData = (customers as Array<{ email: string }>).find((c) => c.email === email);
+      const customerData = (customers as Customer[]).find((c) => c.email === email);
       
       if (customerData) {
-        setCustomer(customerData as Customer);
+        setCustomer(customerData);
         setIsAuthenticated(true);
-        return { success: true, customer: customerData as Customer };
+        return { success: true, customer: customerData };
       } else {
         setCustomer({
           id: mockUser.id,

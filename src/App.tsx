@@ -2,7 +2,7 @@ import { useState, useEffect, startTransition } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
-import { PopupManager } from './components/PopupManager';
+// import { PopupManager } from './components/PopupManager'; // TEMPORARILY DISABLED TO FIX FREEZE
 import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
@@ -228,7 +228,7 @@ function App() {
 
           // Interval to maintain right-side positioning
           const maintainPosition = () => {
-            const currentStyle = element.getAttribute('style') || '';
+            const currentStyle =element.getAttribute('style') || '';
             if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
               element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
               element.style.left = 'auto';
@@ -393,8 +393,8 @@ function App() {
               <StateBlocker onStateVerified={handleStateVerified} />
             )}
 
-            {/* Popup Management System */}
-            <PopupManager currentPage={currentPage} />
+            {/* Popup Management System - TEMPORARILY DISABLED TO FIX FREEZE */}
+            {/* <PopupManager currentPage={currentPage} /> */}
             {isAgeVerified && (
               <>
                 <WishlistInitializer />

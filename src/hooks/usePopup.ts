@@ -27,6 +27,36 @@ export const usePopup = (currentPage: string = '/') => {
     loadPopups();
   }, [canShowPopups, currentPage]);
 
+  const showPopup = useCallback((popup: Popup) => {
+    const sessionKey = `popup_${popup.id}_session`;
+    const dayKey = `popup_${popup.id}_day`;
+    
+    if (popup.display_frequency === 'once_per_session' && sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+    if (popup.display_frequency === 'once_per_day') {
+      const lastShown = localStorage.getItem(dayKey);
+      if (lastShown) {
+        const lastShownDate = new Date(lastShown);
+        const today = new Date();
+        if (lastShownDate.toDateString() === today.toDateString()) {
+          return;
+        }
+      }
+    }
+    
+    setActivePopup(popup);
+    setIsVisible(true);
+    
+    if (popup.display_frequency === 'once_per_session') {
+      sessionStorage.setItem(sessionKey, 'true');
+    } else if (popup.display_frequency === 'once_per_day') {
+      localStorage.setItem(dayKey, new Date().toISOString());
+    }
+    
+    document.body.style.overflow = 'hidden';
+  }, []);
+
   useEffect(() => {
     if (!canShowPopups || popups.length === 0) return;
 
@@ -91,38 +121,7 @@ export const usePopup = (currentPage: string = '/') => {
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [popups, canShowPopups]);
-
-  const showPopup = useCallback((popup: Popup) => {
-    const sessionKey = `popup_${popup.id}_session`;
-    const dayKey = `popup_${popup.id}_day`;
-    
-    if (popup.display_frequency === 'once_per_session' && sessionStorage.getItem(sessionKey)) {
-      return;
-    }
-    if (popup.display_frequency === 'once_per_day') {
-      const lastShown = localStorage.getItem(dayKey);
-      if (lastShown) {
-        const lastShownDate = new Date(lastShown);
-        const today = new Date();
-        if (lastShownDate.toDateString() === today.toDateString()) {
-          return;
-        }
-      }
-    }
-    
-    setActivePopup(popup);
-    setIsVisible(true);
-    
-    if (popup.display_frequency === 'once_per_session') {
-      sessionStorage.setItem(sessionKey, 'true');
-    } else if (popup.display_frequency === 'once_per_day') {
-      localStorage.setItem(dayKey, new Date().toISOString());
-    }
-    
-    document.body.style.overflow = 'hidden';
-  }, []);
+  }, [popups, canShowPopups, showPopup]);
 
   const closePopup = useCallback(() => {
     setIsVisible(false);
