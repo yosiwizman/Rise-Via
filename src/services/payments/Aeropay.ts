@@ -111,9 +111,20 @@ export class AeropayProvider implements PaymentProvider {
     }
   }
 
-  validateWebhook(payload: Record<string, unknown>): boolean {
-    return !!(payload && 
-             typeof payload.provider === 'string' && payload.provider === 'aeropay' && 
-             typeof payload.payment_id === 'string' && payload.payment_id);
+  validateWebhook(payload: string | Buffer, signature: string): boolean {
+    try {
+      // Parse the payload if it's a string or Buffer
+      const data = typeof payload === 'string' 
+        ? JSON.parse(payload) 
+        : JSON.parse(payload.toString());
+      
+      // Validate the webhook data structure
+      return !!(data && 
+               typeof data.provider === 'string' && data.provider === 'aeropay' && 
+               typeof data.payment_id === 'string' && data.payment_id &&
+               signature && signature.length > 0);
+    } catch {
+      return false;
+    }
   }
 }

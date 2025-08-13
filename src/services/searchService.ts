@@ -154,7 +154,7 @@ export class SearchService {
    */
   async filter(products: Product[], filters: SearchFilters): Promise<Product[]> {
     // If we have database access, do filtering in SQL
-    if (sql && (!products || products.length === 0)) {
+    if (!products || products.length === 0) {
       return this.searchAndFilter(filters);
     }
 
@@ -237,41 +237,61 @@ export class SearchService {
 
       // Build dynamic query conditions
       const conditions: string[] = [];
+      const params: any = {};
+      let paramIndex = 1;
       
       // Search query
       if (filters.query) {
         conditions.push(`(
           to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')) 
-          @@ plainto_tsquery('english', ${sql.literal(filters.query)})
-          OR name ILIKE ${sql.literal(`%${filters.query}%`)}
-          OR description ILIKE ${sql.literal(`%${filters.query}%`)}
+          @@ plainto_tsquery('english', $${paramIndex})
+          OR name ILIKE $${paramIndex + 1}
+          OR description ILIKE $${paramIndex + 2}
         )`);
+        params[`$${paramIndex}`] = filters.query;
+        params[`$${paramIndex + 1}`] = `%${filters.query}%`;
+        params[`$${paramIndex + 2}`] = `%${filters.query}%`;
+        paramIndex += 3;
       }
 
       // Category filter
       if (filters.category && filters.category !== 'all') {
-        conditions.push(`category = ${sql.literal(filters.category)}`);
+        conditions.push(`category = $${paramIndex}`);
+        params[`$${paramIndex}`] = filters.category;
+        paramIndex++;
       }
 
       // Strain type filter
       if (filters.strainType && filters.strainType !== 'all') {
-        conditions.push(`strain_type = ${sql.literal(filters.strainType)}`);
+        conditions.push(`strain_type = $${paramIndex}`);
+        params[`$${paramIndex}`] = filters.strainType;
+        paramIndex++;
       }
 
       // Price range filter
       if (filters.priceRange) {
-        conditions.push(`price BETWEEN ${filters.priceRange.min} AND ${filters.priceRange.max}`);
+        conditions.push(`price BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+        params[`$${paramIndex}`] = filters.priceRange.min;
+        params[`$${paramIndex + 1}`] = filters.priceRange.max;
+        paramIndex += 2;
       }
 
       // THC range filter
       if (filters.thcRange) {
-        conditions.push(`COALESCE(thca_percentage, thc, 0) BETWEEN ${filters.thcRange.min} AND ${filters.thcRange.max}`);
+        conditions.push(`COALESCE(thca_percentage, thc, 0) BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
+        params[`$${paramIndex}`] = filters.thcRange.min;
+        params[`$${paramIndex + 1}`] = filters.thcRange.max;
+        paramIndex += 2;
       }
 
       // Effects filter
       if (filters.effects && filters.effects.length > 0) {
-        const effectsArray = `ARRAY[${filters.effects.map(e => sql.literal(e)).join(',')}]`;
+        const effectsArray = `ARRAY[${filters.effects.map((_, i) => `$${paramIndex + i}`).join(',')}]`;
+        filters.effects.forEach((effect, i) => {
+          params[`$${paramIndex + i}`] = effect;
+        });
         conditions.push(`effects && ${effectsArray}`);
+        paramIndex += filters.effects.length;
       }
 
       // Build ORDER BY clause
@@ -304,13 +324,15 @@ export class SearchService {
       let products: Product[];
       
       if (conditions.length > 0) {
-        // Use template literal with raw SQL for WHERE clause
         const whereClause = conditions.join(' AND ');
-        products = await sql`
+        const queryString = `
           SELECT * FROM products
-          WHERE ${sql(whereClause)}
-          ORDER BY ${sql(orderBy)}
-        ` as Product[];
+          WHERE ${whereClause}
+          ORDER BY ${orderBy}
+        `;
+        
+        // Execute with parameterized values
+        products = await sql(queryString, Object.values(params)) as Product[];
       } else {
         // No conditions, just order
         products = await sql`

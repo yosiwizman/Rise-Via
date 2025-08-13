@@ -99,9 +99,20 @@ export class POSaBITProvider implements PaymentProvider {
     }
   }
 
-  validateWebhook(payload: Record<string, unknown>): boolean {
-    return !!(payload && 
-             typeof payload.provider === 'string' && payload.provider === 'posabit' && 
-             typeof payload.transaction_id === 'string' && payload.transaction_id);
+  validateWebhook(payload: string | Buffer, signature: string): boolean {
+    try {
+      // Parse the payload if it's a string or Buffer
+      const data = typeof payload === 'string' 
+        ? JSON.parse(payload) 
+        : JSON.parse(payload.toString());
+      
+      // Validate the webhook data structure
+      return !!(data && 
+               typeof data.provider === 'string' && data.provider === 'posabit' && 
+               typeof data.transaction_id === 'string' && data.transaction_id &&
+               signature && signature.length > 0);
+    } catch {
+      return false;
+    }
   }
 }

@@ -96,11 +96,22 @@ export class StripeProvider implements PaymentProvider {
     }
   }
 
-  validateWebhook(payload: Record<string, unknown>): boolean {
-    return !!(payload && 
-             typeof payload.type === 'string' && payload.type &&
-             payload.data && 
-             typeof payload.data === 'object' && payload.data !== null &&
-             'object' in payload.data);
+  validateWebhook(payload: string | Buffer, signature: string): boolean {
+    try {
+      // Parse the payload if it's a string or Buffer
+      const data = typeof payload === 'string' 
+        ? JSON.parse(payload) 
+        : JSON.parse(payload.toString());
+      
+      // Validate the webhook data structure for Stripe
+      return !!(data && 
+               typeof data.type === 'string' && data.type &&
+               data.data && 
+               typeof data.data === 'object' && data.data !== null &&
+               'object' in data.data &&
+               signature && signature.length > 0);
+    } catch {
+      return false;
+    }
   }
 }
