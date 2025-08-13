@@ -48,6 +48,12 @@ interface NotificationConfig {
   };
 }
 
+interface SystemSetting {
+  setting_key: string;
+  setting_value: string;
+  updated_at?: string;
+}
+
 const NotificationSettings: React.FC = () => {
   const [config, setConfig] = useState<NotificationConfig>({
     push_notifications: {
@@ -97,13 +103,13 @@ const NotificationSettings: React.FC = () => {
 
   const loadNotificationConfig = async () => {
     try {
-      const data = await sql`
+      const data = await sql<SystemSetting[]>`
         SELECT * FROM system_settings 
         WHERE setting_key = 'notification_config'
         LIMIT 1
       `;
       if (data && data[0]) {
-        setConfig(JSON.parse(data[0].setting_value as string));
+        setConfig(JSON.parse(data[0].setting_value));
       }
     } catch (error) {
       console.error('Failed to load notification config:', error);
@@ -128,19 +134,33 @@ const NotificationSettings: React.FC = () => {
     }
   };
 
-  const toggleChannel = (category: keyof NonNullable<NotificationConfig['notification_channels']>, channel: 'email' | 'sms' | 'push') => {
+  const toggleChannel = (category: keyof NonNullable<NotificationConfig['notification_channels']>, channel: string) => {
     const channels = config.notification_channels?.[category] || [];
-    const updated = channels.includes(channel)
-      ? channels.filter(c => c !== channel)
-      : [...channels, channel];
+    
+    // Type guard to ensure channel is valid for the category
+    if (category === 'system' && channel === 'sms') {
+      return; // System category doesn't support SMS
+    }
+    
+    const typedChannel = channel as any; // We've already validated above
+    const updated = channels.includes(typedChannel)
+      ? channels.filter(c => c !== typedChannel)
+      : [...channels, typedChannel];
     
     setConfig({
       ...config,
       notification_channels: {
         ...config.notification_channels,
         [category]: updated
-      }
+      } as NotificationConfig['notification_channels']
     });
+  };
+
+  const getAvailableChannels = (category: keyof NonNullable<NotificationConfig['notification_channels']>): string[] => {
+    if (category === 'system') {
+      return ['email', 'push'];
+    }
+    return ['email', 'sms', 'push'];
   };
 
   return (
@@ -353,11 +373,11 @@ const NotificationSettings: React.FC = () => {
               <div key={category} className="space-y-2">
                 <Label className="capitalize">{category.replace(/_/g, ' ')}</Label>
                 <div className="flex gap-4">
-                  {(['email', 'sms', 'push'] as const).map((channel) => (
+                  {getAvailableChannels(category as keyof NonNullable<NotificationConfig['notification_channels']>).map((channel) => (
                     <label key={channel} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
-                        checked={channels.includes(channel)}
+                        checked={channels.includes(channel as any)}
                         onChange={() => toggleChannel(category as keyof NonNullable<NotificationConfig['notification_channels']>, channel)}
                         className="rounded border-gray-300 text-risevia-purple focus:ring-risevia-purple"
                       />
