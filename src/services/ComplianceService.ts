@@ -461,7 +461,7 @@ class ComplianceService {
       compliance_result: withinLimits
     });
 
-    return wit hinLimits;
+    return withinLimits;
   }
 
   async getComplianceReport(startDate: string, endDate: string): Promise<{
