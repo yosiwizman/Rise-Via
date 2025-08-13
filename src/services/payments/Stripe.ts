@@ -6,7 +6,7 @@ export class StripeProvider implements PaymentProvider {
   private apiKey: string;
   private stripe: Stripe;
 
-  constructor(apiKey: string, testMode = false) {
+  constructor(apiKey: string, _testMode = false) {
     this.apiKey = apiKey;
     this.stripe = new Stripe(apiKey, {
       apiVersion: '2025-07-30.basil' as Stripe.LatestApiVersion,
