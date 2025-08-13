@@ -92,7 +92,7 @@
     "framer-motion": "^12.23.12",
     "input-otp": "^1.4.2",
     "js-cookie": "^3.0.5",
-    "langchain": "^0.1.37",
+    "langchain": "^0.3.30",
     "lucide-react": "^0.364.0",
     "next-seo": "^6.8.0",
     "next-themes": "^0.4.6",
@@ -152,6 +152,6 @@
     "vite": "^6.0.1",
     "vite-bundle-analyzer": "^1.2.1",
     "vite-plugin-pwa": "^1.0.2",
-    "vitest": "^1.6.1"
+    "vitest": "^3.2.4"
   }
 }

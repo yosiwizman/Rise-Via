@@ -117,19 +117,12 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
   useEffect(() => {
     checkAuthStatus();
 
-    const authStateChange = authService.onAuthStateChange((event: string, session: unknown) => {
-      if (event === 'SIGNED_OUT') {
-        setCustomer(null);
-        setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' && session) {
-        checkAuthStatus();
-      }
-    });
-
+    // Note: onAuthStateChange is not implemented in the current auth service
+    // This would be implemented when using a service like Supabase
+    // For now, we'll handle auth state manually through login/logout methods
+    
     return () => {
-      if (authStateChange && typeof authStateChange.then === 'function') {
-        authStateChange.then(res => res?.unsubscribe());
-      }
+      // Cleanup if needed
     };
   }, [checkAuthStatus]);
 
@@ -178,7 +171,9 @@ export const CustomerProvider = ({ children }: CustomerProviderProps) => {
       const authResult = await authService.register(
         registrationData.email,
         registrationData.password,
-        { firstName: registrationData.firstName, lastName: registrationData.lastName }
+        registrationData.firstName,
+        registrationData.lastName,
+        registrationData.phone
       );
 
       if (authResult.user) {

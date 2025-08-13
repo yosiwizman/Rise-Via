@@ -6,8 +6,13 @@
 import { POSaBITProvider } from './payments/POSaBIT';
 import { AeropayProvider } from './payments/Aeropay';
 import { HypurProvider } from './payments/Hypur';
-import { SecurityUtils } from '../utils/security';
-import { ComplianceManager } from '../utils/compliance';
+import { 
+  createPaymentTransaction,
+  updatePaymentTransaction,
+  performFraudCheck,
+  initializePaymentTables,
+  type FraudCheckResult
+} from '../lib/payment';
 
 export interface PaymentProcessor {
   name: string;
@@ -56,51 +61,28 @@ export class PaymentService {
     this.posabit = new POSaBITProvider(import.meta.env.VITE_POSABIT_API_KEY || '', testMode);
     this.aeropay = new AeropayProvider(import.meta.env.VITE_AEROPAY_API_KEY || '', testMode);
     this.hypur = new HypurProvider(import.meta.env.VITE_HYPUR_API_KEY || '', testMode);
+    
+    // Initialize payment tables
+    initializePaymentTables();
   }
 
   /**
    * Enhanced fraud detection for payment processing
    */
-  private async detectPaymentFraud(orderData: OrderData, customerData: Record<string, unknown>): Promise<{ isValid: boolean; riskScore: number; reasons: string[] }> {
-    const reasons: string[] = [];
-    let riskScore = 0;
-
-    const rateLimitKey = `payment_${customerData.email || orderData.customerId}`;
-    if (!SecurityUtils.checkRateLimit(rateLimitKey, 3, 300000)) {
-      riskScore += 0.8;
-      reasons.push('Excessive payment attempts detected');
-    }
-
-    if (orderData.amount > 5000) {
-      riskScore += 0.3;
-      reasons.push('High-value transaction requires additional verification');
-    }
-
-    if (orderData.amount < 10) {
-      riskScore += 0.2;
-      reasons.push('Unusually low transaction amount');
-    }
-
-    if (!SecurityUtils.isValidEmail(orderData.customerId)) {
-      riskScore += 0.4;
-      reasons.push('Invalid customer email format');
-    }
-
-    const complianceResult = ComplianceManager.verifyAge({
-      userAgent: navigator.userAgent,
-      timestamp: Date.now()
-    });
-
-    riskScore += complianceResult.riskScore * 0.5;
-    if (complianceResult.reasons.length > 0) {
-      reasons.push(...complianceResult.reasons);
-    }
-
-    return {
-      isValid: riskScore < 0.8,
-      riskScore: Math.min(riskScore, 1.0),
-      reasons
-    };
+  private async detectPaymentFraud(
+    orderData: OrderData, 
+    customerData: Record<string, unknown>,
+    ipAddress: string = '',
+    userAgent: string = ''
+  ): Promise<FraudCheckResult> {
+    return await performFraudCheck(
+      orderData.customerId,
+      orderData.amount,
+      'card', // Default payment method
+      ipAddress,
+      userAgent,
+      customerData.billingAddress as Record<string, unknown>
+    );
   }
 
   /**
@@ -130,10 +112,46 @@ export class PaymentService {
   /**
    * Process payment with enhanced security and fraud detection
    */
-  async processPayment(orderData: OrderData, preferredProcessor?: string, customerData?: Record<string, unknown>): Promise<PaymentResult> {
+  async processPayment(
+    orderData: OrderData, 
+    preferredProcessor?: string, 
+    customerData?: Record<string, unknown>,
+    ipAddress: string = '',
+    userAgent: string = ''
+  ): Promise<PaymentResult> {
+    let transactionId: string | null = null;
+    
     try {
-      const fraudCheck = await this.detectPaymentFraud(orderData, customerData || {});
+      // Create initial transaction record
+      const transaction = await createPaymentTransaction(
+        orderData.orderId,
+        orderData.customerId,
+        orderData.amount,
+        preferredProcessor || 'unknown',
+        preferredProcessor || 'default',
+        { orderData, customerData }
+      );
+
+      if (!transaction) {
+        return {
+          success: false,
+          error: 'Failed to create payment transaction record'
+        };
+      }
+
+      transactionId = transaction.id;
+
+      // Perform fraud detection
+      const fraudCheck = await this.detectPaymentFraud(orderData, customerData || {}, ipAddress, userAgent);
+      
       if (!fraudCheck.isValid) {
+        await updatePaymentTransaction(
+          transactionId,
+          'failed',
+          undefined,
+          `Fraud detection: ${fraudCheck.reasons.join(', ')}`
+        );
+        
         console.warn('Payment blocked due to fraud detection:', fraudCheck);
         return {
           success: false,
@@ -141,10 +159,34 @@ export class PaymentService {
         };
       }
 
+      if (fraudCheck.requiresManualReview) {
+        await updatePaymentTransaction(
+          transactionId,
+          'pending',
+          undefined,
+          `Manual review required: ${fraudCheck.reasons.join(', ')}`
+        );
+        
+        return {
+          success: false,
+          error: 'Payment requires manual review. Our team will contact you shortly.'
+        };
+      }
+
+      // Update transaction status to processing
+      await updatePaymentTransaction(transactionId, 'processing');
+
       const processors = this.getAvailableProcessors();
       const availableProcessors = processors.filter(p => p.isAvailable);
 
       if (availableProcessors.length === 0) {
+        await updatePaymentTransaction(
+          transactionId,
+          'failed',
+          undefined,
+          'No payment processors configured'
+        );
+        
         return {
           success: false,
           error: 'No payment processors configured. Please contact support.'
@@ -162,36 +204,85 @@ export class PaymentService {
         }
       };
 
+      let paymentResult: PaymentResult;
+
       if (preferredProcessor) {
         const processor = availableProcessors.find(p => p.name === preferredProcessor);
         if (processor) {
           switch (processor.name) {
             case 'POSaBIT':
-              return await this.posabit.processPayment(orderData.amount, customer);
+              paymentResult = await this.posabit.processPayment(orderData.amount, customer);
+              break;
             case 'Aeropay':
-              return await this.aeropay.processPayment(orderData.amount, customer);
+              paymentResult = await this.aeropay.processPayment(orderData.amount, customer);
+              break;
             case 'Hypur':
-              return await this.hypur.processPayment(orderData.amount, customer);
+              paymentResult = await this.hypur.processPayment(orderData.amount, customer);
+              break;
+            default:
+              paymentResult = {
+                success: false,
+                error: 'Preferred processor not supported'
+              };
           }
+        } else {
+          paymentResult = {
+            success: false,
+            error: 'Preferred processor not available'
+          };
+        }
+      } else {
+        const defaultProcessor = availableProcessors[0];
+        switch (defaultProcessor.name) {
+          case 'POSaBIT':
+            paymentResult = await this.posabit.processPayment(orderData.amount, customer);
+            break;
+          case 'Aeropay':
+            paymentResult = await this.aeropay.processPayment(orderData.amount, customer);
+            break;
+          case 'Hypur':
+            paymentResult = await this.hypur.processPayment(orderData.amount, customer);
+            break;
+          default:
+            paymentResult = {
+              success: false,
+              error: 'Payment processor not supported'
+            };
         }
       }
 
-      const defaultProcessor = availableProcessors[0];
-      switch (defaultProcessor.name) {
-        case 'POSaBIT':
-          return await this.posabit.processPayment(orderData.amount, customer);
-        case 'Aeropay':
-          return await this.aeropay.processPayment(orderData.amount, customer);
-        case 'Hypur':
-          return await this.hypur.processPayment(orderData.amount, customer);
-        default:
-          return {
-            success: false,
-            error: 'Payment processor not supported'
-          };
+      // Update transaction with result
+      if (paymentResult.success) {
+        await updatePaymentTransaction(
+          transactionId,
+          'completed',
+          paymentResult.transactionId,
+          undefined,
+          { paymentResult }
+        );
+      } else {
+        await updatePaymentTransaction(
+          transactionId,
+          'failed',
+          paymentResult.transactionId,
+          paymentResult.error,
+          { paymentResult }
+        );
       }
+
+      return paymentResult;
     } catch (error) {
       console.error('Payment processing error:', error);
+      
+      if (transactionId) {
+        await updatePaymentTransaction(
+          transactionId,
+          'failed',
+          undefined,
+          error instanceof Error ? error.message : 'Payment processing failed'
+        );
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Payment processing failed'

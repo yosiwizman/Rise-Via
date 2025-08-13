@@ -330,7 +330,7 @@ describe('WishlistAnalyticsService', () => {
     wishlistAnalytics.trackWishlistEvent('add')
 
     const setItemCall = localStorageMock.setItem.mock.calls.find(call => call[0] === 'wishlist_analytics')
-    const storedEvents = JSON.parse(setItemCall[1])
+    const storedEvents = JSON.parse(setItemCall?.[1] || '[]')
     
     expect(storedEvents).toHaveLength(1000)
     expect(storedEvents[0].id).toBe(1) // First event removed
