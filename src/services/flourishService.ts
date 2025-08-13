@@ -160,7 +160,10 @@ class FlourishService {
         };
       }
 
-      return response as FlourishResponse<FlourishInventoryItem[]>;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch inventory'
+      };
     } catch (error) {
       return {
         success: false,
@@ -219,7 +222,10 @@ class FlourishService {
         };
       }
 
-      return response as FlourishResponse<ComplianceReport[]>;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch compliance reports'
+      };
     } catch (error) {
       return {
         success: false,
