@@ -50,6 +50,9 @@ jobs:
             # Store current branch
             CURRENT_BRANCH=$(git branch --show-current)
             
+            # Stash any changes to avoid conflicts
+            git stash push -m "CI temp stash" || true
+            
             # Switch to main and check violations
             git fetch origin main
             git checkout origin/main
@@ -57,8 +60,9 @@ jobs:
             npm run lint:report || true
             BASELINE=$(cat eslint-report.json | jq '[.[] | .errorCount + .warningCount] | add' || echo "69")
             
-            # Switch back to current branch
+            # Switch back to current branch and restore changes
             git checkout $CURRENT_BRANCH
+            git stash pop || true
             
             DELTA=$((CURRENT - BASELINE))
             echo "delta=$DELTA" >> $GITHUB_OUTPUT

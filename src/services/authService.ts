@@ -108,6 +108,7 @@ export const authService = {
       await logAuthEvent(user.id, 'login_success', ipAddress, userAgent);
 
       // Remove sensitive data
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password_hash, failed_login_attempts, locked_until, ...safeUser } = user;
 
       return { 

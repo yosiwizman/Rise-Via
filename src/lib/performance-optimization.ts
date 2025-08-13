@@ -368,7 +368,7 @@ export class CacheManager {
           VALUES (${key}, ${cacheType}, ${operation}, ${responseTime}, ${dataSize || null})
         `;
       }
-    } catch (error) {
+    } catch {
       // Don't log cache recording errors to avoid recursion
     }
   }
@@ -409,7 +409,7 @@ export class QueryOptimizer {
       return result;
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      await this.recordQueryPerformance(queryHash, queryText, executionTime, null, error as Error);
+      await this.recordQueryPerformance(queryHash, queryText, executionTime, null);
       throw error;
     }
   }
@@ -551,8 +551,7 @@ export class QueryOptimizer {
     queryHash: string,
     queryText: string,
     executionTime: number,
-    result: unknown,
-    _error?: Error
+    result: unknown
   ): Promise<void> {
     try {
       if (sql) {
@@ -565,7 +564,7 @@ export class QueryOptimizer {
           VALUES (${queryHash}, ${queryText}, ${executionTime}, ${rowsReturned})
         `;
       }
-    } catch (recordError) {
+    } catch {
       // Don't log recording errors to avoid recursion
     }
   }
@@ -691,7 +690,7 @@ export class HealthMonitor {
           }
           break;
           
-        case 'cache':
+        case 'cache': {
           // Test cache operations
           await CacheManager.set({
             key: 'health_check',
@@ -701,6 +700,7 @@ export class HealthMonitor {
           const cached = await CacheManager.get('health_check');
           if (!cached) status = 'degraded';
           break;
+        }
           
         case 'email':
           // Would check email service connectivity
@@ -726,7 +726,7 @@ export class HealthMonitor {
         responseTime,
         lastCheck: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         name: serviceName,
         status: 'down',
@@ -810,8 +810,18 @@ export class HealthMonitor {
 /**
  * Performance middleware for tracking request metrics
  */
+interface RequestLike {
+  path?: string;
+  url?: string;
+  get?: (header: string) => string | undefined;
+}
+
+interface ResponseLike {
+  on: (event: string, callback: () => void) => void;
+}
+
 export function createPerformanceMiddleware() {
-  return async (req: any, res: any, next: any) => {
+  return async (req: RequestLike, res: ResponseLike, next: () => void) => {
     const startTime = Date.now();
     
     // Track request start
@@ -829,11 +839,11 @@ export function createPerformanceMiddleware() {
               ${responseTime}, 
               'ms', 
               ${req.path || req.url}, 
-              ${req.get('User-Agent') || ''}
+              ${req.get?.('User-Agent') || ''}
             )
           `;
         }
-      } catch (error) {
+      } catch {
         // Don't fail request due to metrics recording error
       }
     });

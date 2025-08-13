@@ -46,27 +46,70 @@ export interface WebhookEvent {
 }
 
 // CRM Integration (HubSpot, Salesforce, etc.)
+interface CustomerData {
+  email: string;
+  name: string;
+  phone?: string;
+  [key: string]: unknown;
+}
+
+interface DealData {
+  amount: number;
+  stage: string;
+  contactId: string;
+  [key: string]: unknown;
+}
+
+interface ContactFilters {
+  email?: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
 export interface CRMIntegration {
   syncCustomers(): Promise<SyncResult>;
   syncOrders(): Promise<SyncResult>;
-  createContact(customerData: any): Promise<{ success: boolean; id?: string; error?: string }>;
-  updateContact(contactId: string, data: any): Promise<{ success: boolean; error?: string }>;
-  createDeal(dealData: any): Promise<{ success: boolean; id?: string; error?: string }>;
-  getContacts(filters?: any): Promise<any[]>;
+  createContact(customerData: CustomerData): Promise<{ success: boolean; id?: string; error?: string }>;
+  updateContact(contactId: string, data: Partial<CustomerData>): Promise<{ success: boolean; error?: string }>;
+  createDeal(dealData: DealData): Promise<{ success: boolean; id?: string; error?: string }>;
+  getContacts(filters?: ContactFilters): Promise<CustomerData[]>;
 }
 
 // SMS Integration (Twilio, SendGrid, etc.)
+interface SMSMetadata {
+  [key: string]: unknown;
+}
+
+interface IntegrationWithMethods {
+  lastUsed?: number;
+  implementation?: unknown;
+  test?: () => Promise<{ success: boolean; error?: string }>;
+  processWebhook?: (eventType: string, payload: unknown) => Promise<void>;
+}
+
 export interface SMSIntegration {
-  sendSMS(to: string, message: string, metadata?: any): Promise<{ success: boolean; messageId?: string; error?: string }>;
+  sendSMS(to: string, message: string, metadata?: SMSMetadata): Promise<{ success: boolean; messageId?: string; error?: string }>;
   sendBulkSMS(recipients: Array<{ phone: string; message: string }>): Promise<SyncResult>;
   getDeliveryStatus(messageId: string): Promise<{ status: string; delivered_at?: string }>;
   validatePhoneNumber(phone: string): Promise<{ valid: boolean; formatted?: string }>;
 }
 
 // Social Media Integration (Facebook, Instagram, Twitter)
+interface SocialMediaContent {
+  text: string;
+  images?: string[];
+  [key: string]: unknown;
+}
+
+interface SocialMediaAnalytics {
+  impressions: number;
+  engagement: number;
+  [key: string]: unknown;
+}
+
 export interface SocialMediaIntegration {
-  postContent(platform: string, content: any): Promise<{ success: boolean; postId?: string; error?: string }>;
-  getAnalytics(platform: string, dateRange: { start: string; end: string }): Promise<any>;
+  postContent(platform: string, content: SocialMediaContent): Promise<{ success: boolean; postId?: string; error?: string }>;
+  getAnalytics(platform: string, dateRange: { start: string; end: string }): Promise<SocialMediaAnalytics>;
   syncProducts(platform: string): Promise<SyncResult>;
   respondToMessage(platform: string, messageId: string, response: string): Promise<{ success: boolean; error?: string }>;
 }
@@ -181,12 +224,12 @@ export async function initializeThirdPartyIntegrationTables(): Promise<void> {
  * Integration Manager - Central hub for all integrations
  */
 export class IntegrationManager {
-  private static integrations = new Map<string, any>();
+  private static integrations = new Map<string, unknown>();
 
   /**
    * Register an integration
    */
-  static registerIntegration(config: IntegrationConfig, implementation: any): void {
+  static registerIntegration(config: IntegrationConfig, implementation: unknown): void {
     this.integrations.set(config.id, {
       config,
       implementation,
@@ -197,8 +240,8 @@ export class IntegrationManager {
   /**
    * Get integration by ID
    */
-  static getIntegration(integrationId: string): any {
-    const integration = this.integrations.get(integrationId);
+  static getIntegration(integrationId: string): unknown {
+    const integration = this.integrations.get(integrationId) as IntegrationWithMethods;
     if (integration) {
       integration.lastUsed = Date.now();
       return integration.implementation;
@@ -247,7 +290,7 @@ export class IntegrationManager {
       }
 
       const updateFields: string[] = [];
-      const updateValues: any[] = [];
+      const updateValues: unknown[] = [];
 
       Object.entries(updates).forEach(([key, value]) => {
         if (key !== 'id' && key !== 'created_at' && value !== undefined) {
@@ -302,13 +345,13 @@ export class IntegrationManager {
       }
 
       // Each integration should implement a test method
-      if (typeof integration.test === 'function') {
-        const result = await integration.test();
+      if (typeof (integration as IntegrationWithMethods).test === 'function') {
+        const result = await (integration as IntegrationWithMethods).test!();
         
         // Update integration status based on test result
         await this.updateIntegration(integrationId, {
           status: result.success ? 'active' : 'error',
-          error_message: result.error || null,
+          error_message: result.error || undefined,
           last_sync: new Date().toISOString()
         });
 
@@ -376,9 +419,9 @@ export class IntegrationManager {
 
       // Process the event
       const integration = this.getIntegration(event.integration_id);
-      if (integration && typeof integration.processWebhook === 'function') {
+      if (integration && typeof (integration as IntegrationWithMethods).processWebhook === 'function') {
         try {
-          await integration.processWebhook(event.event_type, event.payload);
+          await (integration as IntegrationWithMethods).processWebhook!(event.event_type, event.payload);
           
           // Mark as processed
           await sql`
@@ -522,6 +565,7 @@ export class HubSpotIntegration implements CRMIntegration {
           
           try {
             const result = await this.createContact({
+              name: `${customer.first_name} ${customer.last_name}`,
               email: customer.email,
               firstname: customer.first_name,
               lastname: customer.last_name,
@@ -582,7 +626,7 @@ export class HubSpotIntegration implements CRMIntegration {
     };
   }
 
-  async createContact(customerData: any): Promise<{ success: boolean; id?: string; error?: string }> {
+  async createContact(customerData: CustomerData): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/contacts/v1/contact?hapikey=${this.apiKey}`, {
         method: 'POST',
@@ -602,7 +646,7 @@ export class HubSpotIntegration implements CRMIntegration {
     }
   }
 
-  async updateContact(contactId: string, data: any): Promise<{ success: boolean; error?: string }> {
+  async updateContact(contactId: string, data: Partial<CustomerData>): Promise<{ success: boolean; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/contacts/v1/contact/vid/${contactId}/profile?hapikey=${this.apiKey}`, {
         method: 'POST',
@@ -616,7 +660,7 @@ export class HubSpotIntegration implements CRMIntegration {
     }
   }
 
-  async createDeal(dealData: any): Promise<{ success: boolean; id?: string; error?: string }> {
+  async createDeal(dealData: DealData): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/deals/v1/deal?hapikey=${this.apiKey}`, {
         method: 'POST',
@@ -636,7 +680,7 @@ export class HubSpotIntegration implements CRMIntegration {
     }
   }
 
-  async getContacts(_filters?: any): Promise<any[]> {
+  async getContacts(): Promise<CustomerData[]> {
     try {
       const response = await fetch(`${this.baseUrl}/contacts/v1/lists/all/contacts/all?hapikey=${this.apiKey}`);
       if (response.ok) {
@@ -679,7 +723,7 @@ export class TwilioSMSIntegration implements SMSIntegration {
     }
   }
 
-  async sendSMS(to: string, message: string, _metadata?: any): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  async sendSMS(to: string, message: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64');
       

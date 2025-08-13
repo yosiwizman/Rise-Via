@@ -380,7 +380,7 @@ export async function applyPromotionsToCart(
     const originalTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     // Get applicable promotions
-    let promotions: Promotion[] = [];
+    const promotions: Promotion[] = [];
 
     if (couponCode) {
       // Validate and get coupon-based promotion
@@ -510,7 +510,7 @@ async function calculatePromotionDiscount(
         discountAmount = 0; // Shipping discount handled separately
         break;
 
-      case 'buy_x_get_y':
+      case 'buy_x_get_y': {
         // Simplified buy X get Y logic
         const buyQuantity = Math.floor(promotion.discount_value); // X
         const getQuantity = 1; // Y (simplified to 1)
@@ -521,6 +521,7 @@ async function calculatePromotionDiscount(
           discountAmount += freeItems * item.price;
         }
         break;
+      }
 
       default:
         return null;
