@@ -228,7 +228,7 @@ function App() {
 
           // Interval to maintain right-side positioning
           const maintainPosition = () => {
-            const currentStyle =element.getAttribute('style') || '';
+            const currentStyle = element.getAttribute('style') || '';
             if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
               element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
               element.style.left = 'auto';
@@ -371,7 +371,7 @@ function App() {
         return <LoginPage />;
       case 'register':
         return <RegisterPage onNavigate={setCurrentPage} />;
-      case 'b2b':
+      case '2b':
         return <B2BPage />;
       case 'checkout':
         return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
