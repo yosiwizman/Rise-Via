@@ -6,6 +6,9 @@ import {
   initializeInventoryTables 
 } from '../lib/inventory';
 import { emailService } from './emailService';
+import { processOrderPoints } from '../lib/loyalty-system';
+import { recordPromotionUsage, markCartAsRecovered } from '../lib/promotions';
+import { updateCustomerAnalytics } from '../lib/customer-segmentation';
 
 // Initialize inventory tables
 initializeInventoryTables();
@@ -59,6 +62,12 @@ export interface CreateOrderData {
   shipping_address?: Record<string, unknown>;
   billing_address?: Record<string, unknown>;
   notes?: string;
+  session_id?: string; // For abandoned cart tracking
+  applied_promotions?: Array<{
+    promotion_id: string;
+    coupon_code?: string;
+    discount_amount: number;
+  }>;
 }
 
 export interface OrderStatusUpdate {
@@ -152,6 +161,29 @@ export const orderService = {
           VALUES (${order.id}, ${item.product_id}, ${item.product_name}, ${item.quantity}, ${item.price}, ${item.discount || 0})
         `;
       }
+
+      // Record promotion usage
+      if (orderData.applied_promotions) {
+        for (const promotion of orderData.applied_promotions) {
+          await recordPromotionUsage(
+            promotion.promotion_id,
+            orderData.customer_id,
+            order.id,
+            promotion.discount_amount
+          );
+        }
+      }
+
+      // Mark abandoned cart as recovered if applicable
+      if (orderData.session_id) {
+        await markCartAsRecovered(orderData.session_id, order.id);
+      }
+
+      // Process loyalty points for the order
+      await processOrderPoints(orderData.customer_id, order.id, order.total);
+
+      // Update customer analytics
+      await updateCustomerAnalytics(orderData.customer_id);
 
       // Send order confirmation email
       if (orderData.customer_email) {
