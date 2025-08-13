@@ -1,3 +1,3 @@
 git add src/App.tsx
-git commit -m "fix: correct syntax error in App.tsx maintainPosition function"
+git commit -m "fix: correct b2b case typo in renderCurrentPage switch"
 git push origin main

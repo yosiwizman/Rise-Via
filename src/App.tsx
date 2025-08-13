@@ -371,7 +371,7 @@ function App() {
         return <LoginPage />;
       case 'register':
         return <RegisterPage onNavigate={setCurrentPage} />;
-      case '2b':
+      case 'b2b':
         return <B2BPage />;
       case 'checkout':
         return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
