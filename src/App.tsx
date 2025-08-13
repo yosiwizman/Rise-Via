@@ -1,4 +1,4 @@
-import { useState, useEffect, startTransition } from 'react';
+import { useState, useEffect, startTransition, useRef } from 'react';
 import './App.css';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
@@ -54,6 +54,19 @@ function App() {
   const [showStateBlocker, setShowStateBlocker] = useState(false);
   const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
+  
+  // Use refs to store cleanup functions
+  const cleanupFunctionsRef = useRef<{
+    timers: NodeJS.Timeout[];
+    intervals: NodeJS.Timeout[];
+    observers: MutationObserver[];
+    listeners: Array<{ element: Element | Document | Window; event: string; handler: EventListener }>;
+  }>({
+    timers: [],
+    intervals: [],
+    observers: [],
+    listeners: []
+  });
 
   useEffect(() => {
     startTransition(() => {
@@ -138,12 +151,14 @@ function App() {
     
     initializeApp();
 
+    // UserWay accessibility widget setup with proper cleanup
     const script = document.createElement('script');
     script.src = 'https://cdn.userway.org/widget.js';
     script.setAttribute('data-account', 'FREE_ACCOUNT');
     script.setAttribute('data-size', 'large');
     script.setAttribute('data-position', '6');
     script.async = true;
+    
     script.onload = () => {
       console.log('✅ ADA widget loaded!');
       
@@ -159,6 +174,7 @@ function App() {
           'iframe[src*="userway"]',
           'div[style*="position: fixed"]'
         ];
+        
         let adaWidget = null;
         for (const selector of selectors) {
           adaWidget = document.querySelector(selector);
@@ -166,6 +182,7 @@ function App() {
             break;
           }
         }
+        
         if (adaWidget) {
           const element = adaWidget as HTMLElement;
           element.style.removeProperty('left');
@@ -201,57 +218,45 @@ function App() {
 
           // Accessibility: right-click to hide/show
           let isHidden = false;
-          element.addEventListener('contextmenu', (e) => {
+          const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault();
             isHidden = !isHidden;
             element.style.opacity = isHidden ? '0.3' : '1';
             element.style.pointerEvents = isHidden ? 'none' : 'auto';
-          });
-          element.title = 'Right-click to hide/show • Accessibility Widget';
-
-          // Mutation observer to prevent forced left positioning
-          const styleObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-              if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                const currentStyle = element.getAttribute('style') || '';
-                if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
-                  element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
-                  element.style.left = 'auto';
-                }
-              }
-            });
-          });
-          styleObserver.observe(element, {
-            attributes: true,
-            attributeFilter: ['style']
-          });
-
-          // Interval to maintain right-side positioning
-          const maintainPosition = () => {
-            const currentStyle = element.getAttribute('style') || '';
-            if (currentStyle.includes('left:') && !currentStyle.includes('left: auto')) {
-              element.style.right = window.innerWidth <= 768 ? '15px' : '20px';
-              element.style.left = 'auto';
-            }
           };
-          setInterval(maintainPosition, 1000);
+          
+          element.addEventListener('contextmenu', handleContextMenu);
+          cleanupFunctionsRef.current.listeners.push({
+            element,
+            event: 'contextmenu',
+            handler: handleContextMenu as EventListener
+          });
+          
+          element.title = 'Right-click to hide/show • Accessibility Widget';
         }
       };
 
-      setTimeout(positionWidget, 500);
-      setTimeout(positionWidget, 1500);
-      setTimeout(positionWidget, 3000);
-      setTimeout(positionWidget, 5000);
-
-      window.addEventListener('resize', positionWidget);
-
-      const observer = new MutationObserver(() => {
-        positionWidget();
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
+      // Initial positioning with delays
+      const timer1 = setTimeout(positionWidget, 500);
+      const timer2 = setTimeout(positionWidget, 1500);
+      const timer3 = setTimeout(positionWidget, 3000);
       
-      setTimeout(addUserWayHideButton, 2000);
+      cleanupFunctionsRef.current.timers.push(timer1, timer2, timer3);
+
+      // Resize handler
+      const handleResize = () => positionWidget();
+      window.addEventListener('resize', handleResize);
+      cleanupFunctionsRef.current.listeners.push({
+        element: window,
+        event: 'resize',
+        handler: handleResize as EventListener
+      });
+
+      // Add hide button after widget loads
+      const timer4 = setTimeout(addUserWayHideButton, 2000);
+      cleanupFunctionsRef.current.timers.push(timer4);
     };
+    
     document.head.appendChild(script);
 
     const addUserWayHideButton = () => {
@@ -299,9 +304,31 @@ function App() {
       }
     };
 
+    // Cleanup function
     return () => {
+      // Stop services
       priceTrackingService.stopPriceTracking();
       blogScheduler.stop();
+      
+      // Clear all timers
+      cleanupFunctionsRef.current.timers.forEach(timer => clearTimeout(timer));
+      
+      // Clear all intervals
+      cleanupFunctionsRef.current.intervals.forEach(interval => clearInterval(interval));
+      
+      // Disconnect all observers
+      cleanupFunctionsRef.current.observers.forEach(observer => observer.disconnect());
+      
+      // Remove all event listeners
+      cleanupFunctionsRef.current.listeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler);
+      });
+      
+      // Remove script if it exists
+      const scriptElement = document.querySelector('script[src*="userway.org"]');
+      if (scriptElement) {
+        scriptElement.remove();
+      }
     };
   }, []);
 

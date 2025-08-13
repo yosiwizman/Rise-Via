@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { popupService } from '../services/popupService';
 import type { Popup } from '../types/database';
 
@@ -6,6 +6,7 @@ export const usePopup = (currentPage: string = '/') => {
   const [activePopup, setActivePopup] = useState<Popup | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [popups, setPopups] = useState<Popup[]>([]);
+  const cleanupFunctionsRef = useRef<(() => void)[]>([]);
 
   const isAgeVerified = localStorage.getItem('ageVerified') === 'true';
   const userState = localStorage.getItem('userState');
@@ -60,7 +61,9 @@ export const usePopup = (currentPage: string = '/') => {
   useEffect(() => {
     if (!canShowPopups || popups.length === 0) return;
 
-    const cleanupFunctions: (() => void)[] = [];
+    // Clear previous cleanup functions
+    cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+    cleanupFunctionsRef.current = [];
 
     popups.forEach(popup => {
       const sessionKey = `popup_${popup.id}_session`;
@@ -82,12 +85,13 @@ export const usePopup = (currentPage: string = '/') => {
 
       switch (popup.trigger_type) {
         case 'page_load':
-          setTimeout(() => showPopup(popup), popup.trigger_delay);
+          const pageLoadTimer = setTimeout(() => showPopup(popup), popup.trigger_delay);
+          cleanupFunctionsRef.current.push(() => clearTimeout(pageLoadTimer));
           break;
 
         case 'timer': {
           const timer = setTimeout(() => showPopup(popup), popup.trigger_delay);
-          cleanupFunctions.push(() => clearTimeout(timer));
+          cleanupFunctionsRef.current.push(() => clearTimeout(timer));
           break;
         }
 
@@ -100,7 +104,7 @@ export const usePopup = (currentPage: string = '/') => {
             }
           };
           window.addEventListener('scroll', handleScroll, { passive: true });
-          cleanupFunctions.push(() => window.removeEventListener('scroll', handleScroll));
+          cleanupFunctionsRef.current.push(() => window.removeEventListener('scroll', handleScroll));
           break;
         }
 
@@ -112,22 +116,33 @@ export const usePopup = (currentPage: string = '/') => {
             }
           };
           document.addEventListener('mouseleave', handleMouseLeave);
-          cleanupFunctions.push(() => document.removeEventListener('mouseleave', handleMouseLeave));
+          cleanupFunctionsRef.current.push(() => document.removeEventListener('mouseleave', handleMouseLeave));
           break;
         }
       }
     });
 
+    // Cleanup function for this effect
     return () => {
-      cleanupFunctions.forEach(cleanup => cleanup());
+      cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+      cleanupFunctionsRef.current = [];
     };
-  }, [popups, canShowPopups, showPopup]);
+  }, [popups, canShowPopups]); // Removed showPopup from dependencies to prevent infinite loop
 
   const closePopup = useCallback(() => {
     setIsVisible(false);
     setActivePopup(null);
     
+    // Reset body overflow
     document.body.style.overflow = '';
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+    };
   }, []);
 
   return {
