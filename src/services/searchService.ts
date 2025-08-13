@@ -235,49 +235,43 @@ export class SearchService {
         return [];
       }
 
-      // Build WHERE clause
-      const whereClauses: string[] = [];
-      const values: any[] = [];
-
+      // Build dynamic query conditions
+      const conditions: string[] = [];
+      
       // Search query
       if (filters.query) {
-        whereClauses.push(`(
+        conditions.push(`(
           to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')) 
-          @@ plainto_tsquery('english', $${values.length + 1})
-          OR name ILIKE $${values.length + 2}
-          OR description ILIKE $${values.length + 3}
+          @@ plainto_tsquery('english', ${sql.literal(filters.query)})
+          OR name ILIKE ${sql.literal(`%${filters.query}%`)}
+          OR description ILIKE ${sql.literal(`%${filters.query}%`)}
         )`);
-        values.push(filters.query, `%${filters.query}%`, `%${filters.query}%`);
       }
 
       // Category filter
       if (filters.category && filters.category !== 'all') {
-        whereClauses.push(`category = $${values.length + 1}`);
-        values.push(filters.category);
+        conditions.push(`category = ${sql.literal(filters.category)}`);
       }
 
       // Strain type filter
       if (filters.strainType && filters.strainType !== 'all') {
-        whereClauses.push(`strain_type = $${values.length + 1}`);
-        values.push(filters.strainType);
+        conditions.push(`strain_type = ${sql.literal(filters.strainType)}`);
       }
 
       // Price range filter
       if (filters.priceRange) {
-        whereClauses.push(`price BETWEEN $${values.length + 1} AND $${values.length + 2}`);
-        values.push(filters.priceRange.min, filters.priceRange.max);
+        conditions.push(`price BETWEEN ${filters.priceRange.min} AND ${filters.priceRange.max}`);
       }
 
       // THC range filter
       if (filters.thcRange) {
-        whereClauses.push(`COALESCE(thca_percentage, thc, 0) BETWEEN $${values.length + 1} AND $${values.length + 2}`);
-        values.push(filters.thcRange.min, filters.thcRange.max);
+        conditions.push(`COALESCE(thca_percentage, thc, 0) BETWEEN ${filters.thcRange.min} AND ${filters.thcRange.max}`);
       }
 
       // Effects filter
       if (filters.effects && filters.effects.length > 0) {
-        whereClauses.push(`effects && $${values.length + 1}`);
-        values.push(filters.effects);
+        const effectsArray = `ARRAY[${filters.effects.map(e => sql.literal(e)).join(',')}]`;
+        conditions.push(`effects && ${effectsArray}`);
       }
 
       // Build ORDER BY clause
@@ -306,22 +300,19 @@ export class SearchService {
           break;
       }
 
-      const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
-
-      // Execute query using parameterized query
+      // Build and execute query
       let products: Product[];
-      if (values.length > 0) {
-        // Build parameterized query
-        const queryParts = [`SELECT * FROM products`];
-        if (whereClause) queryParts.push(whereClause);
-        queryParts.push(`ORDER BY ${orderBy}`);
-        const queryText = queryParts.join(' ');
-        
-        // Use raw SQL with parameters
-        const result = await sql.unsafe(queryText, values);
-        products = result as Product[];
+      
+      if (conditions.length > 0) {
+        // Use template literal with raw SQL for WHERE clause
+        const whereClause = conditions.join(' AND ');
+        products = await sql`
+          SELECT * FROM products
+          WHERE ${sql(whereClause)}
+          ORDER BY ${sql(orderBy)}
+        ` as Product[];
       } else {
-        // No parameters, use template literal
+        // No conditions, just order
         products = await sql`
           SELECT * FROM products
           ORDER BY ${sql(orderBy)}

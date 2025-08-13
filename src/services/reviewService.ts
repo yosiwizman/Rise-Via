@@ -247,10 +247,18 @@ export const reviewService = {
         ORDER BY rating
       ` as Array<RatingCount>;
 
-      // Build rating distribution object
-      const ratingDistribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      // Build rating distribution object with proper typing
+      const ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number } = { 
+        1: 0, 
+        2: 0, 
+        3: 0, 
+        4: 0, 
+        5: 0 
+      };
+      
       distribution.forEach(item => {
-        ratingDistribution[item.rating] = parseInt(item.count.toString());
+        const rating = item.rating as 1 | 2 | 3 | 4 | 5;
+        ratingDistribution[rating] = parseInt(item.count.toString());
       });
 
       return {
@@ -334,35 +342,102 @@ export const reviewService = {
         return { data: null, error: 'Review not found or unauthorized' };
       }
 
-      // Build update query dynamically
-      const updateFields: Record<string, any> = {};
+      // Build update query using individual SET clauses
+      let updatedReviews: Array<Review> = [];
       
-      if (updates.rating !== undefined) {
-        updateFields.rating = updates.rating;
-      }
-      if (updates.title !== undefined) {
-        updateFields.title = updates.title;
-      }
-      if (updates.comment !== undefined) {
-        updateFields.comment = updates.comment;
-      }
-      if (updates.images !== undefined) {
-        updateFields.images = updates.images;
-      }
-
-      if (Object.keys(updateFields).length === 0) {
+      if (updates.rating !== undefined && updates.title !== undefined && updates.comment !== undefined && updates.images !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            rating = ${updates.rating},
+            title = ${updates.title},
+            comment = ${updates.comment},
+            images = ${updates.images},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.rating !== undefined && updates.title !== undefined && updates.comment !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            rating = ${updates.rating},
+            title = ${updates.title},
+            comment = ${updates.comment},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.rating !== undefined && updates.title !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            rating = ${updates.rating},
+            title = ${updates.title},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.rating !== undefined && updates.comment !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            rating = ${updates.rating},
+            comment = ${updates.comment},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.title !== undefined && updates.comment !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            title = ${updates.title},
+            comment = ${updates.comment},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.rating !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            rating = ${updates.rating},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.title !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            title = ${updates.title},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.comment !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            comment = ${updates.comment},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else if (updates.images !== undefined) {
+        updatedReviews = await sql`
+          UPDATE reviews 
+          SET 
+            images = ${updates.images},
+            updated_at = NOW()
+          WHERE id = ${reviewId}
+          RETURNING *
+        ` as Array<Review>;
+      } else {
+        // No updates needed
         return { data: reviews[0], error: null };
       }
-
-      // Add updated_at
-      updateFields.updated_at = sql`NOW()`;
-
-      const updatedReviews = await sql`
-        UPDATE reviews 
-        SET ${sql(updateFields)}
-        WHERE id = ${reviewId}
-        RETURNING *
-      ` as Array<Review>;
 
       return { data: updatedReviews[0], error: null };
     } catch (error) {

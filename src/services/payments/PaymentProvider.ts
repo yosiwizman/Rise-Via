@@ -136,9 +136,10 @@ class StripePaymentProvider implements PaymentProvider {
       if (customer.id && sql) {
         const customers = await sql`
           SELECT stripe_customer_id FROM customers WHERE id = ${customer.id}
-        `;
+        ` as Array<{ stripe_customer_id: string | null }>;
+        
         if (customers.length > 0 && customers[0].stripe_customer_id) {
-          stripeCustomerId = customers[0].stripe_customer_id as string;
+          stripeCustomerId = customers[0].stripe_customer_id;
         }
       }
 
