@@ -790,7 +790,7 @@ export async function checkPriceAlerts(): Promise<void> {
 
     for (const alert of alerts) {
       // Send price alert email
-      await triggerEmailAutomation('price_alert', alert.email, {
+      await triggerEmailAutomation('custom', alert.email, {
         productName: alert.product_name,
         targetPrice: alert.target_price.toString(),
         currentPrice: alert.current_product_price.toString(),

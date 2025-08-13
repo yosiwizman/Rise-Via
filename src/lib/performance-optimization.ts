@@ -552,7 +552,7 @@ export class QueryOptimizer {
     queryText: string,
     executionTime: number,
     result: unknown,
-    error?: Error
+    _error?: Error
   ): Promise<void> {
     try {
       if (sql) {

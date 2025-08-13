@@ -636,7 +636,7 @@ export class HubSpotIntegration implements CRMIntegration {
     }
   }
 
-  async getContacts(filters?: any): Promise<any[]> {
+  async getContacts(_filters?: any): Promise<any[]> {
     try {
       const response = await fetch(`${this.baseUrl}/contacts/v1/lists/all/contacts/all?hapikey=${this.apiKey}`);
       if (response.ok) {
@@ -679,7 +679,7 @@ export class TwilioSMSIntegration implements SMSIntegration {
     }
   }
 
-  async sendSMS(to: string, message: string, metadata?: any): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  async sendSMS(to: string, message: string, _metadata?: any): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64');
       

@@ -457,7 +457,12 @@ async function getTopMetrics(startDate: string, endDate: string): Promise<Analyt
     ` as Array<{ customer_id: string; email: string; total_spent: number; order_count: number }>;
 
     return {
-      topProducts: topProducts || [],
+      topProducts: (topProducts || []).map(p => ({
+        product_id: p.product_id,
+        name: p.product_name || 'Unknown Product',
+        revenue: p.revenue,
+        units_sold: p.units_sold
+      })),
       topCategories: topCategories || [],
       topCustomers: topCustomers || []
     };

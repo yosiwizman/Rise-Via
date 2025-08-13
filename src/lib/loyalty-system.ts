@@ -468,7 +468,7 @@ export async function redeemPoints(
     ` as Array<{ email: string; first_name: string }>;
 
     if (customerData.length > 0) {
-      await triggerEmailAutomation('loyalty_reward', customerData[0].email, {
+      await triggerEmailAutomation('loyalty_milestone', customerData[0].email, {
         firstName: customerData[0].first_name || 'Valued Customer',
         rewardName: reward.name,
         pointsUsed: reward.points_required,

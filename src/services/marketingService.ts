@@ -11,25 +11,25 @@ import {
 } from '../lib/email-automation';
 import { 
   updateCustomerAnalytics,
-  createCustomerSegment,
+  // createCustomerSegment,
   getSegmentCustomers,
-  getSegmentInsights,
+  // getSegmentInsights,
   updateAllSegmentMemberships
 } from '../lib/customer-segmentation';
 import { 
   getCustomerLoyalty,
-  awardPoints,
-  redeemPoints,
+  // awardPoints,
+  // redeemPoints,
   getAvailableRewards,
   getLoyaltyAnalytics
 } from '../lib/loyalty-system';
 import { 
   applyPromotionsToCart,
-  validateCouponCode,
-  createPromotion,
-  createCouponCode,
+  // validateCouponCode,
+  // createPromotion,
+  // createCouponCode,
   trackAbandonedCart,
-  createPriceAlert,
+  // createPriceAlert,
   getPromotionAnalytics
 } from '../lib/promotions';
 
@@ -117,7 +117,7 @@ export class MarketingService {
    * Process customer journey events
    */
   async processCustomerEvent(
-    eventType: 'user_registered' | 'order_placed' | 'product_viewed' | 'cart_abandoned' | 'email_opened',
+    eventType: 'user_registered' | 'order_placed' | 'product_viewed' | 'cart_abandoned' | 'loyalty_milestone',
     customerId: string,
     eventData: Record<string, unknown> = {}
   ): Promise<void> {
@@ -176,9 +176,9 @@ export class MarketingService {
    * Create targeted marketing campaign
    */
   async createTargetedCampaign(
-    campaignName: string,
+    _campaignName: string,
     segmentId: string,
-    templateId: string,
+    _templateId: string,
     scheduledFor?: string
   ): Promise<{ success: boolean; error?: string; campaignId?: string }> {
     try {
@@ -361,7 +361,7 @@ export class MarketingService {
           <div style="border: 1px solid #e5e7eb; padding: 20px; margin: 20px 0; border-radius: 8px;">
             <h3>Your Cart Items:</h3>
             {{cartItems}}
-            <p><strong>Total: ${{cartTotal}}</strong></p>
+            <p><strong>Total: $` + '{{cartTotal}}' + `</strong></p>
           </div>
           <p>Complete your purchase now and get 10% off with code: {{recoveryCode}}</p>
           <a href="{{recoveryUrl}}" style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
@@ -394,7 +394,7 @@ export class MarketingService {
           <p>The Rise Via Team</p>
         `,
         'You\'ve reached a new loyalty tier with exclusive benefits!',
-        'loyalty_milestone',
+        'loyalty_reward',
         ['firstName', 'newTier', 'benefits', 'bonusPoints', 'loyaltyUrl']
       );
 

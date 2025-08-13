@@ -497,7 +497,7 @@ export async function updateSegmentMemberships(segmentId: string): Promise<void>
 
     // Add new memberships
     if (matchingCustomers.length > 0) {
-      const values = matchingCustomers.map((customer: { customer_id: string }) => 
+      const values = (matchingCustomers as Array<{ customer_id: string }>).map((customer) => 
         `('${customer.customer_id}', '${segmentId}')`
       ).join(', ');
 

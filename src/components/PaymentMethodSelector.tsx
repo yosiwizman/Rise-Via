@@ -88,26 +88,37 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
 
     setIsProcessing(true);
     try {
-      // Create order in database first
-      const orderData = {
-        customer_id: customerData.email, // Using email as customer ID for now
-        items: cartItems.map(item => ({
-          product_id: item.productId,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total: totalAmount
-      };
-
-      const order = await orderService.createOrder(orderData);
-      
-      if (!order) {
-        throw new Error('Failed to create order in database');
-      }
-
+      // Calculate order totals
       const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const tax = subtotal * 0.08;
       const shipping = subtotal > 100 ? 0 : 10;
+      const discount = 0; // TODO: Apply promotions
+      
+      // Create order in database first
+      const orderData = {
+        customer_id: customerData.email, // Using email as customer ID for now
+        customer_email: customerData.email,
+        items: cartItems.map(item => ({
+          product_id: item.productId,
+          product_name: item.name || 'Product',
+          quantity: item.quantity,
+          price: item.price,
+          discount: 0
+        })),
+        subtotal,
+        tax,
+        discount,
+        shipping,
+        total: subtotal + tax + shipping - discount
+      };
+
+      const orderResult = await orderService.createOrder(orderData);
+      
+      if (!orderResult.order) {
+        throw new Error('Failed to create order in database');
+      }
+
+      const order = orderResult.order;
       
       const transaction = {
         id: order.id,
@@ -150,7 +161,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
       });
 
       if (result.success) {
-        await orderService.updateOrderStatus(order.id, 'completed');
+        await orderService.updateOrderStatus(order.id, { status: 'confirmed' });
 
         clearCart();
         onPaymentComplete({
@@ -159,7 +170,7 @@ export const PaymentMethodSelector = ({ onPaymentComplete, customerData, totalAm
           paymentMethod: selectedMethod
         });
       } else {
-        await orderService.updateOrderStatus(order.id, 'failed');
+        await orderService.updateOrderStatus(order.id, { status: 'cancelled' });
         onPaymentComplete(result);
       }
     } catch (error) {
