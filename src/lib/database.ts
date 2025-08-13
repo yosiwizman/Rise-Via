@@ -3,11 +3,108 @@ import { env } from '../config/env';
 
 const DATABASE_URL = env.DATABASE_URL;
 
-if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL is not configured');
+// Check if database is configured
+const isDatabaseConfigured = DATABASE_URL && DATABASE_URL !== '';
+
+if (!isDatabaseConfigured) {
+  console.warn('⚠️ DATABASE_URL is not configured - running in mock mode');
 }
 
-export const sql = neon(DATABASE_URL);
+// Mock SQL function for development without database
+const mockSql = async (strings: TemplateStringsArray, ...values: any[]) => {
+  const query = strings.join('?');
+  console.log('Mock SQL query:', query, values);
+  
+  // Return mock data based on query patterns
+  if (query.includes('SELECT 1')) {
+    return [{ test: 1 }];
+  }
+  
+  if (query.includes('CREATE TABLE')) {
+    return [];
+  }
+  
+  if (query.includes('CREATE INDEX')) {
+    return [];
+  }
+  
+  if (query.includes('SELECT') && query.includes('FROM products')) {
+    return [
+      {
+        id: '1',
+        name: 'Blue Dream',
+        price: 45.00,
+        category: 'Flower',
+        thc_percentage: 18.5,
+        cbd_percentage: 0.5,
+        inventory: 50,
+        description: 'A classic sativa-dominant hybrid',
+        effects: ['euphoric', 'creative', 'relaxed'],
+        status: 'active',
+        images: ['/images/products/blue-dream.jpg'],
+        strain_type: 'Hybrid',
+        terpenes: ['Myrcene', 'Pinene', 'Caryophyllene']
+      },
+      {
+        id: '2',
+        name: 'OG Kush',
+        price: 50.00,
+        category: 'Flower',
+        thc_percentage: 22.0,
+        cbd_percentage: 0.3,
+        inventory: 30,
+        description: 'A legendary indica strain',
+        effects: ['relaxed', 'happy', 'sleepy'],
+        status: 'active',
+        images: ['/images/products/og-kush.jpg'],
+        strain_type: 'Indica',
+        terpenes: ['Limonene', 'Myrcene', 'Caryophyllene']
+      }
+    ];
+  }
+  
+  if (query.includes('SELECT') && query.includes('FROM users')) {
+    return [
+      {
+        id: '1',
+        email: 'demo@example.com',
+        first_name: 'Demo',
+        last_name: 'User',
+        created_at: new Date().toISOString()
+      }
+    ];
+  }
+  
+  if (query.includes('SELECT') && query.includes('FROM orders')) {
+    return [
+      {
+        id: '1',
+        order_number: 'ORD-001',
+        total: 95.00,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      }
+    ];
+  }
+  
+  if (query.includes('INSERT')) {
+    return [{ id: crypto.randomUUID() }];
+  }
+  
+  if (query.includes('UPDATE')) {
+    return [];
+  }
+  
+  if (query.includes('DELETE')) {
+    return [];
+  }
+  
+  // Default empty result
+  return [];
+};
+
+// Use real neon connection if configured, otherwise use mock
+export const sql = isDatabaseConfigured ? neon(DATABASE_URL) : mockSql as any;
 
 export { DATABASE_URL };
 
@@ -24,9 +121,9 @@ export async function safeQuery<T = unknown>(
 }
 
 export async function testConnection() {
-  if (!sql) {
-    console.warn('⚠️ Database not available, skipping connection test');
-    return false;
+  if (!isDatabaseConfigured) {
+    console.warn('⚠️ Database not configured - using mock mode');
+    return true; // Return true to allow app to continue in mock mode
   }
   
   try {
@@ -41,9 +138,9 @@ export async function testConnection() {
 
 // Create required tables if they don't exist
 export async function initializeTables() {
-  if (!sql) {
-    console.warn('⚠️ Database not available, skipping table initialization');
-    return false;
+  if (!isDatabaseConfigured) {
+    console.warn('⚠️ Database not configured - skipping table initialization (mock mode)');
+    return true; // Return true to allow app to continue
   }
   
   try {
