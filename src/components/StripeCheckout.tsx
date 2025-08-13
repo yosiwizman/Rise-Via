@@ -96,21 +96,33 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onSuccess, onError, custome
     zipCode: string;
     phone: string;
   }): Promise<string> => {
+    const subtotal = getCartTotal();
+    const tax = subtotal * 0.08;
+    const shipping = subtotal > 100 ? 0 : 10;
+    const discount = 0;
+    
     const orderData = {
       customer_id: customerInfo.email, // Use email as customer ID for now
-      total: getCartTotal(),
+      customer_email: customerInfo.email,
       items: items.map(item => ({
         product_id: item.productId,
+        product_name: item.name || 'Product',
         quantity: item.quantity,
-        price: item.price
-      }))
+        price: item.price,
+        discount: 0
+      })),
+      subtotal,
+      tax,
+      discount,
+      shipping,
+      total: subtotal + tax + shipping - discount
     };
 
-    const order = await orderService.createOrder(orderData);
-    if (!order) {
+    const orderResult = await orderService.createOrder(orderData);
+    if (!orderResult.order) {
       throw new Error('Failed to create order');
     }
-    return order.id;
+    return orderResult.order.id;
   };
 
   return (
