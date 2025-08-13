@@ -10,7 +10,7 @@ import {
   releaseReservation,
   initializeInventoryTables 
 } from '../lib/inventory';
-import { createPaymentTransaction, updatePaymentTransaction } from '../lib/payment';
+import { createPaymentTransaction } from '../lib/payment';
 import { emailService } from './emailService';
 import { processOrderPoints } from '../lib/loyalty-system';
 import { recordPromotionUsage, markCartAsRecovered } from '../lib/promotions';

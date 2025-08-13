@@ -41,7 +41,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: 'Welcome to Rise Via - Your Premium THCA Journey Begins!',
         html: `
           <!DOCTYPE html>
@@ -135,7 +135,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: `Order Confirmation #${orderData.orderNumber}`,
         html: `
           <!DOCTYPE html>
@@ -241,7 +241,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: `Order Update #${orderData.orderNumber} - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
         html: `
           <!DOCTYPE html>
@@ -309,7 +309,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: `Your Order #${shippingData.orderNumber} Has Shipped!`,
         html: `
           <!DOCTYPE html>
@@ -367,7 +367,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: email,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: 'Password Reset Request - Rise Via',
         html: `
           <!DOCTYPE html>
@@ -426,7 +426,7 @@ const emailService = {
       const { data, error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject: 'Verify Your Email Address - Rise Via',
         html: `
           <!DOCTYPE html>
@@ -500,7 +500,7 @@ const emailService = {
       const { error } = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
-        reply_to: REPLY_TO_EMAIL,
+        replyTo: REPLY_TO_EMAIL,
         subject,
         html: body,
         text: body.replace(/<[^>]*>/g, '') // Simple HTML stripping

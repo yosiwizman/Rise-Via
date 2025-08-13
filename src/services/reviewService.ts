@@ -21,6 +21,33 @@ interface Review {
   updated_at: string;
 }
 
+interface ReviewVote {
+  id: string;
+  review_id: string;
+  user_id: string;
+  vote_type: string;
+  created_at: string;
+}
+
+interface ReviewWithCustomer extends Review {
+  customer_name: string;
+  verified_purchase: boolean;
+}
+
+interface RatingCount {
+  rating: number;
+  count: string;
+}
+
+interface ReviewStatsResult {
+  average_rating: string;
+  total_reviews: string;
+}
+
+interface CustomerReviewResult extends Review {
+  product_name: string;
+}
+
 /**
  * Initialize review tables
  */
@@ -110,8 +137,8 @@ export const reviewService = {
         FROM reviews r
         LEFT JOIN customers c ON r.customer_id = c.id::text
         WHERE r.product_id = ${productId}
-        ORDER BY ${sql.unsafe(orderClause)}
-      ` as Array<Review>;
+        ORDER BY ${sql(orderClause)}
+      ` as Array<ReviewWithCustomer>;
       
       return { data: reviews || [], error: null };
     } catch (error) {
@@ -135,7 +162,7 @@ export const reviewService = {
         SELECT id FROM reviews 
         WHERE product_id = ${reviewData.productId} 
         AND customer_id = ${reviewData.customerId}
-      `;
+      ` as Array<{ id: string }>;
 
       if (existingReviews.length > 0) {
         return { data: null, error: 'You have already reviewed this product' };
@@ -149,14 +176,14 @@ export const reviewService = {
         WHERE o.customer_id = ${reviewData.customerId}
         AND oi.product_id = ${reviewData.productId}
         AND o.status IN ('delivered', 'shipped')
-      `;
+      ` as Array<{ count: string }>;
 
-      const verifiedPurchase = purchases[0]?.count > 0;
+      const verifiedPurchase = parseInt(purchases[0]?.count || '0') > 0;
 
       // Get customer name
       const customers = await sql`
         SELECT first_name, last_name FROM customers WHERE id::text = ${reviewData.customerId}
-      `;
+      ` as Array<{ first_name: string; last_name: string }>;
       
       const customerName = customers.length > 0 
         ? `${customers[0].first_name} ${customers[0].last_name}`.trim()
@@ -207,7 +234,7 @@ export const reviewService = {
           COUNT(*) as total_reviews
         FROM reviews
         WHERE product_id = ${productId}
-      `;
+      ` as Array<ReviewStatsResult>;
 
       // Get rating distribution
       const distribution = await sql`
@@ -218,7 +245,7 @@ export const reviewService = {
         WHERE product_id = ${productId}
         GROUP BY rating
         ORDER BY rating
-      ` as Array<{ rating: number; count: number }>;
+      ` as Array<RatingCount>;
 
       // Build rating distribution object
       const ratingDistribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -254,7 +281,7 @@ export const reviewService = {
       const existingVotes = await sql`
         SELECT id, vote_type FROM review_votes 
         WHERE review_id = ${reviewId} AND user_id = ${userId}
-      `;
+      ` as Array<ReviewVote>;
 
       if (existingVotes.length > 0) {
         // Update existing vote
@@ -301,42 +328,38 @@ export const reviewService = {
       const reviews = await sql`
         SELECT * FROM reviews 
         WHERE id = ${reviewId} AND customer_id = ${customerId}
-      `;
+      ` as Array<Review>;
 
       if (reviews.length === 0) {
         return { data: null, error: 'Review not found or unauthorized' };
       }
 
       // Build update query dynamically
-      const updateFields: string[] = [];
-      const values: any[] = [];
+      const updateFields: Record<string, any> = {};
       
       if (updates.rating !== undefined) {
-        updateFields.push(`rating = $${values.length + 1}`);
-        values.push(updates.rating);
+        updateFields.rating = updates.rating;
       }
       if (updates.title !== undefined) {
-        updateFields.push(`title = $${values.length + 1}`);
-        values.push(updates.title);
+        updateFields.title = updates.title;
       }
       if (updates.comment !== undefined) {
-        updateFields.push(`comment = $${values.length + 1}`);
-        values.push(updates.comment);
+        updateFields.comment = updates.comment;
       }
       if (updates.images !== undefined) {
-        updateFields.push(`images = $${values.length + 1}`);
-        values.push(updates.images);
+        updateFields.images = updates.images;
       }
 
-      if (updateFields.length === 0) {
-        return { data: reviews[0] as Review, error: null };
+      if (Object.keys(updateFields).length === 0) {
+        return { data: reviews[0], error: null };
       }
 
-      updateFields.push('updated_at = NOW()');
+      // Add updated_at
+      updateFields.updated_at = sql`NOW()`;
 
       const updatedReviews = await sql`
         UPDATE reviews 
-        SET ${sql.unsafe(updateFields.join(', '))}
+        SET ${sql(updateFields)}
         WHERE id = ${reviewId}
         RETURNING *
       ` as Array<Review>;
@@ -363,7 +386,7 @@ export const reviewService = {
         DELETE FROM reviews 
         WHERE id = ${reviewId} AND customer_id = ${customerId}
         RETURNING id
-      `;
+      ` as Array<{ id: string }>;
 
       if (result.length === 0) {
         return { success: false, error: 'Review not found or unauthorized' };
@@ -393,7 +416,7 @@ export const reviewService = {
         WHERE r.customer_id = ${customerId}
         ORDER BY r.created_at DESC
         LIMIT ${limit}
-      ` as Array<Review & { product_name: string }>;
+      ` as Array<CustomerReviewResult>;
 
       return { data: reviews || [], error: null };
     } catch (error) {

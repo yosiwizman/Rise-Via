@@ -96,7 +96,10 @@ export const authService = {
 
       // Generate tokens
       const token = generateToken(user);
-      const refreshToken = generateRefreshToken(user.id);
+      // Remove sensitive data before passing to generateRefreshToken
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password_hash, failed_login_attempts, locked_until, ...safeUser } = user;
+      const refreshToken = generateRefreshToken(safeUser);
 
       // Store refresh token in database
       await sql`
@@ -106,10 +109,6 @@ export const authService = {
 
       // Log successful login
       await logAuthEvent(user.id, 'login_success', ipAddress, userAgent);
-
-      // Remove sensitive data
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, failed_login_attempts, locked_until, ...safeUser } = user;
 
       return { 
         success: true, 
@@ -301,7 +300,7 @@ export const authService = {
       };
 
       const newToken = generateToken(user);
-      const newRefreshToken = generateRefreshToken(user.id);
+      const newRefreshToken = generateRefreshToken(user);
 
       // Revoke old refresh token and create new one
       await sql`

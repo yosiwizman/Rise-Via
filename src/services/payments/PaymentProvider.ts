@@ -10,7 +10,7 @@ import { performFraudCheck } from '../../lib/payment';
 
 // Initialize Stripe with test/production key
 const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-07-30.basil' as Stripe.LatestApiVersion,
 });
 
 // Webhook secret for verifying Stripe webhooks
@@ -107,7 +107,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to create Stripe customer:', error);
       return null;
     }
-  }
+  },
 
   /**
    * Create a payment intent for later confirmation
@@ -143,7 +143,8 @@ class StripePaymentProvider implements PaymentProvider {
       }
 
       if (!stripeCustomerId) {
-        stripeCustomerId = await this.createCustomer(customer) || undefined;
+        const newCustomerId = await this.createCustomer(customer);
+        stripeCustomerId = newCustomerId || undefined;
       }
 
       // Create payment intent
@@ -200,7 +201,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to create payment intent',
       };
     }
-  }
+  },
 
   /**
    * Confirm a payment intent with a payment method
@@ -212,14 +213,17 @@ class StripePaymentProvider implements PaymentProvider {
       });
 
       if (paymentIntent.status === 'requires_action' && paymentIntent.next_action) {
+        const redirectUrl = paymentIntent.next_action.type === 'redirect_to_url' && 
+                           paymentIntent.next_action.redirect_to_url?.url 
+                           ? paymentIntent.next_action.redirect_to_url.url 
+                           : undefined;
+        
         return {
           success: false,
           requiresAction: true,
           paymentIntentId: paymentIntent.id,
           clientSecret: paymentIntent.client_secret || undefined,
-          redirectUrl: paymentIntent.next_action.type === 'redirect_to_url' 
-            ? paymentIntent.next_action.redirect_to_url?.url 
-            : undefined,
+          redirectUrl,
         };
       }
 
@@ -249,7 +253,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to confirm payment',
       };
     }
-  }
+  },
 
   /**
    * Process a payment immediately
@@ -276,7 +280,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to process payment',
       };
     }
-  }
+  },
 
   /**
    * Refund a payment
@@ -322,7 +326,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to process refund',
       };
     }
-  }
+  },
 
   /**
    * Map refund reason to Stripe format
@@ -336,7 +340,7 @@ class StripePaymentProvider implements PaymentProvider {
     };
 
     return reasonMap[reason || ''] || 'requested_by_customer';
-  }
+  },
 
   /**
    * Validate webhook signature
@@ -349,7 +353,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Webhook signature verification failed:', error);
       return false;
     }
-  }
+  },
 
   /**
    * Handle webhook events
@@ -383,7 +387,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to handle webhook:', error);
       throw error; // Re-throw to return 500 to Stripe
     }
-  }
+  },
 
   /**
    * Handle successful payment
@@ -422,7 +426,7 @@ class StripePaymentProvider implements PaymentProvider {
         WHERE id = ${orderId}
       `;
     }
-  }
+  },
 
   /**
    * Handle failed payment
@@ -453,7 +457,7 @@ class StripePaymentProvider implements PaymentProvider {
         WHERE id = ${orderId}
       `;
     }
-  }
+  },
 
   /**
    * Handle refund update
@@ -477,7 +481,7 @@ class StripePaymentProvider implements PaymentProvider {
         refunded_at: new Date().toISOString(),
       }
     );
-  }
+  },
 
   /**
    * Attach a payment method to a customer
@@ -500,7 +504,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to attach payment method:', error);
       return false;
     }
-  }
+  },
 
   /**
    * Get customer's payment methods
@@ -517,7 +521,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to get payment methods:', error);
       return [];
     }
-  }
+  },
 
   /**
    * Create a checkout session for more complex flows

@@ -34,6 +34,16 @@ export interface Product {
   reviewCount?: number;
 }
 
+interface FilterOptions {
+  categories: string[] | null;
+  strain_types: string[] | null;
+  effects: string[] | null;
+  min_price: string | null;
+  max_price: string | null;
+  min_thc: string | null;
+  max_thc: string | null;
+}
+
 /**
  * Initialize product tables if they don't exist
  */
@@ -233,7 +243,7 @@ export class SearchService {
       if (filters.query) {
         whereClauses.push(`(
           to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')) 
-          @@ plainto_tsquery('english', $${values.length +1})
+          @@ plainto_tsquery('english', $${values.length + 1})
           OR name ILIKE $${values.length + 2}
           OR description ILIKE $${values.length + 3}
         )`);
@@ -298,16 +308,25 @@ export class SearchService {
 
       const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-      // Execute query
-      const queryText = `
-        SELECT * FROM products
-        ${whereClause}
-        ORDER BY ${orderBy}
-      `;
-
-      const products = values.length > 0 
-        ? await sql.unsafe(queryText, values) as Array<Product>
-        : await sql.unsafe(queryText) as Array<Product>;
+      // Execute query using parameterized query
+      let products: Product[];
+      if (values.length > 0) {
+        // Build parameterized query
+        const queryParts = [`SELECT * FROM products`];
+        if (whereClause) queryParts.push(whereClause);
+        queryParts.push(`ORDER BY ${orderBy}`);
+        const queryText = queryParts.join(' ');
+        
+        // Use raw SQL with parameters
+        const result = await sql.unsafe(queryText, values);
+        products = result as Product[];
+      } else {
+        // No parameters, use template literal
+        products = await sql`
+          SELECT * FROM products
+          ORDER BY ${sql(orderBy)}
+        ` as Product[];
+      }
 
       return products || [];
     } catch (error) {
@@ -363,15 +382,21 @@ export class SearchService {
             MIN(COALESCE(thca_percentage, thc, 0)) as min_thc,
             MAX(COALESCE(thca_percentage, thc, 0)) as max_thc
           FROM products
-        `;
+        ` as Array<FilterOptions>;
 
         const result = options[0];
         return {
-          categories: result.categories || [],
-          strainTypes: result.strain_types || [],
-          effects: result.effects || [],
-          priceRange: { min: result.min_price || 0, max: result.max_price || 1000 },
-          thcRange: { min: result.min_thc || 0, max: result.max_thc || 100 }
+          categories: result?.categories || [],
+          strainTypes: result?.strain_types || [],
+          effects: result?.effects || [],
+          priceRange: { 
+            min: parseFloat(result?.min_price || '0'), 
+            max: parseFloat(result?.max_price || '1000') 
+          },
+          thcRange: { 
+            min: parseFloat(result?.min_thc || '0'), 
+            max: parseFloat(result?.max_thc || '100') 
+          }
         };
       }
 
