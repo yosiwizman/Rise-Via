@@ -230,11 +230,10 @@ export class AeropayProvider implements PaymentProvider {
     }
   }
 
-  async handleWebhook(event: Stripe.Event): Promise<void> {
+  async handleWebhook(event: any): Promise<void> {
     // Aeropay uses its own webhook format, not Stripe's
-    // This method adapts the interface for compatibility
     try {
-      const eventData = event.data.object as any;
+      const eventData = event.data?.object || event;
       
       switch (event.type) {
         case 'transaction.completed':

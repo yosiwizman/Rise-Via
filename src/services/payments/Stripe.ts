@@ -4,12 +4,10 @@ import Stripe from 'stripe';
 export class StripeProvider implements PaymentProvider {
   name = 'Stripe';
   private apiKey: string;
-  private apiUrl: string;
   private stripe: Stripe;
 
   constructor(apiKey: string, testMode = false) {
     this.apiKey = apiKey;
-    this.apiUrl = testMode ? 'https://api.stripe.com/v1' : 'https://api.stripe.com/v1';
     this.stripe = new Stripe(apiKey, {
       apiVersion: '2025-07-30.basil' as Stripe.LatestApiVersion,
     });

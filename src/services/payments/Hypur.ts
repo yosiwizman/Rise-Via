@@ -104,7 +104,7 @@ export class HypurProvider implements PaymentProvider {
     }
   }
 
-  async processPay(amount: number, customer: Customer, paymentMethodId: string, orderId: string): Promise<PaymentResult> {
+  async processPayment(amount: number, customer: Customer, paymentMethodId: string, orderId: string):Promise<PaymentResult> {
     try {
       if (!this.apiKey || this.apiKey === 'placeholder-key') {
         return {
@@ -214,11 +214,10 @@ export class HypurProvider implements PaymentProvider {
     }
   }
 
-  async handleWebhook(event: Stripe.Event): Promise<void> {
+  async handleWebhook(event: any): Promise<void> {
     // Hypur uses its own webhook format, not Stripe's
-    // This method adapts the interface for compatibility
     try {
-      const eventData = event.data.object as any;
+      const eventData = event.data?.object || event;
       
       switch (event.type) {
         case 'payment.completed':

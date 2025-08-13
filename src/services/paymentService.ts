@@ -204,6 +204,10 @@ export class PaymentService {
         }
       };
 
+      // Generate payment method ID and order ID if not provided
+      const paymentMethodId = 'default';
+      const orderId = orderData.orderId || `order_${Date.now()}`;
+
       let paymentResult: PaymentResult;
 
       if (preferredProcessor) {
@@ -211,13 +215,13 @@ export class PaymentService {
         if (processor) {
           switch (processor.name) {
             case 'POSaBIT':
-              paymentResult = await this.posabit.processPayment(orderData.amount, customer);
+              paymentResult = await this.posabit.processPayment(orderData.amount, customer, paymentMethodId, orderId);
               break;
             case 'Aeropay':
-              paymentResult = await this.aeropay.processPayment(orderData.amount, customer);
+              paymentResult = await this.aeropay.processPayment(orderData.amount, customer, paymentMethodId, orderId);
               break;
             case 'Hypur':
-              paymentResult = await this.hypur.processPayment(orderData.amount, customer);
+              paymentResult = await this.hypur.processPayment(orderData.amount, customer, paymentMethodId, orderId);
               break;
             default:
               paymentResult = {
@@ -235,13 +239,13 @@ export class PaymentService {
         const defaultProcessor = availableProcessors[0];
         switch (defaultProcessor.name) {
           case 'POSaBIT':
-            paymentResult = await this.posabit.processPayment(orderData.amount, customer);
+            paymentResult = await this.posabit.processPayment(orderData.amount, customer, paymentMethodId, orderId);
             break;
           case 'Aeropay':
-            paymentResult = await this.aeropay.processPayment(orderData.amount, customer);
+            paymentResult = await this.aeropay.processPayment(orderData.amount, customer, paymentMethodId, orderId);
             break;
           case 'Hypur':
-            paymentResult = await this.hypur.processPayment(orderData.amount, customer);
+            paymentResult = await this.hypur.processPayment(orderData.amount, customer, paymentMethodId, orderId);
             break;
           default:
             paymentResult = {
