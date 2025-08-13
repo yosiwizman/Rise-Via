@@ -28,6 +28,13 @@ export interface ChatMessage {
   timestamp?: Date;
 }
 
+export interface BlogPostData {
+  topic: string;
+  keywords: string[];
+  targetLength: number;
+  tone: string;
+}
+
 export class AIService {
   private static conversationHistory: ChatMessage[] = [];
 
@@ -101,9 +108,12 @@ export class AIService {
   /**
    * Answer frequently asked questions
    */
-  static async answerFAQ(): Promise<string> {
+  static async answerFAQ(question?: string): Promise<string> {
     try {
       console.log('FAQ requested but API not available');
+      if (question) {
+        return `Thank you for your question about "${question}". Our AI FAQ service is currently being updated. Please contact our support team for detailed answers to your cannabis-related questions.`;
+      }
       return 'Thank you for your question! Our AI FAQ service is currently being updated. Please contact our support team for detailed answers to your cannabis-related questions.';
     } catch (error) {
       console.error('FAQ answer error:', error);
@@ -161,6 +171,20 @@ export class AIService {
   }
 
   /**
+   * Generate blog post content
+   */
+  static async generateBlogPost(data: BlogPostData): Promise<string> {
+    try {
+      console.log('Blog post generation requested but API not available');
+      const prompt = `Write a ${data.targetLength}-word ${data.tone} blog post about ${data.topic}. Include these keywords: ${data.keywords.join(', ')}. Focus on cannabis education and compliance.`;
+      return `Blog Post: ${data.topic}\n\nThis is a placeholder for a ${data.targetLength}-word ${data.tone} article about ${data.topic}. The article would include information about ${data.keywords.join(', ')} while maintaining compliance with cannabis regulations.\n\nPlease contact our content team for professionally written blog posts about cannabis education and products.`;
+    } catch (error) {
+      console.error('Blog post generation error:', error);
+      return 'Unable to generate blog post content at this time. Please contact our content team.';
+    }
+  }
+
+  /**
    * Clear conversation history
    */
   static clearHistory(): void {
@@ -186,9 +210,5 @@ export const aiService = {
   generateCopy: AIService.generateMarketingCopy,
   clearHistory: AIService.clearHistory,
   getHistory: AIService.getHistory,
-  // Add missing methods with basic implementations
-  generateBlogPost: async (data: { topic: string; keywords: string[]; targetLength: number; tone: string }) => {
-    const prompt = `Write a ${data.targetLength}-word ${data.tone} blog post about ${data.topic}. Include these keywords: ${data.keywords.join(', ')}. Focus on cannabis education and compliance.`;
-    return AIService.answerFAQ(prompt);
-  }
+  generateBlogPost: AIService.generateBlogPost
 };
