@@ -176,7 +176,6 @@ export class AIService {
   static async generateBlogPost(data: BlogPostData): Promise<string> {
     try {
       console.log('Blog post generation requested but API not available');
-      const prompt = `Write a ${data.targetLength}-word ${data.tone} blog post about ${data.topic}. Include these keywords: ${data.keywords.join(', ')}. Focus on cannabis education and compliance.`;
       return `Blog Post: ${data.topic}\n\nThis is a placeholder for a ${data.targetLength}-word ${data.tone} article about ${data.topic}. The article would include information about ${data.keywords.join(', ')} while maintaining compliance with cannabis regulations.\n\nPlease contact our content team for professionally written blog posts about cannabis education and products.`;
     } catch (error) {
       console.error('Blog post generation error:', error);
