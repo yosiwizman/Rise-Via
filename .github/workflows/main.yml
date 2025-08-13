@@ -2,12 +2,12 @@ name: CI/CD Pipeline with Tech Debt Tracking
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, fix/eliminate-technical-debt-and-security-vulnerabilities]
   pull_request:
     branches: [main]
 
 env:
-  MAX_ALLOWED_WARNINGS: 56  # Updated technical debt baseline (improved from 69)
+  MAX_ALLOWED_WARNINGS: 35  # Updated technical debt baseline (improved from 69 → 56 → 35)
   NODE_VERSION: '18'
 
 jobs:
@@ -38,6 +38,13 @@ jobs:
           echo "violations=$CURRENT" >> $GITHUB_OUTPUT
           echo "Current violations: $CURRENT"
           
+          # Check if violations are within acceptable range
+          if [ "$CURRENT" -le "${{ env.MAX_ALLOWED_WARNINGS }}" ]; then
+            echo "✅ ESLint violations ($CURRENT) within allowed limit (${{ env.MAX_ALLOWED_WARNINGS }})"
+          else
+            echo "⚠️ ESLint violations ($CURRENT) exceed baseline (${{ env.MAX_ALLOWED_WARNINGS }})"
+          fi
+          
           # Compare with main branch if PR
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # Store current branch
@@ -67,6 +74,13 @@ jobs:
             fi
           else
             echo "delta=0" >> $GITHUB_OUTPUT
+            # For non-PR pushes, check if violations are within baseline
+            if [ "$CURRENT" -le "${{ env.MAX_ALLOWED_WARNINGS }}" ]; then
+              echo "✅ ESLint violations ($CURRENT) within baseline (${{ env.MAX_ALLOWED_WARNINGS }})"
+            else
+              echo "❌ ESLint violations ($CURRENT) exceed baseline (${{ env.MAX_ALLOWED_WARNINGS }})"
+              exit 1
+            fi
           fi
       
       - name: Generate Violation Report
