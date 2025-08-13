@@ -4,7 +4,14 @@
  */
 
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { sql } from './neon';
+
+// Get JWT secrets from environment variables
+const JWT_SECRET = process.env.VITE_JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_REFRESH_SECRET = process.env.VITE_JWT_REFRESH_SECRET || 'your-refresh-secret-change-in-production';
+const JWT_EXPIRES_IN = '15m'; // Access token expires in 15 minutes
+const JWT_REFRESH_EXPIRES_IN = '7d'; // Refresh token expires in 7 days
 
 export interface User {
   id: string;
@@ -30,63 +37,207 @@ export interface TokenPayload {
   userId: string;
   email: string;
   role: string;
-  iat: number;
-  exp: number;
+  type?: 'access' | 'refresh';
 }
 
 /**
- * Generate a secure JWT token
+ * Generate a secure JWT access token
  */
-export function generateToken(user: User, expiresIn: string = '24h'): string {
-  const payload: Omit<TokenPayload, 'iat' | 'exp'> = {
+export function generateToken(user: User): string {
+  const payload: TokenPayload = {
     userId: user.id,
     email: user.email,
-    role: user.role
+    role: user.role,
+    type: 'access'
   };
 
-  const now = Math.floor(Date.now() / 1000);
-  const expiration = now + (expiresIn === '24h' ? 24 * 60 * 60 : 7 * 24 * 60 * 60); // 24h or 7d
-
-  const tokenPayload: TokenPayload = {
-    ...payload,
-    iat: now,
-    exp: expiration
-  };
-
-  // In production, use a proper JWT library with secret key
-  const token = btoa(JSON.stringify(tokenPayload));
-  return token;
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+    issuer: 'risevia',
+    audience: 'risevia-app',
+    subject: user.id
+  });
 }
 
 /**
  * Generate a secure refresh token
  */
-export function generateRefreshToken(userId: string): string {
-  const payload = {
-    userId,
-    type: 'refresh',
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+export function generateRefreshToken(user: User): string {
+  const payload: TokenPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    type: 'refresh'
   };
 
-  return btoa(JSON.stringify(payload));
+  return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    expiresIn: JWT_REFRESH_EXPIRES_IN,
+    issuer: 'risevia',
+    audience: 'risevia-app',
+    subject: user.id
+  });
 }
 
 /**
- * Verify and decode JWT token
+ * Verify and decode JWT access token
  */
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    const decoded = JSON.parse(atob(token)) as TokenPayload;
-    const now = Math.floor(Date.now() / 1000);
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      issuer: 'risevia',
+      audience: 'risevia-app'
+    }) as TokenPayload;
+    
+    return decoded;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      console.error('Token expired');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.error('Invalid token');
+    }
+    return null;
+  }
+}
 
-    if (decoded.exp < now) {
-      return null; // Token expired
+/**
+ * Verify and decode JWT refresh token
+ */
+export function verifyRefreshToken(token: string): TokenPayload | null {
+  try {
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET, {
+      issuer: 'risevia',
+      audience: 'risevia-app'
+    }) as TokenPayload;
+    
+    if (decoded.type !== 'refresh') {
+      return null;
+    }
+    
+    return decoded;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      console.error('Refresh token expired');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.error('Invalid refresh token');
+    }
+    return null;
+  }
+}
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
+  try {
+    // Verify refresh token
+    const decoded = verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      return { success: false, error: 'Invalid refresh token' };
     }
 
-    return decoded;
-  } catch {
-    return null; // Invalid token
+    // Check if refresh token exists in database and is not revoked
+    if (sql) {
+      const tokens = await sql`
+        SELECT * FROM refresh_tokens 
+        WHERE token = ${refreshToken} 
+        AND revoked_at IS NULL 
+        AND expires_at > NOW()
+      `;
+
+      if (tokens.length === 0) {
+        return { success: false, error: 'Refresh token not found or revoked' };
+      }
+    }
+
+    // Get user from database
+    if (sql) {
+      const users = await sql`
+        SELECT * FROM users WHERE id = ${decoded.userId}
+      ` as Array<User>;
+
+      if (users.length === 0) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const user = users[0];
+
+      // Generate new access token
+      const newAccessToken = generateToken(user);
+
+      return {
+        success: true,
+        user,
+        token: newAccessToken,
+        refreshToken // Return same refresh token
+      };
+    }
+
+    return { success: false, error: 'Database not available' };
+  } catch (error) {
+    console.error('Failed to refresh access token:', error);
+    return { success: false, error: 'Failed to refresh token' };
+  }
+}
+
+/**
+ * Store refresh token in database
+ */
+export async function storeRefreshToken(userId: string, token: string): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping refresh token storage');
+      return;
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+    await sql`
+      INSERT INTO refresh_tokens (user_id, token, expires_at)
+      VALUES (${userId}, ${token}, ${expiresAt.toISOString()})
+    `;
+  } catch (error) {
+    console.error('Failed to store refresh token:', error);
+  }
+}
+
+/**
+ * Revoke refresh token
+ */
+export async function revokeRefreshToken(token: string): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping refresh token revocation');
+      return;
+    }
+
+    await sql`
+      UPDATE refresh_tokens 
+      SET revoked_at = NOW()
+      WHERE token = ${token}
+    `;
+  } catch (error) {
+    console.error('Failed to revoke refresh token:', error);
+  }
+}
+
+/**
+ * Revoke all refresh tokens for a user
+ */
+export async function revokeAllUserTokens(userId: string): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping token revocation');
+      return;
+    }
+
+    await sql`
+      UPDATE refresh_tokens 
+      SET revoked_at = NOW()
+      WHERE user_id = ${userId} AND revoked_at IS NULL
+    `;
+  } catch (error) {
+    console.error('Failed to revoke user tokens:', error);
   }
 }
 
@@ -112,6 +263,44 @@ export function generateVerificationToken(): string {
   const randomBytes = new Uint8Array(32);
   crypto.getRandomValues(randomBytes);
   return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Generate password reset token
+ */
+export function generatePasswordResetToken(userId: string): string {
+  const payload = {
+    userId,
+    type: 'password_reset',
+    timestamp: Date.now()
+  };
+
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: '1h',
+    issuer: 'risevia',
+    audience: 'password-reset'
+  });
+}
+
+/**
+ * Verify password reset token
+ */
+export function verifyPasswordResetToken(token: string): { userId: string } | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      issuer: 'risevia',
+      audience: 'password-reset'
+    }) as any;
+
+    if (decoded.type !== 'password_reset') {
+      return null;
+    }
+
+    return { userId: decoded.userId };
+  } catch (error) {
+    console.error('Invalid password reset token:', error);
+    return null;
+  }
 }
 
 /**
@@ -203,11 +392,43 @@ export function cleanupRateLimit(): void {
 setInterval(cleanupRateLimit, 5 * 60 * 1000);
 
 /**
+ * Clean up expired refresh tokens
+ */
+export async function cleanupExpiredTokens(): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping token cleanup');
+      return;
+    }
+
+    await sql`
+      DELETE FROM refresh_tokens 
+      WHERE expires_at < NOW() OR revoked_at IS NOT NULL
+    `;
+
+    await sql`
+      DELETE FROM email_verification_tokens 
+      WHERE expires_at < NOW() OR used_at IS NOT NULL
+    `;
+
+    await sql`
+      DELETE FROM password_reset_tokens 
+      WHERE expires_at < NOW() OR used_at IS NOT NULL
+    `;
+  } catch (error) {
+    console.error('Failed to cleanup expired tokens:', error);
+  }
+}
+
+// Clean up expired tokens every hour
+setInterval(cleanupExpiredTokens, 60 * 60 * 1000);
+
+/**
  * Log authentication events for security monitoring
  */
 export async function logAuthEvent(
   userId: string | null,
-  event: 'login_success' | 'login_failed' | 'logout' | 'password_reset' | 'email_verified',
+  event: 'login_success' | 'login_failed' | 'logout' | 'password_reset' | 'email_verified' | 'token_refresh',
   ipAddress: string,
   userAgent: string,
   details?: Record<string, unknown>
@@ -303,6 +524,7 @@ export async function initializeAuthTables(): Promise<void> {
     await sql`CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_token ON email_verification_tokens(token)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
 
     console.log('✅ Auth tables initialized successfully');

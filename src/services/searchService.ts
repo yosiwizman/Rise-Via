@@ -1,9 +1,9 @@
 /**
  * Search and Filter Service for Rise-Via
- * Provides advanced product search and filtering capabilities
+ * Provides advanced product search and filtering capabilities using database
  */
 
-import productsData from '../data/products.json';
+import { sql } from '../lib/neon';
 
 export interface SearchFilters {
   query?: string;
@@ -34,15 +34,60 @@ export interface Product {
   reviewCount?: number;
 }
 
-const products = productsData.products as Product[];
+/**
+ * Initialize product tables if they don't exist
+ */
+async function initializeProductTables(): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping product table initialization');
+      return;
+    }
+
+    // Products table
+    await sql`
+      CREATE TABLE IF NOT EXISTS products (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        original_price DECIMAL(10,2),
+        thc DECIMAL(5,2),
+        thca_percentage DECIMAL(5,2),
+        cbd DECIMAL(5,2),
+        strain_type VARCHAR(20) NOT NULL,
+        effects TEXT[],
+        description TEXT,
+        images TEXT[],
+        inventory INTEGER DEFAULT 0,
+        terpenes TEXT[],
+        rating DECIMAL(3,2) DEFAULT 0,
+        review_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for better search performance
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_name ON products USING gin(to_tsvector('english', name))`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_description ON products USING gin(to_tsvector('english', description))`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_strain_type ON products(strain_type)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_price ON products(price)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_thca ON products(thca_percentage)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_effects ON products USING gin(effects)`;
+
+    console.log('✅ Product tables initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize product tables:', error);
+  }
+}
+
+// Initialize tables on module load
+initializeProductTables();
 
 export class SearchService {
   private static instance: SearchService;
-  private searchIndex: Map<string, Set<string>> = new Map();
-
-  constructor() {
-    this.buildSearchIndex();
-  }
 
   static getInstance(): SearchService {
     if (!SearchService.instance) {
@@ -52,116 +97,78 @@ export class SearchService {
   }
 
   /**
-   * Build search index for faster searching
-   */
-  private buildSearchIndex() {
-    products.forEach(product => {
-      // Index by name
-      const nameTokens = this.tokenize(product.name);
-      nameTokens.forEach(token => {
-        if (!this.searchIndex.has(token)) {
-          this.searchIndex.set(token, new Set());
-        }
-        this.searchIndex.get(token)!.add(product.id);
-      });
-
-      // Index by description
-      const descTokens = this.tokenize(product.description);
-      descTokens.forEach(token => {
-        if (!this.searchIndex.has(token)) {
-          this.searchIndex.set(token, new Set());
-        }
-        this.searchIndex.get(token)!.add(product.id);
-      });
-
-      // Index by effects
-      product.effects.forEach((effect: string) => {
-        const effectTokens = this.tokenize(effect);
-        effectTokens.forEach(token => {
-          if (!this.searchIndex.has(token)) {
-            this.searchIndex.set(token, new Set());
-          }
-          this.searchIndex.get(token)!.add(product.id);
-        });
-      });
-
-      // Index by strain type
-      const strainToken = product.strainType.toLowerCase();
-      if (!this.searchIndex.has(strainToken)) {
-        this.searchIndex.set(strainToken, new Set());
-      }
-      this.searchIndex.get(strainToken)!.add(product.id);
-    });
-  }
-
-  /**
-   * Tokenize text for indexing
-   */
-  private tokenize(text: string): string[] {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(token => token.length > 2);
-  }
-
-  /**
    * Search products based on query
    */
-  search(query: string): Product[] {
-    if (!query || query.trim() === '') {
-      return products;
-    }
-
-    const queryTokens = this.tokenize(query);
-    const matchedProductIds = new Set<string>();
-
-    // Find products matching any query token
-    queryTokens.forEach(token => {
-      if (this.searchIndex.has(token)) {
-        this.searchIndex.get(token)!.forEach(id => matchedProductIds.add(id));
+  async search(query: string): Promise<Product[]> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty results');
+        return [];
       }
 
-      // Also check for partial matches
-      Array.from(this.searchIndex.keys()).forEach(indexToken => {
-        if (indexToken.includes(token) || token.includes(indexToken)) {
-          this.searchIndex.get(indexToken)!.forEach(id => matchedProductIds.add(id));
-        }
-      });
-    });
+      if (!query || query.trim() === '') {
+        // Return all products if no query
+        const products = await sql`
+          SELECT * FROM products 
+          ORDER BY created_at DESC
+        ` as Array<Product>;
+        return products || [];
+      }
 
-    // Return matched products
-    return products.filter(product => matchedProductIds.has(product.id));
+      // Use PostgreSQL full-text search
+      const products = await sql`
+        SELECT *,
+          ts_rank(
+            to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')),
+            plainto_tsquery('english', ${query})
+          ) as rank
+        FROM products
+        WHERE 
+          to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')) 
+          @@ plainto_tsquery('english', ${query})
+          OR name ILIKE ${`%${query}%`}
+          OR description ILIKE ${`%${query}%`}
+          OR strain_type ILIKE ${`%${query}%`}
+        ORDER BY rank DESC, name ASC
+      ` as Array<Product>;
+
+      return products || [];
+    } catch (error) {
+      console.error('Search error:', error);
+      return [];
+    }
   }
 
   /**
    * Filter products based on criteria
    */
-  filter(products: Product[], filters: SearchFilters): Product[] {
+  async filter(products: Product[], filters: SearchFilters): Promise<Product[]> {
+    // If we have database access, do filtering in SQL
+    if (sql && (!products || products.length === 0)) {
+      return this.searchAndFilter(filters);
+    }
+
+    // Otherwise filter in memory
     let filtered = [...products];
 
-    // Filter by category
     if (filters.category && filters.category !== 'all') {
       filtered = filtered.filter(p => 
         p.category.toLowerCase() === filters.category!.toLowerCase()
       );
     }
 
-    // Filter by strain type
     if (filters.strainType && filters.strainType !== 'all') {
       filtered = filtered.filter(p => 
         p.strainType.toLowerCase() === filters.strainType!.toLowerCase()
       );
     }
 
-    // Filter by price range
     if (filters.priceRange) {
       filtered = filtered.filter(p => 
         p.price >= filters.priceRange!.min && p.price <= filters.priceRange!.max
       );
     }
 
-    // Filter by THC range
     if (filters.thcRange) {
       filtered = filtered.filter(p => {
         const thcValue = p.thc || p.thcaPercentage || 0;
@@ -169,7 +176,6 @@ export class SearchService {
       });
     }
 
-    // Filter by effects
     if (filters.effects && filters.effects.length > 0) {
       filtered = filtered.filter(p => 
         filters.effects!.some(effect => 
@@ -210,199 +216,290 @@ export class SearchService {
   }
 
   /**
-   * Combined search, filter, and sort
+   * Combined search, filter, and sort using database
    */
-  searchAndFilter(filters: SearchFilters): Product[] {
-    // Start with search if query exists
-    let results = filters.query ? this.search(filters.query) : products;
+  async searchAndFilter(filters: SearchFilters): Promise<Product[]> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty results');
+        return [];
+      }
 
-    // Apply filters
-    results = this.filter(results, filters);
+      // Build WHERE clause
+      const whereClauses: string[] = [];
+      const values: any[] = [];
 
-    // Apply sorting
-    if (filters.sortBy) {
-      results = this.sort(results, filters.sortBy);
+      // Search query
+      if (filters.query) {
+        whereClauses.push(`(
+          to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || array_to_string(effects, ' ')) 
+          @@ plainto_tsquery('english', $${values.length +1})
+          OR name ILIKE $${values.length + 2}
+          OR description ILIKE $${values.length + 3}
+        )`);
+        values.push(filters.query, `%${filters.query}%`, `%${filters.query}%`);
+      }
+
+      // Category filter
+      if (filters.category && filters.category !== 'all') {
+        whereClauses.push(`category = $${values.length + 1}`);
+        values.push(filters.category);
+      }
+
+      // Strain type filter
+      if (filters.strainType && filters.strainType !== 'all') {
+        whereClauses.push(`strain_type = $${values.length + 1}`);
+        values.push(filters.strainType);
+      }
+
+      // Price range filter
+      if (filters.priceRange) {
+        whereClauses.push(`price BETWEEN $${values.length + 1} AND $${values.length + 2}`);
+        values.push(filters.priceRange.min, filters.priceRange.max);
+      }
+
+      // THC range filter
+      if (filters.thcRange) {
+        whereClauses.push(`COALESCE(thca_percentage, thc, 0) BETWEEN $${values.length + 1} AND $${values.length + 2}`);
+        values.push(filters.thcRange.min, filters.thcRange.max);
+      }
+
+      // Effects filter
+      if (filters.effects && filters.effects.length > 0) {
+        whereClauses.push(`effects && $${values.length + 1}`);
+        values.push(filters.effects);
+      }
+
+      // Build ORDER BY clause
+      let orderBy = 'created_at DESC';
+      switch (filters.sortBy) {
+        case 'price-asc':
+          orderBy = 'price ASC';
+          break;
+        case 'price-desc':
+          orderBy = 'price DESC';
+          break;
+        case 'thc-asc':
+          orderBy = 'COALESCE(thca_percentage, thc, 0) ASC';
+          break;
+        case 'thc-desc':
+          orderBy = 'COALESCE(thca_percentage, thc, 0) DESC';
+          break;
+        case 'name-asc':
+          orderBy = 'name ASC';
+          break;
+        case 'name-desc':
+          orderBy = 'name DESC';
+          break;
+        case 'popular':
+          orderBy = 'review_count DESC NULLS LAST, rating DESC NULLS LAST';
+          break;
+      }
+
+      const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+      // Execute query
+      const queryText = `
+        SELECT * FROM products
+        ${whereClause}
+        ORDER BY ${orderBy}
+      `;
+
+      const products = values.length > 0 
+        ? await sql.unsafe(queryText, values) as Array<Product>
+        : await sql.unsafe(queryText) as Array<Product>;
+
+      return products || [];
+    } catch (error) {
+      console.error('Search and filter error:', error);
+      return [];
     }
-
-    return results;
   }
 
   /**
    * Get product suggestions based on partial input
    */
-  getSuggestions(query: string, limit: number = 5): string[] {
-    if (!query || query.length < 2) return [];
-
-    const queryLower = query.toLowerCase();
-    const suggestions = new Set<string>();
-
-    // Get product name suggestions
-    products.forEach(product => {
-      if (product.name.toLowerCase().includes(queryLower)) {
-        suggestions.add(product.name);
+  async getSuggestions(query: string, limit: number = 5): Promise<string[]> {
+    try {
+      if (!sql || !query || query.length < 2) {
+        return [];
       }
-    });
 
-    // Get effect suggestions
-    products.forEach(product => {
-      product.effects.forEach((effect: string) => {
-        if (effect.toLowerCase().includes(queryLower)) {
-          suggestions.add(effect);
-        }
-      });
-    });
+      const suggestions = await sql`
+        SELECT DISTINCT name
+        FROM products
+        WHERE name ILIKE ${`${query}%`}
+        ORDER BY name
+        LIMIT ${limit}
+      ` as Array<{ name: string }>;
 
-    return Array.from(suggestions).slice(0, limit);
+      return suggestions.map(s => s.name);
+    } catch (error) {
+      console.error('Get suggestions error:', error);
+      return [];
+    }
   }
 
   /**
    * Get available filter options based on current products
    */
-  getFilterOptions(products: Product[]): {
+  async getFilterOptions(products?: Product[]): Promise<{
     categories: string[];
     strainTypes: string[];
     effects: string[];
     priceRange: { min: number; max: number };
     thcRange: { min: number; max: number };
-  } {
-    const categories = new Set<string>();
-    const strainTypes = new Set<string>();
-    const effects = new Set<string>();
-    let minPrice = Infinity;
-    let maxPrice = 0;
-    let minTHC = Infinity;
-    let maxTHC = 0;
+  }> {
+    try {
+      if (sql && !products) {
+        // Get from database
+        const options = await sql`
+          SELECT 
+            array_agg(DISTINCT category) as categories,
+            array_agg(DISTINCT strain_type) as strain_types,
+            array_agg(DISTINCT unnest(effects)) as effects,
+            MIN(price) as min_price,
+            MAX(price) as max_price,
+            MIN(COALESCE(thca_percentage, thc, 0)) as min_thc,
+            MAX(COALESCE(thca_percentage, thc, 0)) as max_thc
+          FROM products
+        `;
 
-    products.forEach(product => {
-      categories.add(product.category);
-      strainTypes.add(product.strainType);
-      product.effects.forEach(effect => effects.add(effect));
-      
-      if (product.price < minPrice) minPrice = product.price;
-      if (product.price > maxPrice) maxPrice = product.price;
-      const thcValue = product.thc || product.thcaPercentage || 0;
-      if (thcValue < minTHC) minTHC = thcValue;
-      if (thcValue > maxTHC) maxTHC = thcValue;
-    });
+        const result = options[0];
+        return {
+          categories: result.categories || [],
+          strainTypes: result.strain_types || [],
+          effects: result.effects || [],
+          priceRange: { min: result.min_price || 0, max: result.max_price || 1000 },
+          thcRange: { min: result.min_thc || 0, max: result.max_thc || 100 }
+        };
+      }
 
-    return {
-      categories: Array.from(categories).sort(),
-      strainTypes: Array.from(strainTypes).sort(),
-      effects: Array.from(effects).sort(),
-      priceRange: { min: minPrice, max: maxPrice },
-      thcRange: { min: minTHC, max: maxTHC }
-    };
+      // Get from provided products array
+      if (!products || products.length === 0) {
+        return {
+          categories: [],
+          strainTypes: [],
+          effects: [],
+          priceRange: { min: 0, max: 1000 },
+          thcRange: { min: 0, max: 100 }
+        };
+      }
+
+      const categories = new Set<string>();
+      const strainTypes = new Set<string>();
+      const effects = new Set<string>();
+      let minPrice = Infinity;
+      let maxPrice = 0;
+      let minTHC = Infinity;
+      let maxTHC = 0;
+
+      products.forEach(product => {
+        categories.add(product.category);
+        strainTypes.add(product.strainType);
+        product.effects.forEach(effect => effects.add(effect));
+        
+        if (product.price < minPrice) minPrice = product.price;
+        if (product.price > maxPrice) maxPrice = product.price;
+        const thcValue = product.thc || product.thcaPercentage || 0;
+        if (thcValue < minTHC) minTHC = thcValue;
+        if (thcValue > maxTHC) maxTHC = thcValue;
+      });
+
+      return {
+        categories: Array.from(categories).sort(),
+        strainTypes: Array.from(strainTypes).sort(),
+        effects: Array.from(effects).sort(),
+        priceRange: { min: minPrice, max: maxPrice },
+        thcRange: { min: minTHC, max: maxTHC }
+      };
+    } catch (error) {
+      console.error('Get filter options error:', error);
+      return {
+        categories: [],
+        strainTypes: [],
+        effects: [],
+        priceRange: { min: 0, max: 1000 },
+        thcRange: { min: 0, max: 100 }
+      };
+    }
   }
 
   /**
    * Get related products based on a product
    */
-  getRelatedProducts(productId: string, limit: number = 4): Product[] {
-    const product = products.find(p => p.id === productId);
-    if (!product) return [];
+  async getRelatedProducts(productId: string, limit: number = 4): Promise<Product[]> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available, returning empty results');
+        return [];
+      }
 
-    // Score other products based on similarity
-    const scored = products
-      .filter(p => p.id !== productId)
-      .map(p => {
-        let score = 0;
+      // Get the source product
+      const sourceProducts = await sql`
+        SELECT * FROM products WHERE id = ${productId}
+      ` as Array<Product>;
 
-        // Same strain type
-        if (p.strainType === product.strainType) score += 3;
+      if (sourceProducts.length === 0) {
+        return [];
+      }
 
-        // Same category
-        if (p.category === product.category) score += 2;
+      const product = sourceProducts[0];
 
-        // Similar THC level (within 5%)
-        const pThc = p.thc || p.thcaPercentage || 0;
-        const productThc = product.thc || product.thcaPercentage || 0;
-        if (Math.abs(pThc - productThc) <= 5) score += 2;
+      // Find related products based on strain type, category, and effects
+      const relatedProducts = await sql`
+        SELECT *,
+          (
+            CASE WHEN strain_type = ${product.strainType} THEN 3 ELSE 0 END +
+            CASE WHEN category = ${product.category} THEN 2 ELSE 0 END +
+            CASE WHEN ABS(COALESCE(thca_percentage, thc, 0) - ${product.thcaPercentage || product.thc || 0}) <= 5 THEN 2 ELSE 0 END +
+            CASE WHEN effects && ${product.effects} THEN array_length(effects & ${product.effects}, 1) ELSE 0 END +
+            CASE WHEN ABS(price - ${product.price}) / ${product.price} <= 0.2 THEN 1 ELSE 0 END
+          ) as similarity_score
+        FROM products
+        WHERE id != ${productId}
+        ORDER BY similarity_score DESC, review_count DESC NULLS LAST
+        LIMIT ${limit}
+      ` as Array<Product>;
 
-        // Shared effects
-        const sharedEffects = p.effects.filter((e: string) => product.effects.includes(e));
-        score += sharedEffects.length;
-
-        // Similar price (within 20%)
-        const priceDiff = Math.abs(p.price - product.price) / product.price;
-        if (priceDiff <= 0.2) score += 1;
-
-        return { product: p, score };
-      })
-      .sort((a, b) => b.score - a.score);
-
-    return scored.slice(0, limit).map(s => s.product);
+      return relatedProducts || [];
+    } catch (error) {
+      console.error('Get related products error:', error);
+      return [];
+    }
   }
 
   /**
-   * Search products with fuzzy matching
+   * Fuzzy search products with similarity matching
    */
-  fuzzySearch(query: string, threshold: number = 0.6): Product[] {
-    if (!query || query.trim() === '') {
-      return products;
+  async fuzzySearch(query: string, threshold: number = 0.3): Promise<Product[]> {
+    try {
+      if (!sql || !query || query.trim() === '') {
+        return [];
+      }
+
+      // Use PostgreSQL's similarity functions
+      const products = await sql`
+        SELECT *,
+          similarity(name, ${query}) as name_similarity,
+          similarity(description, ${query}) as desc_similarity
+        FROM products
+        WHERE 
+          similarity(name, ${query}) > ${threshold}
+          OR similarity(description, ${query}) > ${threshold}
+          OR name ILIKE ${`%${query}%`}
+          OR description ILIKE ${`%${query}%`}
+        ORDER BY 
+          GREATEST(similarity(name, ${query}), similarity(description, ${query})) DESC,
+          name ASC
+      ` as Array<Product>;
+
+      return products || [];
+    } catch (error) {
+      console.error('Fuzzy search error:', error);
+      // Fallback to basic search
+      return this.search(query);
     }
-
-    const queryLower = query.toLowerCase();
-    const results: Array<{ product: Product; score: number }> = [];
-
-    products.forEach(product => {
-      let score = 0;
-
-      // Check name similarity
-      const nameSimilarity = this.calculateSimilarity(queryLower, product.name.toLowerCase());
-      if (nameSimilarity > threshold) {
-        score = Math.max(score, nameSimilarity * 1.5); // Name matches are weighted higher
-      }
-
-      // Check description similarity
-      const descSimilarity = this.calculateSimilarity(queryLower, product.description.toLowerCase());
-      if (descSimilarity > threshold) {
-        score = Math.max(score, descSimilarity);
-      }
-
-      // Check effects
-      product.effects.forEach((effect: string) => {
-        const effectSimilarity = this.calculateSimilarity(queryLower, effect.toLowerCase());
-        if (effectSimilarity > threshold) {
-          score = Math.max(score, effectSimilarity * 1.2);
-        }
-      });
-
-      if (score > 0) {
-        results.push({ product, score });
-      }
-    });
-
-    // Sort by score and return products
-    return results
-      .sort((a, b) => b.score - a.score)
-      .map(r => r.product);
-  }
-
-  /**
-   * Calculate string similarity (Levenshtein distance based)
-   */
-  private calculateSimilarity(str1: string, str2: string): number {
-    const maxLen = Math.max(str1.length, str2.length);
-    if (maxLen === 0) return 1;
-
-    // Simple substring matching for now
-    if (str2.includes(str1) || str1.includes(str2)) {
-      const minLen = Math.min(str1.length, str2.length);
-      return minLen / maxLen;
-    }
-
-    // Check word-by-word matching
-    const words1 = str1.split(/\s+/);
-    const words2 = str2.split(/\s+/);
-    let matches = 0;
-
-    words1.forEach(word1 => {
-      if (words2.some(word2 => word2.includes(word1) || word1.includes(word2))) {
-        matches++;
-      }
-    });
-
-    return matches / Math.max(words1.length, words2.length);
   }
 }
 

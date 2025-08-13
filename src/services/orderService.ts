@@ -1,10 +1,16 @@
+/**
+ * Order Management Service
+ * Handles order creation, processing, and fulfillment
+ */
+
 import { sql } from '../lib/neon';
 import { 
   reserveInventory, 
-  fulfillOrder, 
+  fulfillOrder as fulfillInventoryOrder,
   releaseReservation,
   initializeInventoryTables 
 } from '../lib/inventory';
+import { createPaymentTransaction, updatePaymentTransaction } from '../lib/payment';
 import { emailService } from './emailService';
 import { processOrderPoints } from '../lib/loyalty-system';
 import { recordPromotionUsage, markCartAsRecovered } from '../lib/promotions';
@@ -26,8 +32,11 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   payment_method?: string;
+  payment_intent_id?: string;
   shipping_address?: Record<string, unknown>;
   billing_address?: Record<string, unknown>;
+  tracking_number?: string;
+  carrier?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -59,6 +68,8 @@ export interface CreateOrderData {
   discount: number;
   shipping: number;
   total: number;
+  payment_method?: string;
+  payment_intent_id?: string;
   shipping_address?: Record<string, unknown>;
   billing_address?: Record<string, unknown>;
   notes?: string;
@@ -74,8 +85,90 @@ export interface OrderStatusUpdate {
   status: Order['status'];
   notes?: string;
   tracking_number?: string;
+  carrier?: string;
   estimated_delivery?: string;
 }
+
+/**
+ * Initialize order tables
+ */
+export async function initializeOrderTables(): Promise<void> {
+  try {
+    if (!sql) {
+      console.warn('⚠️ Database not available, skipping order table initialization');
+      return;
+    }
+
+    // Orders table
+    await sql`
+      CREATE TABLE IF NOT EXISTS orders (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_number VARCHAR(50) UNIQUE NOT NULL,
+        customer_id VARCHAR(255) NOT NULL,
+        customer_email VARCHAR(255),
+        subtotal DECIMAL(10,2) NOT NULL,
+        tax DECIMAL(10,2) DEFAULT 0,
+        discount DECIMAL(10,2) DEFAULT 0,
+        shipping DECIMAL(10,2) DEFAULT 0,
+        total DECIMAL(10,2) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        payment_status VARCHAR(20) DEFAULT 'pending',
+        payment_method VARCHAR(50),
+        payment_intent_id VARCHAR(255),
+        shipping_address JSONB,
+        billing_address JSONB,
+        tracking_number VARCHAR(255),
+        carrier VARCHAR(50),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Order items table
+    await sql`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        product_id VARCHAR(255) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        quantity INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        discount DECIMAL(10,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Order status history table
+    await sql`
+      CREATE TABLE IF NOT EXISTS order_status_history (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL,
+        notes TEXT,
+        created_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_order_status_history_order_id ON order_status_history(order_id)`;
+
+    console.log('✅ Order tables initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize order tables:', error);
+  }
+}
+
+// Initialize tables on module load
+initializeOrderTables();
 
 /**
  * Generate unique order number
@@ -84,6 +177,44 @@ function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `RV-${timestamp}-${random}`.toUpperCase();
+}
+
+/**
+ * Calculate tax based on state
+ */
+function calculateTax(subtotal: number, state?: string): number {
+  // State tax rates for cannabis products (simplified)
+  const taxRates: Record<string, number> = {
+    'CA': 0.15, // California cannabis tax
+    'CO': 0.15, // Colorado cannabis tax
+    'WA': 0.37, // Washington cannabis tax
+    'OR': 0.17, // Oregon cannabis tax
+    'NV': 0.10, // Nevada cannabis tax
+    'MA': 0.20, // Massachusetts cannabis tax
+    'MI': 0.10, // Michigan cannabis tax
+    'IL': 0.25, // Illinois cannabis tax
+    'AZ': 0.16, // Arizona cannabis tax
+    'MT': 0.20, // Montana cannabis tax
+  };
+
+  const rate = state ? (taxRates[state] || 0.10) : 0.10; // Default 10% tax
+  return Math.round(subtotal * rate * 100) / 100;
+}
+
+/**
+ * Calculate shipping cost
+ */
+function calculateShipping(subtotal: number, items: Array<{ quantity: number }>): number {
+  // Free shipping over $100
+  if (subtotal >= 100) {
+    return 0;
+  }
+
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const baseShipping = 7.99;
+  const perItemShipping = 1.50;
+
+  return Math.round((baseShipping + (totalQuantity * perItemShipping)) * 100) / 100;
 }
 
 export const orderService = {
@@ -97,14 +228,14 @@ export const orderService = {
       // Generate unique order number
       const orderNumber = generateOrderNumber();
 
-      // Validate inventory availability and reserve stock
+      // Validate and reserve inventory for each item
       const reservationResults: Array<{ product_id: string; success: boolean; error?: string }> = [];
       
       for (const item of orderData.items) {
         const reservationResult = await reserveInventory(
           item.product_id,
           item.quantity,
-          orderNumber, // Use order number as reservation ID
+          orderNumber,
           'order',
           60 // Reserve for 60 minutes
         );
@@ -129,16 +260,24 @@ export const orderService = {
         }
       }
 
+      // Calculate final amounts
+      const subtotal = orderData.subtotal;
+      const tax = orderData.tax || calculateTax(subtotal, (orderData.shipping_address as any)?.state);
+      const shipping = orderData.shipping || calculateShipping(subtotal, orderData.items);
+      const discount = orderData.discount || 0;
+      const total = subtotal + tax + shipping - discount;
+
       // Create order record
       const orders = await sql`
         INSERT INTO orders (
-          order_number, customer_id, subtotal, tax, discount, shipping, total,
-          status, payment_status, shipping_address, billing_address, notes
+          order_number, customer_id, customer_email, subtotal, tax, discount, shipping, total,
+          status, payment_status, payment_method, payment_intent_id, shipping_address, billing_address, notes
         )
         VALUES (
-          ${orderNumber}, ${orderData.customer_id}, ${orderData.subtotal}, 
-          ${orderData.tax}, ${orderData.discount}, ${orderData.shipping}, ${orderData.total},
-          'pending', 'pending', ${JSON.stringify(orderData.shipping_address || {})}, 
+          ${orderNumber}, ${orderData.customer_id}, ${orderData.customer_email || null}, ${subtotal}, 
+          ${tax}, ${discount}, ${shipping}, ${total},
+          'pending', 'pending', ${orderData.payment_method || null}, ${orderData.payment_intent_id || null},
+          ${JSON.stringify(orderData.shipping_address || {})}, 
           ${JSON.stringify(orderData.billing_address || {})}, ${orderData.notes || null}
         )
         RETURNING *
@@ -162,7 +301,25 @@ export const orderService = {
         `;
       }
 
-      // Record promotion usage
+      // Add status history entry
+      await sql`
+        INSERT INTO order_status_history (order_id, status, notes, created_by)
+        VALUES (${order.id}, 'pending', 'Order created', 'system')
+      `;
+
+      // Create payment transaction record
+      if (orderData.payment_method) {
+        await createPaymentTransaction(
+          order.id,
+          orderData.customer_id,
+          total,
+          orderData.payment_method,
+          'stripe', // Default to Stripe
+          { order_number: orderNumber }
+        );
+      }
+
+      // Record promotion usage if applicable
       if (orderData.applied_promotions) {
         for (const promotion of orderData.applied_promotions) {
           await recordPromotionUsage(
@@ -190,7 +347,13 @@ export const orderService = {
         try {
           await emailService.sendOrderConfirmation(orderData.customer_email, {
             orderNumber: order.order_number,
-            total: order.total
+            total: order.total,
+            items: orderData.items.map(item => ({
+              name: item.product_name,
+              quantity: item.quantity,
+              price: item.price
+            })),
+            estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()
           });
         } catch (emailError) {
           console.error('Failed to send order confirmation email:', emailError);
@@ -301,10 +464,23 @@ export const orderService = {
       }
 
       // Update order status
+      const updateFields: string[] = [`status = ${statusUpdate.status}`];
+      if (statusUpdate.tracking_number) {
+        updateFields.push(`tracking_number = ${statusUpdate.tracking_number}`);
+      }
+      if (statusUpdate.carrier) {
+        updateFields.push(`carrier = ${statusUpdate.carrier}`);
+      }
+      if (statusUpdate.notes) {
+        updateFields.push(`notes = ${statusUpdate.notes}`);
+      }
+
       const orders = await sql`
         UPDATE orders 
-        SET status = ${statusUpdate.status}, 
-            notes = COALESCE(${statusUpdate.notes}, notes),
+        SET status = ${statusUpdate.status},
+            tracking_number = COALESCE(${statusUpdate.tracking_number || null}, tracking_number),
+            carrier = COALESCE(${statusUpdate.carrier || null}, carrier),
+            notes = COALESCE(${statusUpdate.notes || null}, notes),
             updated_at = NOW()
         WHERE id = ${orderId}
         RETURNING *
@@ -316,12 +492,19 @@ export const orderService = {
 
       const updatedOrder = orders[0];
 
-      // Handle inventory fulfillment for processing orders
+      // Add status history entry
+      await sql`
+        INSERT INTO order_status_history (order_id, status, notes, created_by)
+        VALUES (${orderId}, ${statusUpdate.status}, ${statusUpdate.notes || `Status changed to ${statusUpdate.status}`}, 'system')
+      `;
+
+      // Handle status-specific actions
       if (statusUpdate.status === 'processing' && currentOrder.status === 'confirmed') {
+        // Convert reservations to actual sales
         const orderItems = await this.getOrderItems(orderId);
         
         for (const item of orderItems) {
-          const fulfillResult = await fulfillOrder(
+          const fulfillResult = await fulfillInventoryOrder(
             item.product_id,
             item.quantity,
             updatedOrder.order_number
@@ -329,7 +512,6 @@ export const orderService = {
           
           if (!fulfillResult.success) {
             console.error(`Failed to fulfill item ${item.product_id}:`, fulfillResult.error);
-            // Continue with other items but log the error
           }
         }
       }
@@ -344,19 +526,28 @@ export const orderService = {
       }
 
       // Send status update email
-      if (customerEmail) {
+      const email = customerEmail || updatedOrder.customer_email;
+      if (email) {
         try {
-          await emailService.sendOrderStatusUpdate(
-            customerEmail,
-            {
+          if (statusUpdate.status === 'shipped' && statusUpdate.tracking_number) {
+            await emailService.sendShippingNotification(email, {
               orderNumber: updatedOrder.order_number,
-              total: updatedOrder.total
-            },
-            statusUpdate.status
-          );
+              trackingNumber: statusUpdate.tracking_number,
+              carrier: statusUpdate.carrier || 'USPS',
+              estimatedDelivery: statusUpdate.estimated_delivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()
+            });
+          } else {
+            await emailService.sendOrderStatusUpdate(
+              email,
+              {
+                orderNumber: updatedOrder.order_number,
+                total: updatedOrder.total
+              },
+              statusUpdate.status
+            );
+          }
         } catch (emailError) {
           console.error('Failed to send order status update email:', emailError);
-          // Don't fail the status update if email fails
         }
       }
 
@@ -370,7 +561,8 @@ export const orderService = {
   async updatePaymentStatus(
     orderId: string,
     paymentStatus: Order['payment_status'],
-    paymentMethod?: string
+    paymentMethod?: string,
+    paymentIntentId?: string
   ): Promise<{ order: Order | null; error?: string }> {
     try {
       if (!sql) {
@@ -380,7 +572,8 @@ export const orderService = {
       const orders = await sql`
         UPDATE orders 
         SET payment_status = ${paymentStatus},
-            payment_method = COALESCE(${paymentMethod}, payment_method),
+            payment_method = COALESCE(${paymentMethod || null}, payment_method),
+            payment_intent_id = COALESCE(${paymentIntentId || null}, payment_intent_id),
             updated_at = NOW()
         WHERE id = ${orderId}
         RETURNING *
@@ -506,6 +699,38 @@ export const orderService = {
         ordersByStatus: [],
         topProducts: []
       };
+    }
+  },
+
+  async getOrderStatusHistory(orderId: string): Promise<Array<{
+    id: string;
+    status: string;
+    notes: string;
+    created_by: string;
+    created_at: string;
+  }>> {
+    try {
+      if (!sql) {
+        console.warn('⚠️ Database not available');
+        return [];
+      }
+
+      const history = await sql`
+        SELECT * FROM order_status_history
+        WHERE order_id = ${orderId}
+        ORDER BY created_at DESC
+      `;
+
+      return history as Array<{
+        id: string;
+        status: string;
+        notes: string;
+        created_by: string;
+        created_at: string;
+      }>;
+    } catch (error) {
+      console.error('Failed to get order status history:', error);
+      return [];
     }
   },
 
