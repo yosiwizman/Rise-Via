@@ -23,6 +23,7 @@ import { EmailManager } from '../components/admin/EmailManager';
 import { LabResultsManager } from '../components/admin/LabResultsManager';
 import { ComplianceReports } from './admin/ComplianceReports';
 import { PopupManager } from '../components/admin/PopupManager';
+import { AdminSettings } from '../components/admin/AdminSettings';
 
 export const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -183,6 +184,9 @@ export const AdminPage = () => {
       
       case 'popups':
         return <PopupManager />;
+      
+      case 'settings':
+        return <AdminSettings />;
       
       default:
         return (
