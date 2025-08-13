@@ -107,7 +107,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to create Stripe customer:', error);
       return null;
     }
-  },
+  }
 
   /**
    * Create a payment intent for later confirmation
@@ -201,7 +201,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to create payment intent',
       };
     }
-  },
+  }
 
   /**
    * Confirm a payment intent with a payment method
@@ -253,7 +253,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to confirm payment',
       };
     }
-  },
+  }
 
   /**
    * Process a payment immediately
@@ -280,7 +280,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to process payment',
       };
     }
-  },
+  }
 
   /**
    * Refund a payment
@@ -326,7 +326,7 @@ class StripePaymentProvider implements PaymentProvider {
         error: error instanceof Error ? error.message : 'Failed to process refund',
       };
     }
-  },
+  }
 
   /**
    * Map refund reason to Stripe format
@@ -340,7 +340,7 @@ class StripePaymentProvider implements PaymentProvider {
     };
 
     return reasonMap[reason || ''] || 'requested_by_customer';
-  },
+  }
 
   /**
    * Validate webhook signature
@@ -353,7 +353,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Webhook signature verification failed:', error);
       return false;
     }
-  },
+  }
 
   /**
    * Handle webhook events
@@ -387,7 +387,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to handle webhook:', error);
       throw error; // Re-throw to return 500 to Stripe
     }
-  },
+  }
 
   /**
    * Handle successful payment
@@ -426,7 +426,7 @@ class StripePaymentProvider implements PaymentProvider {
         WHERE id = ${orderId}
       `;
     }
-  },
+  }
 
   /**
    * Handle failed payment
@@ -457,7 +457,7 @@ class StripePaymentProvider implements PaymentProvider {
         WHERE id = ${orderId}
       `;
     }
-  },
+  }
 
   /**
    * Handle refund update
@@ -481,7 +481,7 @@ class StripePaymentProvider implements PaymentProvider {
         refunded_at: new Date().toISOString(),
       }
     );
-  },
+  }
 
   /**
    * Attach a payment method to a customer
@@ -504,7 +504,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to attach payment method:', error);
       return false;
     }
-  },
+  }
 
   /**
    * Get customer's payment methods
@@ -521,7 +521,7 @@ class StripePaymentProvider implements PaymentProvider {
       console.error('Failed to get payment methods:', error);
       return [];
     }
-  },
+  }
 
   /**
    * Create a checkout session for more complex flows
