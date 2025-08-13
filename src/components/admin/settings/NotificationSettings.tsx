@@ -103,13 +103,14 @@ const NotificationSettings: React.FC = () => {
 
   const loadNotificationConfig = async () => {
     try {
-      const data = await sql<SystemSetting[]>`
+      const data = await sql`
         SELECT * FROM system_settings 
         WHERE setting_key = 'notification_config'
         LIMIT 1
       `;
-      if (data && data[0]) {
-        setConfig(JSON.parse(data[0].setting_value));
+      if (data && data.length > 0) {
+        const setting = data[0] as SystemSetting;
+        setConfig(JSON.parse(setting.setting_value));
       }
     } catch (error) {
       console.error('Failed to load notification config:', error);
