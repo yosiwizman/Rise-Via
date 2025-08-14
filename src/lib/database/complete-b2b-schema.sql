@@ -363,9 +363,10 @@ CREATE TABLE IF NOT EXISTS compliance_violations (
 );
 
 -- System Settings table (for API keys, etc.)
+-- Using quoted "key" since it's a reserved word in SQL
 CREATE TABLE IF NOT EXISTS system_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  key VARCHAR(255) UNIQUE NOT NULL,
+  "key" VARCHAR(255) UNIQUE NOT NULL,
   value TEXT,
   category VARCHAR(100),
   description TEXT,
@@ -374,12 +375,12 @@ CREATE TABLE IF NOT EXISTS system_settings (
 );
 
 -- Create all necessary indexes
-CREATE INDEX idx_business_accounts_rep ON business_accounts(assigned_rep_id);
-CREATE INDEX idx_business_accounts_territory ON business_accounts(territory_id);
-CREATE INDEX idx_commission_transactions_rep ON commission_transactions(rep_id);
-CREATE INDEX idx_commission_transactions_period ON commission_transactions(commission_period);
-CREATE INDEX idx_territories_state ON territories(state);
-CREATE INDEX idx_territories_rep ON territories(assigned_rep_id);
-CREATE INDEX idx_orders_customer ON orders(customer_id);
-CREATE INDEX idx_orders_business ON orders(business_account_id);
-CREATE INDEX idx_orders_rep ON orders(sales_rep_id);
+CREATE INDEX IF NOT EXISTS idx_business_accounts_rep ON business_accounts(assigned_rep_id);
+CREATE INDEX IF NOT EXISTS idx_business_accounts_territory ON business_accounts(territory_id);
+CREATE INDEX IF NOT EXISTS idx_commission_transactions_rep ON commission_transactions(rep_id);
+CREATE INDEX IF NOT EXISTS idx_commission_transactions_period ON commission_transactions(commission_period);
+CREATE INDEX IF NOT EXISTS idx_territories_state ON territories(state);
+CREATE INDEX IF NOT EXISTS idx_territories_rep ON territories(assigned_rep_id);
+CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_business ON orders(business_account_id);
+CREATE INDEX IF NOT EXISTS idx_orders_rep ON orders(sales_rep_id);
