@@ -1,17 +1,10 @@
 /**
- * Secure Authentication Library
- * Implements JWT-based authentication with proper security measures
+ * Browser-Safe Authentication Utility
+ * Handles token storage and retrieval in the browser
+ * All JWT operations should be performed on the backend
  */
 
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { sql } from './neon';
-
-// Get JWT secrets from environment variables
-const JWT_SECRET = process.env.VITE_JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_REFRESH_SECRET = process.env.VITE_JWT_REFRESH_SECRET || 'your-refresh-secret-change-in-production';
-const JWT_EXPIRES_IN = '15m'; // Access token expires in 15 minutes
-const JWT_REFRESH_EXPIRES_IN = '7d'; // Refresh token expires in 7 days
 
 export interface User {
   id: string;
@@ -40,266 +33,181 @@ export interface TokenPayload {
   type?: 'access' | 'refresh';
 }
 
-/**
- * Generate a secure JWT access token
- */
-export function generateToken(user: User): string {
-  const payload: TokenPayload = {
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-    type: 'access'
-  };
-
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-    issuer: 'risevia',
-    audience: 'risevia-app',
-    subject: user.id
-  });
-}
+// Token storage keys
+const ACCESS_TOKEN_KEY = 'risevia_access_token';
+const REFRESH_TOKEN_KEY = 'risevia_refresh_token';
+const USER_KEY = 'risevia_user';
 
 /**
- * Generate a secure refresh token
+ * Store access token in localStorage
  */
-export function generateRefreshToken(user: User): string {
-  const payload: TokenPayload = {
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-    type: 'refresh'
-  };
-
-  return jwt.sign(payload, JWT_REFRESH_SECRET, {
-    expiresIn: JWT_REFRESH_EXPIRES_IN,
-    issuer: 'risevia',
-    audience: 'risevia-app',
-    subject: user.id
-  });
-}
-
-/**
- * Verify and decode JWT access token
- */
-export function verifyToken(token: string): TokenPayload | null {
+export function storeAccessToken(token: string): void {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      issuer: 'risevia',
-      audience: 'risevia-app'
-    }) as TokenPayload;
-    
-    return decoded;
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      console.error('Token expired');
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      console.error('Invalid token');
-    }
-    return null;
+    console.error('Failed to store access token:', error);
   }
 }
 
 /**
- * Verify and decode JWT refresh token
+ * Store refresh token in localStorage
  */
-export function verifyRefreshToken(token: string): TokenPayload | null {
+export function storeRefreshToken(token: string): void {
   try {
-    const decoded = jwt.verify(token, JWT_REFRESH_SECRET, {
-      issuer: 'risevia',
-      audience: 'risevia-app'
-    }) as TokenPayload;
-    
-    if (decoded.type !== 'refresh') {
-      return null;
-    }
-    
-    return decoded;
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      console.error('Refresh token expired');
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      console.error('Invalid refresh token');
-    }
-    return null;
-  }
-}
-
-/**
- * Refresh access token using refresh token
- */
-export async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
-  try {
-    // Verify refresh token
-    const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      return { success: false, error: 'Invalid refresh token' };
-    }
-
-    // Check if refresh token exists in database and is not revoked
-    if (sql) {
-      const tokens = await sql`
-        SELECT * FROM refresh_tokens 
-        WHERE token = ${refreshToken} 
-        AND revoked_at IS NULL 
-        AND expires_at > NOW()
-      `;
-
-      if (tokens.length === 0) {
-        return { success: false, error: 'Refresh token not found or revoked' };
-      }
-    }
-
-    // Get user from database
-    if (sql) {
-      const users = await sql`
-        SELECT * FROM users WHERE id = ${decoded.userId}
-      ` as Array<User>;
-
-      if (users.length === 0) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const user = users[0];
-
-      // Generate new access token
-      const newAccessToken = generateToken(user);
-
-      return {
-        success: true,
-        user,
-        token: newAccessToken,
-        refreshToken // Return same refresh token
-      };
-    }
-
-    return { success: false, error: 'Database not available' };
-  } catch (error) {
-    console.error('Failed to refresh access token:', error);
-    return { success: false, error: 'Failed to refresh token' };
-  }
-}
-
-/**
- * Store refresh token in database
- */
-export async function storeRefreshToken(userId: string, token: string): Promise<void> {
-  try {
-    if (!sql) {
-      console.warn('⚠️ Database not available, skipping refresh token storage');
-      return;
-    }
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
-
-    await sql`
-      INSERT INTO refresh_tokens (user_id, token, expires_at)
-      VALUES (${userId}, ${token}, ${expiresAt.toISOString()})
-    `;
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
   } catch (error) {
     console.error('Failed to store refresh token:', error);
   }
 }
 
 /**
- * Revoke refresh token
+ * Get access token from localStorage
  */
-export async function revokeRefreshToken(token: string): Promise<void> {
+export function getAccessToken(): string | null {
   try {
-    if (!sql) {
-      console.warn('⚠️ Database not available, skipping refresh token revocation');
-      return;
-    }
-
-    await sql`
-      UPDATE refresh_tokens 
-      SET revoked_at = NOW()
-      WHERE token = ${token}
-    `;
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
   } catch (error) {
-    console.error('Failed to revoke refresh token:', error);
-  }
-}
-
-/**
- * Revoke all refresh tokens for a user
- */
-export async function revokeAllUserTokens(userId: string): Promise<void> {
-  try {
-    if (!sql) {
-      console.warn('⚠️ Database not available, skipping token revocation');
-      return;
-    }
-
-    await sql`
-      UPDATE refresh_tokens 
-      SET revoked_at = NOW()
-      WHERE user_id = ${userId} AND revoked_at IS NULL
-    `;
-  } catch (error) {
-    console.error('Failed to revoke user tokens:', error);
-  }
-}
-
-/**
- * Hash password securely
- */
-export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 12;
-  return await bcrypt.hash(password, saltRounds);
-}
-
-/**
- * Verify password against hash
- */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
-}
-
-/**
- * Generate secure verification token
- */
-export function generateVerificationToken(): string {
-  const randomBytes = new Uint8Array(32);
-  crypto.getRandomValues(randomBytes);
-  return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * Generate password reset token
- */
-export function generatePasswordResetToken(userId: string): string {
-  const payload = {
-    userId,
-    type: 'password_reset',
-    timestamp: Date.now()
-  };
-
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '1h',
-    issuer: 'risevia',
-    audience: 'password-reset'
-  });
-}
-
-/**
- * Verify password reset token
- */
-export function verifyPasswordResetToken(token: string): { userId: string } | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      issuer: 'risevia',
-      audience: 'password-reset'
-    }) as any;
-
-    if (decoded.type !== 'password_reset') {
-      return null;
-    }
-
-    return { userId: decoded.userId };
-  } catch (error) {
-    console.error('Invalid password reset token:', error);
+    console.error('Failed to get access token:', error);
     return null;
+  }
+}
+
+/**
+ * Get refresh token from localStorage
+ */
+export function getRefreshToken(): string | null {
+  try {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch (error) {
+    console.error('Failed to get refresh token:', error);
+    return null;
+  }
+}
+
+/**
+ * Store user data in localStorage
+ */
+export function storeUser(user: User): void {
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch (error) {
+    console.error('Failed to store user data:', error);
+  }
+}
+
+/**
+ * Get user data from localStorage
+ */
+export function getStoredUser(): User | null {
+  try {
+    const userStr = localStorage.getItem(USER_KEY);
+    if (!userStr) return null;
+    return JSON.parse(userStr);
+  } catch (error) {
+    console.error('Failed to get user data:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear all auth data from localStorage
+ */
+export function clearAuthData(): void {
+  try {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  } catch (error) {
+    console.error('Failed to clear auth data:', error);
+  }
+}
+
+/**
+ * Check if user is authenticated (has valid token)
+ */
+export function isAuthenticated(): boolean {
+  return !!getAccessToken();
+}
+
+/**
+ * Parse JWT token payload (without verification - for display only)
+ * WARNING: This does NOT verify the token signature. Only use for non-security UI purposes.
+ */
+export function parseTokenPayload(token: string): TokenPayload | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch (error) {
+    console.error('Failed to parse token payload:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if token is expired (based on exp claim)
+ * WARNING: This does NOT verify the token. Only checks expiration time.
+ */
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = parseTokenPayload(token);
+    if (!payload || !('exp' in payload)) return true;
+    
+    const exp = (payload as any).exp;
+    const now = Math.floor(Date.now() / 1000);
+    return exp < now;
+  } catch (error) {
+    console.error('Failed to check token expiration:', error);
+    return true;
+  }
+}
+
+/**
+ * Refresh access token using refresh token
+ * This makes an API call to the backend to get a new access token
+ */
+export async function refreshAccessToken(): Promise<AuthResult> {
+  try {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      return { success: false, error: 'No refresh token available' };
+    }
+
+    const response = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to refresh token' };
+    }
+
+    const data = await response.json();
+    
+    if (data.token) {
+      storeAccessToken(data.token);
+    }
+    
+    if (data.user) {
+      storeUser(data.user);
+    }
+
+    return {
+      success: true,
+      user: data.user,
+      token: data.token,
+      refreshToken: data.refreshToken || refreshToken,
+    };
+  } catch (error) {
+    console.error('Failed to refresh access token:', error);
+    return { success: false, error: 'Failed to refresh token' };
   }
 }
 
@@ -344,7 +252,7 @@ export function validatePassword(password: string): { isValid: boolean; errors: 
 }
 
 /**
- * Rate limiting for authentication attempts
+ * Rate limiting for authentication attempts (client-side only)
  */
 const rateLimitStore = new Map<string, { attempts: number; lastAttempt: number }>();
 
@@ -392,64 +300,241 @@ export function cleanupRateLimit(): void {
 setInterval(cleanupRateLimit, 5 * 60 * 1000);
 
 /**
- * Clean up expired refresh tokens
+ * Generate secure verification token (client-side)
  */
-export async function cleanupExpiredTokens(): Promise<void> {
-  try {
-    if (!sql) {
-      console.warn('⚠️ Database not available, skipping token cleanup');
-      return;
-    }
-
-    await sql`
-      DELETE FROM refresh_tokens 
-      WHERE expires_at < NOW() OR revoked_at IS NOT NULL
-    `;
-
-    await sql`
-      DELETE FROM email_verification_tokens 
-      WHERE expires_at < NOW() OR used_at IS NOT NULL
-    `;
-
-    await sql`
-      DELETE FROM password_reset_tokens 
-      WHERE expires_at < NOW() OR used_at IS NOT NULL
-    `;
-  } catch (error) {
-    console.error('Failed to cleanup expired tokens:', error);
-  }
+export function generateVerificationToken(): string {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// Clean up expired tokens every hour
-setInterval(cleanupExpiredTokens, 60 * 60 * 1000);
-
 /**
- * Log authentication events for security monitoring
+ * Store auth tokens and user data after successful login
  */
-export async function logAuthEvent(
-  userId: string | null,
-  event: 'login_success' | 'login_failed' | 'logout' | 'password_reset' | 'email_verified' | 'token_refresh',
-  ipAddress: string,
-  userAgent: string,
-  details?: Record<string, unknown>
-): Promise<void> {
-  try {
-    if (!sql) {
-      console.warn('⚠️ Database not available, skipping auth log');
-      return;
-    }
-
-    await sql`
-      INSERT INTO auth_logs (user_id, event, ip_address, user_agent, details, created_at)
-      VALUES (${userId}, ${event}, ${ipAddress}, ${userAgent}, ${JSON.stringify(details || {})}, NOW())
-    `;
-  } catch (error) {
-    console.error('Failed to log auth event:', error);
+export function storeAuthData(authResult: AuthResult): void {
+  if (authResult.token) {
+    storeAccessToken(authResult.token);
+  }
+  
+  if (authResult.refreshToken) {
+    storeRefreshToken(authResult.refreshToken);
+  }
+  
+  if (authResult.user) {
+    storeUser(authResult.user);
   }
 }
 
 /**
- * Create auth logs table if it doesn't exist
+ * Get authorization header for API requests
+ */
+export function getAuthHeader(): { Authorization: string } | {} {
+  const token = getAccessToken();
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+/**
+ * Login user (API call to backend)
+ */
+export async function login(email: string, password: string): Promise<AuthResult> {
+  try {
+    // Check rate limiting
+    if (!checkRateLimit(email)) {
+      return { success: false, error: 'Too many login attempts. Please try again later.' };
+    }
+
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Login failed' };
+    }
+
+    const data = await response.json();
+    
+    // Store auth data
+    storeAuthData(data);
+
+    return {
+      success: true,
+      user: data.user,
+      token: data.token,
+      refreshToken: data.refreshToken,
+    };
+  } catch (error) {
+    console.error('Login failed:', error);
+    return { success: false, error: 'Login failed. Please try again.' };
+  }
+}
+
+/**
+ * Logout user
+ */
+export async function logout(): Promise<void> {
+  try {
+    const refreshToken = getRefreshToken();
+    
+    // Call backend to revoke refresh token
+    if (refreshToken) {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    // Always clear local auth data
+    clearAuthData();
+  }
+}
+
+/**
+ * Register new user (API call to backend)
+ */
+export async function register(userData: {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+}): Promise<AuthResult> {
+  try {
+    // Validate email
+    if (!isValidEmail(userData.email)) {
+      return { success: false, error: 'Invalid email address' };
+    }
+
+    // Validate password
+    const passwordValidation = validatePassword(userData.password);
+    if (!passwordValidation.isValid) {
+      return { success: false, error: passwordValidation.errors.join('. ') };
+    }
+
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Registration failed' };
+    }
+
+    const data = await response.json();
+    
+    // Store auth data
+    storeAuthData(data);
+
+    return {
+      success: true,
+      user: data.user,
+      token: data.token,
+      refreshToken: data.refreshToken,
+    };
+  } catch (error) {
+    console.error('Registration failed:', error);
+    return { success: false, error: 'Registration failed. Please try again.' };
+  }
+}
+
+/**
+ * Request password reset (API call to backend)
+ */
+export async function requestPasswordReset(email: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await fetch('/api/auth/password-reset/request', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to request password reset' };
+    }
+
+    return { success: true, message: 'Password reset email sent' };
+  } catch (error) {
+    console.error('Password reset request failed:', error);
+    return { success: false, error: 'Failed to request password reset' };
+  }
+}
+
+/**
+ * Reset password with token (API call to backend)
+ */
+export async function resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Validate password
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      return { success: false, error: passwordValidation.errors.join('. ') };
+    }
+
+    const response = await fetch('/api/auth/password-reset/confirm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to reset password' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Password reset failed:', error);
+    return { success: false, error: 'Failed to reset password' };
+  }
+}
+
+/**
+ * Verify email with token (API call to backend)
+ */
+export async function verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch('/api/auth/verify-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || 'Failed to verify email' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Email verification failed:', error);
+    return { success: false, error: 'Failed to verify email' };
+  }
+}
+
+/**
+ * Initialize auth tables (database operations - only if sql is available)
  */
 export async function initializeAuthTables(): Promise<void> {
   try {
