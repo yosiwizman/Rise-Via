@@ -15,6 +15,7 @@ const SystemSettings: React.FC = () => {
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [connectionMessage, setConnectionMessage] = useState('');
   const [lastSyncTimes, setLastSyncTimes] = useState<Record<string, string>>({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const timezones = [
     'America/New_York',
@@ -33,9 +34,12 @@ const SystemSettings: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadSystemSettings();
-    loadLastSyncTimes();
-  }, []);
+    if (!isInitialized) {
+      loadSystemSettings();
+      loadLastSyncTimes();
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
 
   const loadSystemSettings = async () => {
     try {
@@ -59,13 +63,17 @@ const SystemSettings: React.FC = () => {
     try {
       const data = await sql`
         SELECT key, value FROM system_settings 
-        WHERE category =  'flourish' AND key LIKE 'flourish_last_sync_%'
+        WHERE category = 'flourish' AND key LIKE 'flourish_last_sync_%'
       `;
       
       const syncTimes: Record<string, string> = {};
       (data as Array<{ key: string; value: string }>).forEach((setting) => {
         const syncType = setting.key.replace('flourish_last_sync_', '');
-        syncTimes[syncType] = JSON.parse(setting.value);
+        try {
+          syncTimes[syncType] = JSON.parse(setting.value);
+        } catch {
+          syncTimes[syncType] = setting.value;
+        }
       });
       
       setLastSyncTimes(syncTimes);
@@ -216,8 +224,11 @@ const SystemSettings: React.FC = () => {
           await saveFlourishSettings(key, value);
         }
       }
+
+      alert('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save all settings:', error);
+      alert('Failed to save settings. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -227,18 +238,22 @@ const SystemSettings: React.FC = () => {
     const timestamp = lastSyncTimes[syncType];
     if (!timestamp) return 'Never';
     
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+      
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      
+      return date.toLocaleDateString();
+    } catch {
+      return 'Never';
+    }
   };
 
   return (
