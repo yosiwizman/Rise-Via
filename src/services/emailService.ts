@@ -1,18 +1,10 @@
 /**
  * Email Service Implementation
- * Handles email sending via Resend API
+ * Browser-safe email service that communicates with backend API
  */
 
-import { Resend } from 'resend';
-import { sql } from '../lib/neon';
-
-// Initialize Resend with API key
-const resend = new Resend(process.env.VITE_RESEND_API_KEY || 're_placeholder_key');
-
-// Email configuration
-const FROM_EMAIL = process.env.VITE_FROM_EMAIL || 'noreply@risevia.com';
-const FROM_NAME = process.env.VITE_FROM_NAME || 'Rise Via';
-const REPLY_TO_EMAIL = process.env.VITE_REPLY_TO_EMAIL || 'support@risevia.com';
+import { API_ENDPOINTS, buildRequestUrl, withTimeout } from '../config/api';
+import { getAuthHeader } from '../lib/auth';
 
 export interface EmailTemplate {
   id: string;
@@ -32,80 +24,45 @@ export interface EmailLog {
   created_at: string;
 }
 
+export interface EmailData {
+  to: string;
+  subject: string;
+  html?: string;
+  text?: string;
+  template?: string;
+  data?: Record<string, any>;
+}
+
 const emailService = {
   /**
    * Send welcome email to new user
    */
   async sendWelcomeEmail(to: string, name: string): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject: 'Welcome to Rise Via - Your Premium THCA Journey Begins!',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">Welcome to Rise Via!</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p style="font-size: 16px;">Hi ${name},</p>
-              
-              <p>Welcome to the Rise Via family! We're thrilled to have you join our community of cannabis enthusiasts.</p>
-              
-              <p>At Rise Via, we're committed to providing you with the highest quality THCA products, backed by rigorous lab testing and exceptional customer service.</p>
-              
-              <h3 style="color: #667eea;">What makes us different:</h3>
-              <ul style="list-style: none; padding: 0;">
-                <li style="padding: 5px 0;">🌿 Premium THCA flower with full COAs</li>
-                <li style="padding: 5px 0;">🔬 Third-party lab tested for purity and potency</li>
-                <li style="padding: 5px 0;">📦 Discreet, fast shipping nationwide</li>
-                <li style="padding: 5px 0;">💎 Loyalty rewards program</li>
-              </ul>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.VITE_APP_URL || 'https://risevia.com'}/shop" 
-                   style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  Explore Our Products
-                </a>
-              </div>
-              
-              <p>Questions? We're here to help at <a href="mailto:${REPLY_TO_EMAIL}">${REPLY_TO_EMAIL}</a></p>
-              
-              <p>Welcome aboard!</p>
-              <p><strong>The Rise Via Team</strong></p>
-            </div>
-            
-            <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
-              <p>© ${new Date().getFullYear()} Rise Via. All rights reserved.</p>
-              <p>
-                <a href="${process.env.VITE_APP_URL || 'https://risevia.com'}/privacy" style="color: #888;">Privacy Policy</a> | 
-                <a href="${process.env.VITE_APP_URL || 'https://risevia.com'}/terms" style="color: #888;">Terms of Service</a>
-              </p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Welcome to Rise Via!\n\nHi ${name},\n\nWelcome to the Rise Via family! We're thrilled to have you join our community of cannabis enthusiasts.\n\nVisit our shop: ${process.env.VITE_APP_URL || 'https://risevia.com'}/shop\n\nThe Rise Via Team`
-      });
-      
-      if (error) throw error;
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/welcome'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ to, name })
+        })
+      );
 
-      // Log email
-      await this.logEmail(to, 'Welcome to Rise Via!', 'sent');
-      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send welcome email' }));
+        throw new Error(error.message || 'Failed to send welcome email');
+      }
+
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send welcome email:', error);
-      await this.logEmail(to, 'Welcome to Rise Via!', 'failed');
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send welcome email' 
+      };
     }
   },
 
@@ -122,90 +79,30 @@ const emailService = {
     }
   ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const itemsHtml = orderData.items 
-        ? orderData.items.map(item => `
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-              <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-              <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price * item.quantity).toFixed(2)}</td>
-            </tr>
-          `).join('')
-        : '';
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/order-confirmation'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ to, orderData })
+        })
+      );
 
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject: `Order Confirmation #${orderData.orderNumber}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">Order Confirmed!</h1>
-              <p style="color: white; margin: 10px 0;">Order #${orderData.orderNumber}</p>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p style="font-size: 16px;">Thank you for your order!</p>
-              
-              ${itemsHtml ? `
-                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                  <thead>
-                    <tr style="background: #f0f0f0;">
-                      <th style="padding: 10px; text-align: left;">Item</th>
-                      <th style="padding: 10px; text-align: center;">Qty</th>
-                      <th style="padding: 10px; text-align: right;">Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${itemsHtml}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="2" style="padding: 10px; text-align: right; font-weight: bold;">Total:</td>
-                      <td style="padding: 10px; text-align: right; font-weight: bold; font-size: 18px; color: #10b981;">$${orderData.total.toFixed(2)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              ` : `
-                <p><strong>Total:</strong> $${orderData.total.toFixed(2)}</p>
-              `}
-              
-              ${orderData.estimatedDelivery ? `
-                <p><strong>Estimated Delivery:</strong> ${orderData.estimatedDelivery}</p>
-              ` : ''}
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.VITE_APP_URL || 'https://risevia.com'}/track-order?order=${orderData.orderNumber}" 
-                   style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  Track Your Order
-                </a>
-              </div>
-              
-              <p>If you have any questions, please contact us at <a href="mailto:${REPLY_TO_EMAIL}">${REPLY_TO_EMAIL}</a></p>
-              
-              <p>Thank you for choosing Rise Via!</p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Order Confirmation\n\nOrder Number: ${orderData.orderNumber}\nTotal: $${orderData.total.toFixed(2)}\n\nTrack your order: ${process.env.VITE_APP_URL || 'https://risevia.com'}/track-order?order=${orderData.orderNumber}\n\nThank you for choosing Rise Via!`
-      });
-      
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send order confirmation' }));
+        throw new Error(error.message || 'Failed to send order confirmation');
+      }
 
-      await this.logEmail(to, `Order Confirmation #${orderData.orderNumber}`, 'sent');
-      
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order confirmation:', error);
-      await this.logEmail(to, `Order Confirmation #${orderData.orderNumber}`, 'failed');
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send order confirmation' 
+      };
     }
   },
 
@@ -218,69 +115,30 @@ const emailService = {
     newStatus: string
   ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const statusMessages: Record<string, string> = {
-        pending: 'Your order has been received and is being processed.',
-        confirmed: 'Your order has been confirmed and will be processed soon.',
-        processing: 'Your order is currently being prepared for shipment.',
-        shipped: 'Your order has been shipped and is on its way!',
-        delivered: 'Your order has been successfully delivered.',
-        cancelled: 'Your order has been cancelled.',
-        refunded: 'Your order has been refunded.'
-      };
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/order-status'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ to, orderData, newStatus })
+        })
+      );
 
-      const statusColors: Record<string, string> = {
-        pending: '#f59e0b',
-        confirmed: '#10b981',
-        processing: '#3b82f6',
-        shipped: '#8b5cf6',
-        delivered: '#10b981',
-        cancelled: '#ef4444',
-        refunded: '#6b7280'
-      };
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send order status update' }));
+        throw new Error(error.message || 'Failed to send order status update');
+      }
 
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject: `Order Update #${orderData.orderNumber} - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: ${statusColors[newStatus] || '#667eea'}; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">Order Status Update</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
-              <p><strong>Status:</strong> <span style="color: ${statusColors[newStatus] || '#667eea'}; font-weight: bold;">${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</span></p>
-              <p>${statusMessages[newStatus] || 'Your order status has been updated.'}</p>
-              <p><strong>Total:</strong> $${orderData.total.toFixed(2)}</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.VITE_APP_URL || 'https://risevia.com'}/track-order?order=${orderData.orderNumber}" 
-                   style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  View Order Details
-                </a>
-              </div>
-              
-              <p>Thank you for choosing Rise Via!</p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Order Status Update\n\nOrder Number: ${orderData.orderNumber}\nStatus: ${newStatus}\n${statusMessages[newStatus] || 'Your order status has been updated.'}\n\nView order: ${process.env.VITE_APP_URL || 'https://risevia.com'}/track-order?order=${orderData.orderNumber}`
-      });
-      
-      if (error) throw error;
-
-      await this.logEmail(to, `Order Update #${orderData.orderNumber}`, 'sent');
-      
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send order status update:', error);
-      await this.logEmail(to, `Order Update #${orderData.orderNumber}`, 'failed');
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send order status update' 
+      };
     }
   },
 
@@ -297,63 +155,30 @@ const emailService = {
     }
   ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const trackingUrls: Record<string, string> = {
-        'USPS': `https://tools.usps.com/go/TrackConfirmAction?tLabels=${shippingData.trackingNumber}`,
-        'UPS': `https://www.ups.com/track?tracknum=${shippingData.trackingNumber}`,
-        'FedEx': `https://www.fedex.com/fedextrack/?trknbr=${shippingData.trackingNumber}`,
-        'DHL': `https://www.dhl.com/en/express/tracking.html?AWB=${shippingData.trackingNumber}`
-      };
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/shipping'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ to, shippingData })
+        })
+      );
 
-      const trackingUrl = trackingUrls[shippingData.carrier] || '#';
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send shipping notification' }));
+        throw new Error(error.message || 'Failed to send shipping notification');
+      }
 
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject: `Your Order #${shippingData.orderNumber} Has Shipped!`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">📦 Your Order Has Shipped!</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p>Great news! Your order #${shippingData.orderNumber} is on its way.</p>
-              
-              <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #333; margin-top: 0;">Tracking Information:</h3>
-                <p><strong>Carrier:</strong> ${shippingData.carrier}</p>
-                <p><strong>Tracking Number:</strong> ${shippingData.trackingNumber}</p>
-                <p><strong>Estimated Delivery:</strong> ${shippingData.estimatedDelivery}</p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${trackingUrl}" 
-                   style="background: #8b5cf6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  Track Your Package
-                </a>
-              </div>
-              
-              <p>Thank you for your patience!</p>
-              <p><strong>The Rise Via Team</strong></p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Your Order Has Shipped!\n\nOrder Number: ${shippingData.orderNumber}\nCarrier: ${shippingData.carrier}\nTracking Number: ${shippingData.trackingNumber}\nEstimated Delivery: ${shippingData.estimatedDelivery}\n\nTrack your package: ${trackingUrl}`
-      });
-      
-      if (error) throw error;
-
-      await this.logEmail(to, `Shipping Notification #${shippingData.orderNumber}`, 'sent');
-      
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send shipping notification:', error);
-      await this.logEmail(to, `Shipping Notification #${shippingData.orderNumber}`, 'failed');
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send shipping notification' 
+      };
     }
   },
 
@@ -362,57 +187,29 @@ const emailService = {
    */
   async sendPasswordReset(email: string, resetToken: string): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const resetUrl = `${process.env.VITE_APP_URL || 'https://risevia.com'}/reset-password?token=${resetToken}`;
-      
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to: email,
-        replyTo: REPLY_TO_EMAIL,
-        subject: 'Password Reset Request - Rise Via',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">Password Reset Request</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
-              
-              <p>To reset your password, click the button below:</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" 
-                   style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  Reset Password
-                </a>
-              </div>
-              
-              <p>Or copy and paste this link into your browser:</p>
-              <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
-              
-              <p><strong>This link will expire in 1 hour for security reasons.</strong></p>
-              
-              <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
-              
-              <p>Best regards,<br><strong>The Rise Via Team</strong></p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Password Reset Request\n\nWe received a request to reset your password.\n\nReset your password: ${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.\n\nThe Rise Via Team`
-      });
-      
-      if (error) throw error;
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/password-reset'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, resetToken })
+        })
+      );
 
-      await this.logEmail(email, 'Password Reset Request', 'sent');
-      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send password reset email' }));
+        throw new Error(error.message || 'Failed to send password reset email');
+      }
+
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send password reset email:', error);
-      await this.logEmail(email, 'Password Reset Request', 'failed');
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send password reset email' 
+      };
     }
   },
 
@@ -421,74 +218,29 @@ const emailService = {
    */
   async sendVerificationEmail(to: string, name: string, token: string): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
-      const verifyUrl = `${process.env.VITE_APP_URL || 'https://risevia.com'}/verify-email?token=${token}`;
-      
-      const { data, error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject: 'Verify Your Email Address - Rise Via',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0;">Verify Your Email</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-              <p>Hi ${name},</p>
-              
-              <p>Please click the link below to verify your email address:</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${verifyUrl}" 
-                   style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                  Verify Email Address
-                </a>
-              </div>
-              
-              <p>Or copy and paste this link into your browser:</p>
-              <p style="word-break: break-all; color: #667eea;">${verifyUrl}</p>
-              
-              <p>If you didn't create an account, you can safely ignore this email.</p>
-              
-              <p>The Rise Via Team</p>
-            </div>
-          </body>
-          </html>
-        `,
-        text: `Verify Your Email\n\nHi ${name},\n\nPlease verify your email address: ${verifyUrl}\n\nIf you didn't create an account, you can safely ignore this email.\n\nThe Rise Via Team`
-      });
-      
-      if (error) throw error;
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/verification'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ to, name, token })
+        })
+      );
 
-      await this.logEmail(to, 'Email Verification', 'sent');
-      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to send verification email' }));
+        throw new Error(error.message || 'Failed to send verification email');
+      }
+
+      const data = await response.json();
       return { success: true, data };
     } catch (error) {
       console.error('Failed to send verification email:', error);
-      await this.logEmail(to, 'Email Verification', 'failed');
-      return { success: false, error };
-    }
-  },
-
-  /**
-   * Log email attempt to database
-   */
-  async logEmail(to: string, subject: string, status: 'sent' | 'failed'): Promise<void> {
-    try {
-      if (!sql) {
-        console.warn('⚠️ Database not available, skipping email log');
-        return;
-      }
-
-      await sql`
-        INSERT INTO email_logs (to_email, subject, body, status, sent_at, created_at)
-        VALUES (${to}, ${subject}, ${status === 'sent' ? 'Email sent successfully' : 'Email failed to send'}, ${status}, ${status === 'sent' ? 'NOW()' : null}, NOW())
-      `;
-    } catch (error) {
-      console.error('Failed to log email:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send verification email' 
+      };
     }
   },
 
@@ -497,43 +249,49 @@ const emailService = {
    */
   async sendEmail(to: string, subject: string, body: string): Promise<boolean> {
     try {
-      const { error } = await resend.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to,
-        replyTo: REPLY_TO_EMAIL,
-        subject,
-        html: body,
-        text: body.replace(/<[^>]*>/g, '') // Simple HTML stripping
-      });
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/send'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ to, subject, body })
+        })
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
-      await this.logEmail(to, subject, 'sent');
       return true;
     } catch (error) {
       console.error('Failed to send email:', error);
-      await this.logEmail(to, subject, 'failed');
       return false;
     }
   },
 
   /**
-   * Get email logs from database
+   * Get email logs from backend
    */
   async getEmailLogs(limit: number = 50): Promise<EmailLog[]> {
     try {
-      if (!sql) {
-        console.warn('⚠️ Database not available, returning empty email logs');
-        return [];
+      const response = await withTimeout(
+        fetch(buildRequestUrl(`/api/email/logs?limit=${limit}`), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          }
+        })
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch email logs');
       }
 
-      const logs = await sql`
-        SELECT * FROM email_logs 
-        ORDER BY created_at DESC 
-        LIMIT ${limit}
-      `;
-      
-      return (logs || []) as Array<EmailLog>;
+      const data = await response.json();
+      return data.logs || [];
     } catch (error) {
       console.error('Failed to get email logs:', error);
       return [];
@@ -541,23 +299,161 @@ const emailService = {
   },
 
   /**
-   * Get email template from database
+   * Get email template from backend
    */
   async getEmailTemplate(name: string): Promise<EmailTemplate | null> {
     try {
-      if (!sql) {
-        console.warn('⚠️ Database not available, returning null email template');
-        return null;
+      const response = await withTimeout(
+        fetch(buildRequestUrl(`/api/email/templates/${encodeURIComponent(name)}`), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          }
+        })
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Failed to fetch email template');
       }
 
-      const templates = await sql`
-        SELECT * FROM email_templates 
-        WHERE name = ${name}
-      `;
-      
-      return templates.length > 0 ? templates[0] as EmailTemplate : null;
+      const data = await response.json();
+      return data.template || null;
     } catch (error) {
       console.error('Failed to get email template:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Create or update email template
+   */
+  async saveEmailTemplate(template: Omit<EmailTemplate, 'id' | 'created_at'>): Promise<{ success: boolean; template?: EmailTemplate; error?: string }> {
+    try {
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/templates'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify(template)
+        })
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to save template' }));
+        throw new Error(error.message || 'Failed to save email template');
+      }
+
+      const data = await response.json();
+      return { success: true, template: data.template };
+    } catch (error) {
+      console.error('Failed to save email template:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to save email template' 
+      };
+    }
+  },
+
+  /**
+   * Delete email template
+   */
+  async deleteEmailTemplate(templateId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await withTimeout(
+        fetch(buildRequestUrl(`/api/email/templates/${templateId}`), {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          }
+        })
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to delete template' }));
+        throw new Error(error.message || 'Failed to delete email template');
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete email template:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to delete email template' 
+      };
+    }
+  },
+
+  /**
+   * Test email configuration
+   */
+  async testEmailConfiguration(testEmail: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await withTimeout(
+        fetch(buildRequestUrl('/api/email/test'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          },
+          body: JSON.stringify({ email: testEmail })
+        })
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Test failed' }));
+        throw new Error(error.message || 'Email configuration test failed');
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Email configuration test failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Email configuration test failed' 
+      };
+    }
+  },
+
+  /**
+   * Get email statistics
+   */
+  async getEmailStatistics(startDate?: Date, endDate?: Date): Promise<{
+    total: number;
+    sent: number;
+    failed: number;
+    pending: number;
+    byDay: Array<{ date: string; count: number }>;
+  } | null> {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate.toISOString());
+      if (endDate) params.append('endDate', endDate.toISOString());
+
+      const response = await withTimeout(
+        fetch(buildRequestUrl(`/api/email/statistics?${params.toString()}`), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+          }
+        })
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch email statistics');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to get email statistics:', error);
       return null;
     }
   }
