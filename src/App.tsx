@@ -1,58 +1,116 @@
-import { useState, useEffect, startTransition, useRef } from 'react';
+import { useState, useEffect, startTransition, useRef, Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
+import { AuthProvider } from './contexts/AuthContext';
+import { CustomerProvider } from './contexts/CustomerContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
-// import { PopupManager } from './components/PopupManager'; // TEMPORARILY DISABLED TO FIX FREEZE
 import { AgeGate } from './components/AgeGate';
 import { StateBlocker } from './components/StateBlocker';
 import { CookieConsentBanner } from './components/CookieConsent';
 import { AnalyticsProvider } from './components/AnalyticsPlaceholder';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import { WishlistInitializer } from './components/wishlist/WishlistInitializer';
 import MobileCartButton from './components/MobileCartButton';
 import { ToastEventHandler } from './components/ToastEventHandler';
 import { ChatBot } from './components/ChatBot';
 import { Toaster } from './components/ui/sonner';
-import { CustomerProvider } from './contexts/CustomerContext';
 import { useAgeGate } from './hooks/useAgeGate';
 import { getUserState } from './utils/cookies';
 import { priceTrackingService } from './services/priceTracking';
 import { blogScheduler } from './services/blogScheduler';
 import { initializeTables } from './lib/database';
-import RegisterPage from './pages/RegisterPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { LearnPage } from './pages/LearnPage';
-import { LegalPage } from './pages/LegalPage';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { TermsPage } from './pages/TermsPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { OrderTrackingPage } from './pages/OrderTrackingPage';
-import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
-import { TermsOfService } from './pages/legal/TermsOfService';
-import { ContactPage } from './pages/ContactPage';
-import { ShippingPage } from './pages/ShippingPage';
-import { LabResultsPage } from './pages/LabResultsPage';
-import { CareersPage } from './pages/CareersPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { WishlistPage } from './components/wishlist/WishlistPage';
-import { SharedWishlistPage } from './components/wishlist/WishlistShare';
-import { AdminPage } from './pages/AdminPage';
-import { AccountPage } from './pages/AccountPage';
-import { LoginPage } from './pages/LoginPage';
-import { B2BPage } from './pages/B2BPage';
-import { HealthCheck } from './components/HealthCheck';
-import { PasswordResetPage } from './pages/PasswordResetPage';
-import BlogPage from './pages/BlogPage';
-import BlogPostPage from './pages/BlogPostPage';
+import { initializeAuth, cleanupAuth } from './lib/auth';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
+
+// Lazy load pages for better performance
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const ShopPage = lazy(() => import('./pages/ShopPage').then(m => ({ default: m.ShopPage })));
+const LearnPage = lazy(() => import('./pages/LearnPage').then(m => ({ default: m.LearnPage })));
+const LegalPage = lazy(() => import('./pages/LegalPage').then(m => ({ default: m.LegalPage })));
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const ShippingPage = lazy(() => import('./pages/ShippingPage').then(m => ({ default: m.ShippingPage })));
+const LabResultsPage = lazy(() => import('./pages/LabResultsPage').then(m => ({ default: m.LabResultsPage })));
+const CareersPage = lazy(() => import('./pages/CareersPage').then(m => ({ default: m.CareersPage })));
+const WishlistPage = lazy(() => import('./components/wishlist/WishlistPage').then(m => ({ default: m.WishlistPage })));
+const B2BPage = lazy(() => import('./pages/B2BPage').then(m => ({ default: m.B2BPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage').then(m => ({ default: m.OrderTrackingPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const HealthCheck = lazy(() => import('./components/HealthCheck').then(m => ({ default: m.HealthCheck })));
+
+// Auth pages
+const LoginForm = lazy(() => import('./components/auth/LoginForm').then(m => ({ default: m.LoginForm })));
+const RegisterForm = lazy(() => import('./components/auth/RegisterForm').then(m => ({ default: m.RegisterForm })));
+const ForgotPasswordForm = lazy(() => import('./components/auth/ForgotPasswordForm').then(m => ({ default: m.ForgotPasswordForm })));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'));
+
+// Layout wrapper component
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const [currentPage, setCurrentPage] = useState('home');
+  const [, setSearchOpen] = useState(false);
+  const { isAgeVerified } = useAgeGate();
+  
+  // Update currentPage based on location
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    if (path === '/' || path === '/home') {
+      setCurrentPage('home');
+    } else if (path.startsWith('/shop')) {
+      setCurrentPage('shop');
+    } else if (path.startsWith('/learn')) {
+      setCurrentPage('learn');
+    } else if (path.startsWith('/blog')) {
+      setCurrentPage('blog');
+    } else if (path.startsWith('/wishlist')) {
+      setCurrentPage('wishlist');
+    } else if (path.startsWith('/account') || path.startsWith('/dashboard') || path.startsWith('/profile')) {
+      setCurrentPage('account');
+    } else if (path.startsWith('/admin')) {
+      setCurrentPage('admin');
+    } else {
+      setCurrentPage(path.substring(1));
+    }
+  }, [location]);
+
+  // Don't show navigation/footer on auth pages
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].some(
+    path => location.pathname.startsWith(path)
+  );
+
+  if (!isAgeVerified || isAuthPage) {
+    return <>{children}</>;
+  }
+
+  return (
+    <>
+      <Navigation
+        currentPage={currentPage}
+        onNavigate={(page) => setCurrentPage(page)}
+        setSearchOpen={setSearchOpen}
+      />
+      <main>{children}</main>
+      <Footer onNavigate={(page) => setCurrentPage(page)} />
+      <MobileCartButton />
+      <ChatBot />
+    </>
+  );
+}
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [blogSlug, setBlogSlug] = useState<string>('');
   const [, setUserState] = useState<string>('');
   const [showStateBlocker, setShowStateBlocker] = useState(false);
-  const [, setSearchOpen] = useState(false);
   const { isAgeVerified, showAgeGate, verifyAge } = useAgeGate();
   
   // Use refs to store cleanup functions
@@ -69,62 +127,6 @@ function App() {
   });
 
   useEffect(() => {
-    startTransition(() => {
-      const path = window.location.pathname.toLowerCase();
-      const urlParams = new URLSearchParams(window.location.search);
-      const page = urlParams.get('page');
-
-      if (page === 'password-reset') {
-        setCurrentPage('password-reset');
-      } else if (path === '/' || path === '/home') {
-        setCurrentPage('home');
-      } else if (path === '/admin') {
-        setCurrentPage('admin');
-      } else if (path === '/shop') {
-        setCurrentPage('shop');
-      } else if (path === '/learn') {
-        setCurrentPage('learn');
-      } else if (path === '/legal') {
-        setCurrentPage('legal');
-      } else if (path === '/privacy') {
-        setCurrentPage('privacy');
-      } else if (path === '/legal/privacy') {
-        setCurrentPage('legal-privacy');
-      } else if (path === '/terms') {
-        setCurrentPage('terms');
-      } else if (path === '/legal/terms') {
-        setCurrentPage('legal-terms');
-      } else if (path === '/reset-password') {
-        setCurrentPage('reset-password');
-      } else if (path === '/orders' || path === '/account/orders') {
-        setCurrentPage('orders');
-      } else if (path === '/contact') {
-        setCurrentPage('contact');
-      } else if (path === '/blog') {
-        setCurrentPage('blog');
-      } else if (path.startsWith('/blog/')) {
-        const slug = path.replace('/blog/', '');
-        setBlogSlug(slug);
-        setCurrentPage('blog-post');
-      } else if (path === '/wishlist') {
-        setCurrentPage('wishlist');
-      } else if (path === '/account') {
-        setCurrentPage('account');
-      } else if (path === '/login') {
-        setCurrentPage('login');
-      } else if (path === '/register') {
-        setCurrentPage('register');
-      } else if (path === '/b2b' || path === '/wholesale') {
-        setCurrentPage('b2b');
-      } else if (path === '/checkout') {
-        setCurrentPage('checkout');
-      } else if (path === '/health') {
-        setCurrentPage('health');
-      } else {
-        setCurrentPage('home');
-      }
-    });
-
     const savedState = getUserState();
     if (savedState) {
       setUserState(savedState);
@@ -134,7 +136,12 @@ function App() {
 
     const initializeApp = async () => {
       try {
-        console.log('🔧 Initializing database tables...');
+        console.log('🔧 Initializing application...');
+        
+        // Initialize auth system
+        initializeAuth();
+        
+        // Initialize database tables
         const success = await initializeTables();
         if (success) {
           console.log('✅ Database tables initialized successfully');
@@ -142,7 +149,7 @@ function App() {
           console.error('❌ Database initialization failed');
         }
       } catch (error) {
-        console.error('❌ Database initialization error:', error);
+        console.error('❌ Application initialization error:', error);
       }
       
       priceTrackingService.startPriceTracking();
@@ -309,6 +316,7 @@ function App() {
       // Stop services
       priceTrackingService.stopPriceTracking();
       blogScheduler.stop();
+      cleanupAuth();
       
       // Clear all timers
       cleanupFunctionsRef.current.timers.forEach(timer => clearTimeout(timer));
@@ -337,114 +345,116 @@ function App() {
     setShowStateBlocker(false);
   };
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage onNavigate={setCurrentPage} />;
-      case 'shop':
-        return <ShopPage />;
-      case 'learn':
-        return <LearnPage />;
-      case 'legal':
-        return <LegalPage />;
-      case 'privacy':
-        return <PrivacyPage />;
-      case 'legal-privacy':
-        return <PrivacyPolicy />;
-      case 'terms':
-        return <TermsPage />;
-      case 'legal-terms':
-        return <TermsOfService />;
-      case 'reset-password':
-        return <ResetPasswordPage />;
-      case 'password-reset':
-        return <PasswordResetPage onNavigate={setCurrentPage} />;
-      case 'orders':
-        return <OrderTrackingPage />;
-      case 'contact':
-        return <ContactPage />;
-      case 'blog':
-        return <BlogPage onNavigate={(page: string, _productId?: string, slug?: string) => {
-          if (page === 'blog-post' && slug) {
-            setBlogSlug(slug);
-            setCurrentPage('blog-post');
-            window.history.pushState({}, '', `/blog/${slug}`);
-          } else {
-            setCurrentPage(page);
-          }
-        }} />;
-      case 'blog-post':
-        return <BlogPostPage slug={blogSlug} onNavigate={(page: string) => {
-          setCurrentPage(page);
-          if (page === 'blog') {
-            window.history.pushState({}, '', '/blog');
-          }
-        }} />;
-      case 'shipping':
-        return <ShippingPage />;
-      case 'lab-results':
-        return <LabResultsPage />;
-      case 'careers':
-        return <CareersPage />;
-      case 'wishlist':
-        return <WishlistPage onNavigate={setCurrentPage} />;
-      case 'wishlist-shared':
-        return <SharedWishlistPage shareCode="demo" onNavigate={setCurrentPage} />;
-      case 'admin':
-        return <AdminPage />;
-      case 'account':
-        return <AccountPage />;
-      case 'login':
-        return <LoginPage />;
-      case 'register':
-        return <RegisterPage onNavigate={setCurrentPage} />;
-      case 'b2b':
-        return <B2BPage />;
-      case 'checkout':
-        return <CheckoutPage onNavigate={setCurrentPage} isStateBlocked={false} />;
-      case 'health':
-        return <HealthCheck />;
-      default:
-        return <NotFoundPage onNavigate={setCurrentPage} />;
-    }
-  };
-
   return (
     <CustomerProvider>
       <ErrorBoundary>
-        <AnalyticsProvider>
-          <div className="min-h-screen bg-risevia-black text-white">
-            {/* Age gating modal (merged feature: use AgeGate) */}
-            <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
-            {showStateBlocker && (
-              <StateBlocker onStateVerified={handleStateVerified} />
-            )}
+        <AuthProvider>
+          <AnalyticsProvider>
+            <Router>
+              <div className="min-h-screen bg-risevia-black text-white">
+                {/* Age gating modal */}
+                <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
+                {showStateBlocker && (
+                  <StateBlocker onStateVerified={handleState} />
+                )}
 
-            {/* Popup Management System - TEMPORARILY DISABLED TO FIX FREEZE */}
-            {/* <PopupManager currentPage={currentPage} /> */}
-            {isAgeVerified && (
-              <>
-                <WishlistInitializer />
-                <Navigation
-                  currentPage={currentPage}
-                  onNavigate={setCurrentPage}
-                  setSearchOpen={setSearchOpen}
-                />
-                <main>
-                  {renderCurrentPage()}
-                </main>
-                <Footer onNavigate={setCurrentPage} />
-                <MobileCartButton />
-                <CookieConsentBanner />
-                <ChatBot />
-              </>
-            )}
-          </div>
-          <ToastEventHandler />
-          <Toaster />
-        </AnalyticsProvider>
+                {isAgeVerified && (
+                  <>
+                    <WishlistInitializer />
+                    <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
+                      <AppLayout>
+                        <Routes>
+                          {/* Public Routes */}
+                          <Route path="/" element={<HomePage onNavigate={() => {}} />} />
+                          <Route path="/shop" element={<ShopPage />} />
+                          <Route path="/learn" element={<LearnPage />} />
+                          <Route path="/legal" element={<LegalPage />} />
+                          <Route path="/privacy" element={<PrivacyPolicy />} />
+                          <Route path="/terms" element={<TermsOfService />} />
+                          <Route path="/contact" element={<ContactPage />} />
+                          <Route path="/shipping" element={<ShippingPage />} />
+                          <Route path="/lab-results" element={<LabResultsPage />} />
+                          <Route path="/careers" element={<CareersPage />} />
+                          <Route path="/b2b" element={<B2BPage />} />
+                          <Route path="/blog" element={<BlogPage onNavigate={() => {}} />} />
+                          <Route path="/blog/:slug" element={<BlogPostPage slug="" onNavigate={() => {}} />} />
+                          <Route path="/health" element={<HealthCheck />} />
+                          
+                          {/* Auth Routes */}
+                          <Route path="/login" element={<LoginForm />} />
+                          <Route path="/register" element={<RegisterForm />} />
+                          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+                          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                          <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
+                          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                          
+                          {/* Protected Routes - Customer */}
+                          <Route
+                            path="/dashboard"
+                            element={
+                              <ProtectedRoute>
+                                <Dashboard />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/profile"
+                            element={
+                              <ProtectedRoute>
+                                <UserProfile />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/wishlist"
+                            element={
+                              <ProtectedRoute>
+                                <WishlistPage onNavigate={() => {}} />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/checkout"
+                            element={
+                              <ProtectedRoute>
+                                <CheckoutPage onNavigate={() => {}} isStateBlocked={false} />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/orders"
+                            element={
+                              <ProtectedRoute>
+                                <OrderTrackingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          
+                          {/* Protected Routes - Admin */}
+                          <Route
+                            path="/admin/*"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <AdminDashboard />
+                              </ProtectedRoute>
+                            }
+                          />
+                          
+                          {/* Catch all - 404 */}
+                          <Route path="*" element={<NotFoundPage onNavigate={() => {}} />} />
+                        </Routes>
+                      </AppLayout>
+                    </Suspense>
+                    <CookieConsentBanner />
+                  </>
+                )}
+              </div>
+              <ToastEventHandler />
+              <Toaster />
+            </Router>
+          </AnalyticsProvider>
+        </AuthProvider>
       </ErrorBoundary>
-      <Toaster />
     </CustomerProvider>
   );
 }
