@@ -1,6 +1,6 @@
 import { 
   isValidEmail,
-  validate,
+  validatePassword,
   checkRateLimit,
   type User,
   type AuthResult,
@@ -551,7 +551,7 @@ export const authService = {
         return { success: false, error: 'Request was cancelled' };
       }
       
-      return { success: false, error: 'Failed to resend verification email' };
+      return { success: false, error: 'Faile to resend verification email' };
     }
   },
 
@@ -571,7 +571,7 @@ export const authService = {
           method: 'GET',
           headers: {
             ...headers,
-            'Content-Type': '/',
+            'Content-Type': 'application/json'
           }
         },
         'checkAuthStatus'
