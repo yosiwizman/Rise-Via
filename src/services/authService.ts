@@ -1,30 +1,24 @@
-import { sql } from '../lib/neon';
 import { 
-  hashPassword, 
-  verifyPassword, 
-  generateToken, 
-  generateRefreshToken, 
-  generateVerificationToken,
-  verifyToken,
   isValidEmail,
   validatePassword,
   checkRateLimit,
-  logAuthEvent,
-  initializeAuthTables,
+  generateVerificationToken,
   type User,
-  type AuthResult
+  type AuthResult,
+  storeAuthData,
+  clearAuthData,
+  getAuthHeader
 } from '../lib/auth';
 import { emailService } from './emailService';
 
-// Initialize auth tables on service load
-initializeAuthTables();
+// Mock implementation for browser-safe auth service
+// All actual authentication happens on the backend via API calls
 
 export const authService = {
   async login(email: string, password: string, ipAddress: string = '', userAgent: string = ''): Promise<AuthResult> {
     try {
-      // Rate limiting
+      // Client-side rate limiting
       if (!checkRateLimit(`login_${email}`, 5, 15 * 60 * 1000)) {
-        await logAuthEvent(null, 'login_failed', ipAddress, userAgent, { reason: 'rate_limited', email });
         return { success: false, error: 'Too many login attempts. Please try again in 15 minutes.' };
       }
 
@@ -33,88 +27,32 @@ export const authService = {
         return { success: false, error: 'Invalid email format' };
       }
 
-      if (!sql) {
-        console.warn('⚠️ Database not available');
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-IP': ipAddress,
+          'X-User-Agent': userAgent
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Login failed' }));
+        return { success: false, error: error.message || 'Invalid email or password' };
       }
 
-      // Get user from database
-      const users = await sql`
-        SELECT id, email, password_hash, first_name, last_name, phone, role, email_verified, 
-               failed_login_attempts, locked_until, created_at, updated_at
-        FROM users 
-        WHERE email = ${email.toLowerCase()}
-      ` as Array<User & { password_hash: string; failed_login_attempts: number; locked_until: string | null }>;
+      const data = await response.json();
       
-      if (users.length === 0) {
-        await logAuthEvent(null, 'login_failed', ipAddress, userAgent, { reason: 'user_not_found', email });
-        return { success: false, error: 'Invalid email or password' };
-      }
-      
-      const user = users[0];
-
-      // Check if account is locked
-      if (user.locked_until && new Date(user.locked_until) > new Date()) {
-        await logAuthEvent(user.id, 'login_failed', ipAddress, userAgent, { reason: 'account_locked' });
-        return { success: false, error: 'Account is temporarily locked. Please try again later.' };
-      }
-
-      // Verify password
-      const isValidPassword = await verifyPassword(password, user.password_hash);
-      
-      if (!isValidPassword) {
-        // Increment failed attempts
-        const newFailedAttempts = (user.failed_login_attempts || 0) + 1;
-        const lockUntil = newFailedAttempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null; // Lock for 30 minutes after 5 failed attempts
-
-        await sql`
-          UPDATE users 
-          SET failed_login_attempts = ${newFailedAttempts}, 
-              locked_until = ${lockUntil?.toISOString() || null}
-          WHERE id = ${user.id}
-        `;
-
-        await logAuthEvent(user.id, 'login_failed', ipAddress, userAgent, { 
-          reason: 'invalid_password', 
-          failed_attempts: newFailedAttempts 
-        });
-
-        return { success: false, error: 'Invalid email or password' };
-      }
-
-      // Check if email is verified
-      if (!user.email_verified) {
-        return { success: false, error: 'Please verify your email address before logging in' };
-      }
-
-      // Reset failed attempts on successful login
-      await sql`
-        UPDATE users 
-        SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
-        WHERE id = ${user.id}
-      `;
-
-      // Generate tokens
-      const token = generateToken(user);
-      // Remove sensitive data before passing to generateRefreshToken
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, failed_login_attempts, locked_until, ...safeUser } = user;
-      const refreshToken = generateRefreshToken(safeUser);
-
-      // Store refresh token in database
-      await sql`
-        INSERT INTO refresh_tokens (user_id, token, expires_at)
-        VALUES (${user.id}, ${refreshToken}, ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()})
-      `;
-
-      // Log successful login
-      await logAuthEvent(user.id, 'login_success', ipAddress, userAgent);
+      // Store auth data in localStorage
+      storeAuthData(data);
 
       return { 
         success: true, 
-        user: safeUser,
-        token,
-        refreshToken
+        user: data.user,
+        token: data.token,
+        refreshToken: data.refreshToken
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -132,7 +70,7 @@ export const authService = {
     userAgent: string = ''
   ): Promise<AuthResult> {
     try {
-      // Rate limiting for registration
+      // Client-side rate limiting for registration
       if (!checkRateLimit(`register_${ipAddress}`, 3, 60 * 60 * 1000)) {
         return { success: false, error: 'Too many registration attempts. Please try again in 1 hour.' };
       }
@@ -151,59 +89,35 @@ export const authService = {
         return { success: false, error: 'First name and last name are required' };
       }
 
-      if (!sql) {
-        console.warn('⚠️ Database not available');
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-IP': ipAddress,
+          'X-User-Agent': userAgent
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          password,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone || null
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Registration failed' }));
+        return { success: false, error: error.message || 'An account with this email already exists' };
       }
 
-      // Check if user already exists
-      const existingUsers = await sql`
-        SELECT id FROM users WHERE email = ${email.toLowerCase()}
-      `;
+      const data = await response.json();
 
-      if (existingUsers.length > 0) {
-        return { success: false, error: 'An account with this email already exists' };
-      }
-
-      // Hash password
-      const passwordHash = await hashPassword(password);
-
-      // Generate verification token
-      const verificationToken = generateVerificationToken();
-
-      // Create user
-      const users = await sql`
-        INSERT INTO users (email, password_hash, first_name, last_name, phone, role, email_verified)
-        VALUES (${email.toLowerCase()}, ${passwordHash}, ${firstName.trim()}, ${lastName.trim()}, ${phone || null}, 'customer', false)
-        RETURNING id, email, first_name, last_name, phone, role, email_verified, created_at, updated_at
-      ` as Array<User>;
-
-      if (users.length === 0) {
-        return { success: false, error: 'Failed to create account' };
-      }
-
-      const user = users[0];
-
-      // Store verification token
-      await sql`
-        INSERT INTO email_verification_tokens (user_id, token, expires_at)
-        VALUES (${user.id}, ${verificationToken}, ${new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()})
-      `;
-
-      // Send verification email
-      try {
-        await emailService.sendVerificationEmail(user.email, user.first_name || 'User', verificationToken);
-      } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
-        // Don't fail registration if email fails
-      }
-
-      // Log registration
-      await logAuthEvent(user.id, 'login_success', ipAddress, userAgent, { event: 'registration' });
-
+      // Don't store auth data for registration (user needs to verify email first)
+      
       return { 
         success: true, 
-        user,
+        user: data.user,
         error: 'Account created successfully. Please check your email to verify your account.'
       };
     } catch (error) {
@@ -214,47 +128,52 @@ export const authService = {
 
   async logout(token: string, ipAddress: string = '', userAgent: string = ''): Promise<{ success: boolean }> {
     try {
-      const decoded = verifyToken(token);
-      if (decoded) {
-        // Revoke refresh token
-        if (sql) {
-          await sql`
-            UPDATE refresh_tokens 
-            SET revoked_at = NOW() 
-            WHERE user_id = ${decoded.userId} AND revoked_at IS NULL
-          `;
+      // Make API call to backend to revoke tokens
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-Client-IP': ipAddress,
+          'X-User-Agent': userAgent
         }
+      }).catch(() => {
+        // Ignore logout API errors
+      });
 
-        // Log logout
-        await logAuthEvent(decoded.userId, 'logout', ipAddress, userAgent);
-      }
+      // Always clear local auth data
+      clearAuthData();
 
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
-      return { success: true }; // Always return success for logout
+      // Always return success for logout
+      clearAuthData();
+      return { success: true };
     }
   },
 
   async getCurrentUser(token: string): Promise<User | null> {
     try {
-      const decoded = verifyToken(token);
-      if (!decoded) {
+      if (!token) {
         return null;
       }
 
-      if (!sql) {
-        console.warn('⚠️ Database not available');
+      // Make API call to backend
+      const response = await fetch('/api/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
         return null;
       }
 
-      const users = await sql`
-        SELECT id, email, first_name, last_name, phone, role, email_verified, created_at, updated_at
-        FROM users 
-        WHERE id = ${decoded.userId}
-      ` as Array<User>;
-      
-      return users.length > 0 ? users[0] : null;
+      const data = await response.json();
+      return data.user || null;
     } catch (error) {
       console.error('Get current user error:', error);
       return null;
@@ -263,62 +182,30 @@ export const authService = {
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
     try {
-      if (!sql) {
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to refresh token' }));
+        return { success: false, error: error.message || 'Invalid refresh token' };
       }
 
-      // Verify refresh token
-      const tokenRecords = await sql`
-        SELECT rt.user_id, rt.expires_at, u.email, u.first_name, u.last_name, u.phone, u.role, u.email_verified, u.created_at, u.updated_at
-        FROM refresh_tokens rt
-        JOIN users u ON rt.user_id = u.id
-        WHERE rt.token = ${refreshToken} AND rt.revoked_at IS NULL
-      ` as Array<{ user_id: string; expires_at: string } & User>;
-
-      if (tokenRecords.length === 0) {
-        return { success: false, error: 'Invalid refresh token' };
-      }
-
-      const record = tokenRecords[0];
-
-      // Check if token is expired
-      if (new Date(record.expires_at) < new Date()) {
-        return { success: false, error: 'Refresh token expired' };
-      }
-
-      // Generate new tokens
-      const user: User = {
-        id: record.user_id,
-        email: record.email,
-        first_name: record.first_name,
-        last_name: record.last_name,
-        phone: record.phone,
-        role: record.role,
-        email_verified: record.email_verified,
-        created_at: record.created_at,
-        updated_at: record.updated_at
-      };
-
-      const newToken = generateToken(user);
-      const newRefreshToken = generateRefreshToken(user);
-
-      // Revoke old refresh token and create new one
-      await sql`
-        UPDATE refresh_tokens 
-        SET revoked_at = NOW() 
-        WHERE token = ${refreshToken}
-      `;
-
-      await sql`
-        INSERT INTO refresh_tokens (user_id, token, expires_at)
-        VALUES (${user.id}, ${newRefreshToken}, ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()})
-      `;
+      const data = await response.json();
+      
+      // Store new auth data
+      storeAuthData(data);
 
       return {
         success: true,
-        user,
-        token: newToken,
-        refreshToken: newRefreshToken
+        user: data.user,
+        token: data.token,
+        refreshToken: data.refreshToken
       };
     } catch (error) {
       console.error('Refresh token error:', error);
@@ -328,48 +215,19 @@ export const authService = {
 
   async verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
     try {
-      if (!sql) {
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Verification failed' }));
+        return { success: false, error: error.message || 'Invalid verification token' };
       }
-
-      // Find verification token
-      const tokenRecords = await sql`
-        SELECT user_id, expires_at, used_at
-        FROM email_verification_tokens
-        WHERE token = ${token}
-      ` as Array<{ user_id: string; expires_at: string; used_at: string | null }>;
-
-      if (tokenRecords.length === 0) {
-        return { success: false, error: 'Invalid verification token' };
-      }
-
-      const record = tokenRecords[0];
-
-      // Check if token is already used
-      if (record.used_at) {
-        return { success: false, error: 'Verification token already used' };
-      }
-
-      // Check if token is expired
-      if (new Date(record.expires_at) < new Date()) {
-        return { success: false, error: 'Verification token expired' };
-      }
-
-      // Mark user as verified and token as used
-      await sql`
-        UPDATE users 
-        SET email_verified = true 
-        WHERE id = ${record.user_id}
-      `;
-
-      await sql`
-        UPDATE email_verification_tokens 
-        SET used_at = NOW() 
-        WHERE token = ${token}
-      `;
-
-      // Log email verification
-      await logAuthEvent(record.user_id, 'email_verified', '', '');
 
       return { success: true };
     } catch (error) {
@@ -380,7 +238,7 @@ export const authService = {
 
   async requestPasswordReset(email: string, ipAddress: string = '', userAgent: string = ''): Promise<{ success: boolean; error?: string }> {
     try {
-      // Rate limiting
+      // Client-side rate limiting
       if (!checkRateLimit(`password_reset_${email}`, 3, 60 * 60 * 1000)) {
         return { success: false, error: 'Too many password reset attempts. Please try again in 1 hour.' };
       }
@@ -389,65 +247,23 @@ export const authService = {
         return { success: false, error: 'Invalid email format' };
       }
 
-      if (!sql) {
-        return { success: false, error: 'Service temporarily unavailable' };
-      }
+      // Make API call to backend
+      const response = await fetch('/api/auth/password-reset/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-IP': ipAddress,
+          'X-User-Agent': userAgent
+        },
+        body: JSON.stringify({ email: email.toLowerCase() })
+      });
 
-      // Check if user exists
-      const users = await sql`
-        SELECT id, first_name, email_verified
-        FROM users 
-        WHERE email = ${email.toLowerCase()}
-      ` as Array<{ id: string; first_name: string; email_verified: boolean }>;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Request failed' }));
+        return { success: false, error: error.message || 'Password reset request failed' };
+      }
 
       // Always return success to prevent email enumeration
-      if (users.length === 0) {
-        return { success: true };
-      }
-
-      const user = users[0];
-
-      // Only send reset email if account is verified
-      if (!user.email_verified) {
-        return { success: true };
-      }
-
-      // Generate reset token
-      const resetToken = generateVerificationToken();
-
-      // Store reset token
-      await sql`
-        INSERT INTO password_reset_tokens (user_id, token, expires_at)
-        VALUES (${user.id}, ${resetToken}, ${new Date(Date.now() + 60 * 60 * 1000).toISOString()})
-      `;
-
-      // Send reset email
-      try {
-        const resetUrl = `${import.meta.env.VITE_APP_URL || 'https://rise-via.vercel.app'}/reset-password?token=${resetToken}`;
-        
-        await emailService.sendEmail(
-          email,
-          'Password Reset Request',
-          `
-            <h1>Password Reset Request</h1>
-            <p>Hi ${user.first_name},</p>
-            <p>You requested a password reset for your Rise Via account.</p>
-            <p>Click the link below to reset your password:</p>
-            <a href="${resetUrl}" style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
-              Reset Password
-            </a>
-            <p>This link will expire in 1 hour.</p>
-            <p>If you didn't request this reset, you can safely ignore this email.</p>
-            <p>The Rise Via Team</p>
-          `
-        );
-      } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError);
-      }
-
-      // Log password reset request
-      await logAuthEvent(user.id, 'password_reset', ipAddress, userAgent, { event: 'request' });
-
       return { success: true };
     } catch (error) {
       console.error('Password reset request error:', error);
@@ -463,58 +279,21 @@ export const authService = {
         return { success: false, error: passwordValidation.errors.join(', ') };
       }
 
-      if (!sql) {
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/password-reset/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-IP': ipAddress,
+          'X-User-Agent': userAgent
+        },
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Reset failed' }));
+        return { success: false, error: error.message || 'Invalid or expired reset token' };
       }
-
-      // Find reset token
-      const tokenRecords = await sql`
-        SELECT user_id, expires_at, used_at
-        FROM password_reset_tokens
-        WHERE token = ${token}
-      ` as Array<{ user_id: string; expires_at: string; used_at: string | null }>;
-
-      if (tokenRecords.length === 0) {
-        return { success: false, error: 'Invalid reset token' };
-      }
-
-      const record = tokenRecords[0];
-
-      // Check if token is already used
-      if (record.used_at) {
-        return { success: false, error: 'Reset token already used' };
-      }
-
-      // Check if token is expired
-      if (new Date(record.expires_at) < new Date()) {
-        return { success: false, error: 'Reset token expired' };
-      }
-
-      // Hash new password
-      const passwordHash = await hashPassword(newPassword);
-
-      // Update password and mark token as used
-      await sql`
-        UPDATE users 
-        SET password_hash = ${passwordHash}, failed_login_attempts = 0, locked_until = NULL
-        WHERE id = ${record.user_id}
-      `;
-
-      await sql`
-        UPDATE password_reset_tokens 
-        SET used_at = NOW() 
-        WHERE token = ${token}
-      `;
-
-      // Revoke all refresh tokens for this user
-      await sql`
-        UPDATE refresh_tokens 
-        SET revoked_at = NOW() 
-        WHERE user_id = ${record.user_id} AND revoked_at IS NULL
-      `;
-
-      // Log password reset
-      await logAuthEvent(record.user_id, 'password_reset', ipAddress, userAgent, { event: 'completed' });
 
       return { success: true };
     } catch (error) {
@@ -529,43 +308,162 @@ export const authService = {
         return { success: false, error: 'Invalid email format' };
       }
 
-      if (!sql) {
-        return { success: false, error: 'Service temporarily unavailable' };
+      // Make API call to backend
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email.toLowerCase() })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Request failed' }));
+        return { success: false, error: error.message || 'Failed to resend verification email' };
       }
-
-      // Check if user exists and is not verified
-      const users = await sql`
-        SELECT id, first_name, email_verified
-        FROM users 
-        WHERE email = ${email.toLowerCase()}
-      ` as Array<{ id: string; first_name: string; email_verified: boolean }>;
-
-      if (users.length === 0) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const user = users[0];
-
-      if (user.email_verified) {
-        return { success: false, error: 'Email is already verified' };
-      }
-
-      // Generate new verification token
-      const verificationToken = generateVerificationToken();
-
-      // Store verification token
-      await sql`
-        INSERT INTO email_verification_tokens (user_id, token, expires_at)
-        VALUES (${user.id}, ${verificationToken}, ${new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()})
-      `;
-
-      // Send verification email
-      await emailService.sendVerificationEmail(email, user.first_name || 'User', verificationToken);
 
       return { success: true };
     } catch (error) {
       console.error('Resend verification email error:', error);
       return { success: false, error: 'Failed to resend verification email' };
+    }
+  },
+
+  // Helper method to check authentication status
+  async checkAuthStatus(): Promise<{ isAuthenticated: boolean; user?: User }> {
+    try {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        return { isAuthenticated: false };
+      }
+
+      const response = await fetch('/api/auth/status', {
+        method: 'GET',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        clearAuthData();
+        return { isAuthenticated: false };
+      }
+
+      const data = await response.json();
+      return { 
+        isAuthenticated: true, 
+        user: data.user 
+      };
+    } catch (error) {
+      console.error('Auth status check error:', error);
+      return { isAuthenticated: false };
+    }
+  },
+
+  // Helper method to update user profile
+  async updateProfile(updates: Partial<User>): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const response = await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Update failed' }));
+        return { success: false, error: error.message || 'Failed to update profile' };
+      }
+
+      const data = await response.json();
+      
+      // Update stored user data
+      if (data.user) {
+        storeAuthData({ success: true, user: data.user });
+      }
+
+      return { 
+        success: true, 
+        user: data.user 
+      };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { success: false, error: 'Failed to update profile' };
+    }
+  },
+
+  // Helper method to change password
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Validate new password
+      const passwordValidation = validatePassword(newPassword);
+      if (!passwordValidation.isValid) {
+        return { success: false, error: passwordValidation.errors.join(', ') };
+      }
+
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Change failed' }));
+        return { success: false, error: error.message || 'Failed to change password' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Change password error:', error);
+      return { success: false, error: 'Failed to change password' };
+    }
+  },
+
+  // Helper method to delete account
+  async deleteAccount(password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Delete failed' }));
+        return { success: false, error: error.message || 'Failed to delete account' };
+      }
+
+      // Clear auth data after successful deletion
+      clearAuthData();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Delete account error:', error);
+      return { success: false, error: 'Failed to delete account' };
     }
   }
 };
