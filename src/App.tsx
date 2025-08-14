@@ -355,7 +355,7 @@ function App() {
                 {/* Age gating modal */}
                 <AgeGate isOpen={showAgeGate} onVerify={verifyAge} />
                 {showStateBlocker && (
-                  <StateBlocker onStateVerified={handleState} />
+                  <StateBlocker onStateVerified={handleStateVerified} />
                 )}
 
                 {isAgeVerified && (
