@@ -1,4 +1,18 @@
--- Sales Representatives Table (Created first to avoid FK dependency issues)
+-- Admin Users Table (created first as it's referenced by other tables)
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  role VARCHAR(50) NOT NULL DEFAULT 'admin',
+  permissions JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Sales Representatives Table
 CREATE TABLE IF NOT EXISTS sales_reps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE, -- Links to main users table if exists
@@ -42,24 +56,16 @@ CREATE TABLE IF NOT EXISTS sales_reps (
   -- Metadata
   notes TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  
-  CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES sales_reps(id)
-);
-
--- Admin Users Table (if not exists)
-CREATE TABLE IF NOT EXISTS admin_users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  role VARCHAR(50) NOT NULL DEFAULT 'admin',
-  permissions JSONB DEFAULT '{}',
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Add the self-referencing foreign key constraint after the table is created
+ALTER TABLE sales_reps 
+  ADD CONSTRAINT fk_manager 
+  FOREIGN KEY (manager_id) 
+  REFERENCES sales_reps(id) 
+  ON DELETE SET NULL
+  DEFERRABLE INITIALLY DEFERRED;
 
 -- Business Accounts Table
 CREATE TABLE IF NOT EXISTS business_accounts (
@@ -124,9 +130,9 @@ CREATE TABLE IF NOT EXISTS business_accounts (
   updated_at TIMESTAMP DEFAULT NOW(),
   created_by UUID,
   
-  CONSTRAINT fk_assigned_rep FOREIGN KEY (assigned_rep_id) REFERENCES sales_reps(id),
-  CONSTRAINT fk_approved_by FOREIGN KEY (approved_by) REFERENCES admin_users(id),
-  CONSTRAINT fk_credit_approved_by FOREIGN KEY (credit_approved_by) REFERENCES admin_users(id)
+  CONSTRAINT fk_assigned_rep FOREIGN KEY (assigned_rep_id) REFERENCES sales_reps(id) ON DELETE SET NULL,
+  CONSTRAINT fk_approved_by FOREIGN KEY (approved_by) REFERENCES admin_users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_credit_approved_by FOREIGN KEY (credit_approved_by) REFERENCES admin_users(id) ON DELETE SET NULL
 );
 
 -- Business Users Table (Multiple users per business account)
@@ -204,9 +210,9 @@ CREATE TABLE IF NOT EXISTS rep_territory_assignments (
   is_active BOOLEAN DEFAULT TRUE,
   deactivated_at TIMESTAMP,
   
-  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id),
-  CONSTRAINT fk_territory FOREIGN KEY (territory_id) REFERENCES territories(id),
-  CONSTRAINT fk_assigned_by FOREIGN KEY (assigned_by) REFERENCES admin_users(id),
+  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id) ON DELETE CASCADE,
+  CONSTRAINT fk_territory FOREIGN KEY (territory_id) REFERENCES territories(id) ON DELETE CASCADE,
+  CONSTRAINT fk_assigned_by FOREIGN KEY (assigned_by) REFERENCES admin_users(id) ON DELETE SET NULL,
   CONSTRAINT unique_rep_territory UNIQUE (rep_id, territory_id)
 );
 
@@ -243,9 +249,9 @@ CREATE TABLE IF NOT EXISTS commission_transactions (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   
-  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id),
-  CONSTRAINT fk_business_account FOREIGN KEY (business_account_id) REFERENCES business_accounts(id),
-  CONSTRAINT fk_approved_by FOREIGN KEY (approved_by) REFERENCES admin_users(id)
+  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id) ON DELETE CASCADE,
+  CONSTRAINT fk_business_account FOREIGN KEY (business_account_id) REFERENCES business_accounts(id) ON DELETE SET NULL,
+  CONSTRAINT fk_approved_by FOREIGN KEY (approved_by) REFERENCES admin_users(id) ON DELETE SET NULL
 );
 
 -- Rep Account Assignments History
@@ -263,10 +269,10 @@ CREATE TABLE IF NOT EXISTS rep_account_history (
   created_at TIMESTAMP DEFAULT NOW(),
   created_by UUID,
   
-  CONSTRAINT fk_business_account FOREIGN KEY (business_account_id) REFERENCES business_accounts(id),
-  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id),
-  CONSTRAINT fk_previous_rep FOREIGN KEY (previous_rep_id) REFERENCES sales_reps(id),
-  CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES admin_users(id)
+  CONSTRAINT fk_business_account FOREIGN KEY (business_account_id) REFERENCES business_accounts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rep FOREIGN KEY (rep_id) REFERENCES sales_reps(id) ON DELETE CASCADE,
+  CONSTRAINT fk_previous_rep FOREIGN KEY (previous_rep_id) REFERENCES sales_reps(id) ON DELETE SET NULL,
+  CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES admin_users(id) ON DELETE SET NULL
 );
 
 -- Commission Rules Configuration
@@ -298,7 +304,7 @@ CREATE TABLE IF NOT EXISTS commission_rules (
   updated_at TIMESTAMP DEFAULT NOW(),
   created_by UUID,
   
-  CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES admin_users(id)
+  CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES admin_users(id) ON DELETE SET NULL
 );
 
 -- Create indexes for performance
@@ -309,6 +315,7 @@ CREATE INDEX IF NOT EXISTS idx_business_users_account ON business_users(business
 CREATE INDEX IF NOT EXISTS idx_business_users_email ON business_users(email);
 CREATE INDEX IF NOT EXISTS idx_sales_reps_code ON sales_reps(rep_code);
 CREATE INDEX IF NOT EXISTS idx_sales_reps_status ON sales_reps(status);
+CREATE INDEX IF NOT EXISTS idx_sales_reps_manager ON sales_reps(manager_id);
 CREATE INDEX IF NOT EXISTS idx_territories_type ON territories(type);
 CREATE INDEX IF NOT EXISTS idx_territories_zips ON territories USING GIN(zip_codes);
 CREATE INDEX IF NOT EXISTS idx_rep_territory_assignments_rep ON rep_territory_assignments(rep_id);
