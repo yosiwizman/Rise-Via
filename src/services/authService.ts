@@ -16,12 +16,16 @@ import { API_ENDPOINTS, buildRequestUrl, withTimeout, retryRequest } from '../co
 // Active request controllers for cancellation
 const activeRequests = new Map<string, AbortController>();
 
+// Request deduplication cache
+const pendingRequests = new Map<string, Promise<Response>>();
+
 /**
  * Cancel all active requests
  */
 export function cancelAllAuthRequests(): void {
   activeRequests.forEach(controller => controller.abort());
   activeRequests.clear();
+  pendingRequests.clear();
 }
 
 /**
@@ -33,6 +37,7 @@ export function cancelAuthRequest(key: string): void {
     controller.abort();
     activeRequests.delete(key);
   }
+  pendingRequests.delete(key);
 }
 
 /**
@@ -53,37 +58,99 @@ function createAbortController(key: string): AbortController {
  */
 function cleanupAbortController(key: string): void {
   activeRequests.delete(key);
+  pendingRequests.delete(key);
 }
 
 /**
- * Make authenticated API request with proper error handling
+ * Check if network is available
+ */
+function isNetworkAvailable(): boolean {
+  return typeof window !== 'undefined' && window.navigator && window.navigator.onLine !== false;
+}
+
+/**
+ * Make authenticated API request with proper error handling and deduplication
  */
 async function makeAuthRequest(
   endpoint: string,
   options: RequestInit,
-  requestKey: string
+  requestKey: string,
+  enableDeduplication: boolean = false
 ): Promise<Response> {
+  // Check network availability
+  if (!isNetworkAvailable()) {
+    throw new Error('No network connection available');
+  }
+
+  // Check for pending request if deduplication is enabled
+  if (enableDeduplication && pendingRequests.has(requestKey)) {
+    return pendingRequests.get(requestKey)!;
+  }
+
   const controller = createAbortController(requestKey);
   
-  try {
-    const response = await withTimeout(
-      fetch(buildRequestUrl(endpoint), {
-        ...options,
-        signal: controller.signal
-      })
-    );
-    
-    cleanupAbortController(requestKey);
-    return response;
-  } catch (error) {
-    cleanupAbortController(requestKey);
-    
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request was cancelled');
+  const requestPromise = (async () => {
+    try {
+      const response = await withTimeout(
+        fetch(buildRequestUrl(endpoint), {
+          ...options,
+          signal: controller.signal
+        })
+      );
+      
+      cleanupAbortController(requestKey);
+      return response;
+    } catch (error) {
+      cleanupAbortController(requestKey);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request was cancelled');
+      }
+      
+      throw error;
     }
-    
-    throw error;
+  })();
+
+  // Store promise for deduplication if enabled
+  if (enableDeduplication) {
+    pendingRequests.set(requestKey, requestPromise);
   }
+
+  return requestPromise;
+}
+
+/**
+ * Retry request with exponential backoff
+ */
+async function retryWithBackoff(
+  fn: () => Promise<Response>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Don't retry on client errors (4xx) or cancellation
+      if (error instanceof Error && 
+          (error.message === 'Request was cancelled' || 
+           error.message.includes('4'))) {
+        throw error;
+      }
+      
+      // Wait before retrying with exponential backoff
+      if (i < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Request failed after retries');
 }
 
 export const authService = {
@@ -121,7 +188,8 @@ export const authService = {
           },
           body: JSON.stringify({ email, password })
         },
-        'login'
+        'login',
+        true // Enable deduplication for login
       );
 
       if (!response.ok) {
@@ -146,8 +214,13 @@ export const authService = {
     } catch (error) {
       console.error('Login error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Login request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Login request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Login failed. Please try again.' };
@@ -233,8 +306,13 @@ export const authService = {
     } catch (error) {
       console.error('Registration error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Registration request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Registration request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Registration failed. Please try again.' };
@@ -291,16 +369,21 @@ export const authService = {
         return null;
       }
 
-      const response = await makeAuthRequest(
-        API_ENDPOINTS.auth.me,
-        {
-          method: 'GET',
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json'
-          }
-        },
-        'getCurrentUser'
+      const response = await retryWithBackoff(
+        () => makeAuthRequest(
+          API_ENDPOINTS.auth.me,
+          {
+            method: 'GET',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+            }
+          },
+          'getCurrentUser',
+          true // Enable deduplication
+        ),
+        2, // Max 2 retries
+        500 // Start with 500ms delay
       );
 
       if (!response.ok) {
@@ -329,16 +412,21 @@ export const authService = {
         };
       }
 
-      const response = await makeAuthRequest(
-        API_ENDPOINTS.auth.refresh,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+      const response = await retryWithBackoff(
+        () => makeAuthRequest(
+          API_ENDPOINTS.auth.refresh,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refreshToken })
           },
-          body: JSON.stringify({ refreshToken })
-        },
-        'refreshToken'
+          'refreshToken',
+          true // Enable deduplication for refresh
+        ),
+        2, // Max 2 retries
+        1000 // Start with 1s delay
       );
 
       if (!response.ok) {
@@ -363,8 +451,13 @@ export const authService = {
     } catch (error) {
       console.error('Refresh token error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Refresh request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Refresh request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection' };
+        }
       }
       
       return { success: false, error: 'Failed to refresh token' };
@@ -400,8 +493,13 @@ export const authService = {
     } catch (error) {
       console.error('Email verification error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Verification request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Verification request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Email verification failed' };
@@ -453,8 +551,13 @@ export const authService = {
     } catch (error) {
       console.error('Password reset request error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Password reset request failed' };
@@ -506,8 +609,13 @@ export const authService = {
     } catch (error) {
       console.error('Password reset error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Reset request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Reset request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Password reset failed' };
@@ -547,11 +655,16 @@ export const authService = {
     } catch (error) {
       console.error('Resend verification email error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
-      return { success: false, error: 'Faile to resend verification email' };
+      return { success: false, error: 'Failed to resend verification email' };
     }
   },
 
@@ -574,7 +687,8 @@ export const authService = {
             'Content-Type': 'application/json'
           }
         },
-        'checkAuthStatus'
+        'checkAuthStatus',
+        true // Enable deduplication
       );
 
       if (!response.ok) {
@@ -638,8 +752,13 @@ export const authService = {
     } catch (error) {
       console.error('Profile update error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Update request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Update request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Failed to update profile' };
@@ -693,8 +812,13 @@ export const authService = {
     } catch (error) {
       console.error('Change password error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Failed to change password' };
@@ -740,8 +864,13 @@ export const authService = {
     } catch (error) {
       console.error('Delete account error:', error);
       
-      if (error instanceof Error && error.message === 'Request was cancelled') {
-        return { success: false, error: 'Request was cancelled' };
+      if (error instanceof Error) {
+        if (error.message === 'Request was cancelled') {
+          return { success: false, error: 'Request was cancelled' };
+        }
+        if (error.message === 'No network connection available') {
+          return { success: false, error: 'No internet connection. Please check your network.' };
+        }
       }
       
       return { success: false, error: 'Failed to delete account' };
