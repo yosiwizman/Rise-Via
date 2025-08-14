@@ -1,3 +1,66 @@
+-- Sales Representatives Table (Created first to avoid FK dependency issues)
+CREATE TABLE IF NOT EXISTS sales_reps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE, -- Links to main users table if exists
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  phone VARCHAR(20),
+  mobile VARCHAR(20),
+  
+  -- Rep Details
+  rep_code VARCHAR(20) UNIQUE NOT NULL,
+  employee_id VARCHAR(50),
+  hire_date DATE,
+  
+  -- Commission Structure
+  commission_rate DECIMAL(5, 2) DEFAULT 5.00, -- Base commission percentage
+  commission_tier VARCHAR(20) DEFAULT 'standard', -- 'standard', 'silver', 'gold', 'platinum'
+  override_rate DECIMAL(5, 2) DEFAULT 0, -- For sales managers
+  
+  -- Territory Assignment
+  territory_ids UUID[],
+  can_sell_outside_territory BOOLEAN DEFAULT FALSE,
+  
+  -- Hierarchy
+  manager_id UUID,
+  is_manager BOOLEAN DEFAULT FALSE,
+  team_name VARCHAR(100),
+  
+  -- Performance Metrics
+  monthly_quota DECIMAL(10, 2),
+  quarterly_quota DECIMAL(10, 2),
+  annual_quota DECIMAL(10, 2),
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'active', -- 'active', 'inactive', 'terminated'
+  is_active BOOLEAN DEFAULT TRUE,
+  deactivated_at TIMESTAMP,
+  termination_date DATE,
+  
+  -- Metadata
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES sales_reps(id)
+);
+
+-- Admin Users Table (if not exists)
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  role VARCHAR(50) NOT NULL DEFAULT 'admin',
+  permissions JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Business Accounts Table
 CREATE TABLE IF NOT EXISTS business_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -98,55 +161,6 @@ CREATE TABLE IF NOT EXISTS business_users (
   created_by UUID,
   
   CONSTRAINT fk_business_account FOREIGN KEY (business_account_id) REFERENCES business_accounts(id) ON DELETE CASCADE
-);
-
--- Sales Representatives Table
-CREATE TABLE IF NOT EXISTS sales_reps (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID UNIQUE, -- Links to main users table if exists
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  phone VARCHAR(20),
-  mobile VARCHAR(20),
-  
-  -- Rep Details
-  rep_code VARCHAR(20) UNIQUE NOT NULL,
-  employee_id VARCHAR(50),
-  hire_date DATE,
-  
-  -- Commission Structure
-  commission_rate DECIMAL(5, 2) DEFAULT 5.00, -- Base commission percentage
-  commission_tier VARCHAR(20) DEFAULT 'standard', -- 'standard', 'silver', 'gold', 'platinum'
-  override_rate DECIMAL(5, 2) DEFAULT 0, -- For sales managers
-  
-  -- Territory Assignment
-  territory_ids UUID[],
-  can_sell_outside_territory BOOLEAN DEFAULT FALSE,
-  
-  -- Hierarchy
-  manager_id UUID,
-  is_manager BOOLEAN DEFAULT FALSE,
-  team_name VARCHAR(100),
-  
-  -- Performance Metrics
-  monthly_quota DECIMAL(10, 2),
-  quarterly_quota DECIMAL(10, 2),
-  annual_quota DECIMAL(10, 2),
-  
-  -- Status
-  status VARCHAR(20) DEFAULT 'active', -- 'active', 'inactive', 'terminated'
-  is_active BOOLEAN DEFAULT TRUE,
-  deactivated_at TIMESTAMP,
-  termination_date DATE,
-  
-  -- Metadata
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  
-  CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES sales_reps(id)
 );
 
 -- Territory Management Table
@@ -288,19 +302,19 @@ CREATE TABLE IF NOT EXISTS commission_rules (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_business_accounts_rep ON business_accounts(assigned_rep_id);
-CREATE INDEX idx_business_accounts_status ON business_accounts(status);
-CREATE INDEX idx_business_accounts_zip ON business_accounts(billing_zip, shipping_zip);
-CREATE INDEX idx_business_users_account ON business_users(business_account_id);
-CREATE INDEX idx_business_users_email ON business_users(email);
-CREATE INDEX idx_sales_reps_code ON sales_reps(rep_code);
-CREATE INDEX idx_sales_reps_status ON sales_reps(status);
-CREATE INDEX idx_territories_type ON territories(type);
-CREATE INDEX idx_territories_zips ON territories USING GIN(zip_codes);
-CREATE INDEX idx_rep_territory_assignments_rep ON rep_territory_assignments(rep_id);
-CREATE INDEX idx_rep_territory_assignments_territory ON rep_territory_assignments(territory_id);
-CREATE INDEX idx_commission_transactions_rep ON commission_transactions(rep_id);
-CREATE INDEX idx_commission_transactions_period ON commission_transactions(commission_period);
-CREATE INDEX idx_commission_transactions_status ON commission_transactions(status);
-CREATE INDEX idx_rep_account_history_account ON rep_account_history(business_account_id);
-CREATE INDEX idx_rep_account_history_rep ON rep_account_history(rep_id);
+CREATE INDEX IF NOT EXISTS idx_business_accounts_rep ON business_accounts(assigned_rep_id);
+CREATE INDEX IF NOT EXISTS idx_business_accounts_status ON business_accounts(status);
+CREATE INDEX IF NOT EXISTS idx_business_accounts_zip ON business_accounts(billing_zip, shipping_zip);
+CREATE INDEX IF NOT EXISTS idx_business_users_account ON business_users(business_account_id);
+CREATE INDEX IF NOT EXISTS idx_business_users_email ON business_users(email);
+CREATE INDEX IF NOT EXISTS idx_sales_reps_code ON sales_reps(rep_code);
+CREATE INDEX IF NOT EXISTS idx_sales_reps_status ON sales_reps(status);
+CREATE INDEX IF NOT EXISTS idx_territories_type ON territories(type);
+CREATE INDEX IF NOT EXISTS idx_territories_zips ON territories USING GIN(zip_codes);
+CREATE INDEX IF NOT EXISTS idx_rep_territory_assignments_rep ON rep_territory_assignments(rep_id);
+CREATE INDEX IF NOT EXISTS idx_rep_territory_assignments_territory ON rep_territory_assignments(territory_id);
+CREATE INDEX IF NOT EXISTS idx_commission_transactions_rep ON commission_transactions(rep_id);
+CREATE INDEX IF NOT EXISTS idx_commission_transactions_period ON commission_transactions(commission_period);
+CREATE INDEX IF NOT EXISTS idx_commission_transactions_status ON commission_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_rep_account_history_account ON rep_account_history(business_account_id);
+CREATE INDEX IF NOT EXISTS idx_rep_account_history_rep ON rep_account_history(rep_id);
