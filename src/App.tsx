@@ -55,6 +55,10 @@ const UserProfile = lazy(() => import('./pages/UserProfile'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'));
 
+// B2B and Sales Rep pages
+const RepDashboard = lazy(() => import('./pages/rep/RepDashboard').then(m => ({ default: m.RepDashboard })));
+const SmokeShopRegistration = lazy(() => import('./pages/b2b/SmokeShopRegistration'));
+
 // Layout wrapper component
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -79,6 +83,10 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       setCurrentPage('account');
     } else if (path.startsWith('/admin')) {
       setCurrentPage('admin');
+    } else if (path.startsWith('/rep')) {
+      setCurrentPage('rep');
+    } else if (path.startsWith('/b2b')) {
+      setCurrentPage('b2b');
     } else {
       setCurrentPage(path.substring(1));
     }
@@ -376,6 +384,7 @@ function App() {
                           <Route path="/lab-results" element={<LabResultsPage />} />
                           <Route path="/careers" element={<CareersPage />} />
                           <Route path="/b2b" element={<B2BPage />} />
+                          <Route path="/b2b/register" element={<SmokeShopRegistration />} />
                           <Route path="/blog" element={<BlogPage onNavigate={() => {}} />} />
                           <Route path="/blog/:slug" element={<BlogPostPage slug="" onNavigate={() => {}} />} />
                           <Route path="/health" element={<HealthCheck />} />
@@ -426,6 +435,16 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <OrderTrackingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          
+                          {/* Protected Routes - Sales Rep */}
+                          <Route
+                            path="/rep/dashboard"
+                            element={
+                              <ProtectedRoute requireRole="sales_rep">
+                                <RepDashboard />
                               </ProtectedRoute>
                             }
                           />

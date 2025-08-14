@@ -10,7 +10,8 @@ export interface User {
   first_name?: string;
   last_name?: string;
   phone?: string;
-  role: 'customer' | 'admin' | 'employee';
+  role: 'customer' | 'admin' | 'employee' | 'sales_rep';
+  is_sales_rep?: boolean; // Added for sales rep identification
   email_verified: boolean;
   created_at: string;
   updated_at: string;
@@ -261,6 +262,21 @@ export function validatePassword(password: string): { isValid: boolean; errors: 
 }
 
 /**
+ * Hash password using bcrypt (for client-side hashing before sending to server)
+ * Note: This is a simple hash for demo. In production, use proper bcrypt library
+ */
+export async function hashPassword(password: string): Promise<string> {
+  // In production, you would use bcryptjs here
+  // For now, we'll just return a placeholder
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+/**
  * Rate limiting for authentication attempts (client-side only)
  */
 const rateLimitStore = new Map<string, { attempts: number; lastAttempt: number }>();
@@ -396,6 +412,13 @@ export function isEmployee(user: User | null): boolean {
  */
 export function isCustomer(user: User | null): boolean {
   return hasRole(user, 'customer');
+}
+
+/**
+ * Check if user is sales rep
+ */
+export function isSalesRep(user: User | null): boolean {
+  return user?.role === 'sales_rep' || (user?.role === 'employee' && user?.is_sales_rep === true);
 }
 
 /**
